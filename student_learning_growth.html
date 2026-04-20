@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Learning Growth - 2 Year Comparison</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#fff;color:#1a1a1a;padding:32px 24px;max-width:1100px;margin:0 auto}
+h1{font-size:26px;font-weight:600;text-align:center;margin-bottom:4px}
+.subtitle{font-size:15px;color:#777;text-align:center;margin-bottom:20px}
+.nav{display:flex;justify-content:center;flex-wrap:wrap;gap:0;margin-bottom:20px}
+.nav button{padding:11px 18px;font-size:13px;font-weight:400;border:1px solid #ccc;background:#f0f0f0;color:#666;cursor:pointer;transition:all .15s}
+.nav button:first-child{border-radius:8px 0 0 8px}
+.nav button:last-child{border-radius:0 8px 8px 0}
+.nav button:not(:first-child):not(:last-child){border-radius:0}
+.nav button.active{background:#333;color:#fff;font-weight:600;border-color:#333}
+.toggle-row{display:flex;justify-content:center;flex-wrap:wrap;gap:0;margin-bottom:14px}
+.toggle-row button{padding:10px 22px;font-size:13px;font-weight:400;border:1px solid #ccc;background:#f0f0f0;color:#666;cursor:pointer;transition:all .15s}
+.toggle-row button:first-child{border-radius:8px 0 0 8px}
+.toggle-row button:last-child{border-radius:0 8px 8px 0}
+.toggle-row button:not(:first-child):not(:last-child){border-radius:0}
+.legend{display:flex;justify-content:center;gap:24px;margin-bottom:20px;font-size:13px;color:#555}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend .dot{width:12px;height:12px;border-radius:3px;display:inline-block}
+.card{background:#f8f8f8;border:1px solid #e0e0e0;border-radius:14px;padding:24px 20px 20px;margin-bottom:20px}
+.year-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.year-label{font-size:15px;font-weight:600;text-align:center;margin-bottom:10px;color:#777}
+.canvas-wrap{position:relative;width:100%;height:300px}
+.divider{border-top:1px solid #ddd;margin:20px 0 8px}
+.table-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin-top:4px}
+.table-year{font-size:13px;font-weight:600;text-align:center;margin-bottom:6px;color:#777}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{padding:8px 10px;font-weight:600;font-size:12px;background:#eee;border-bottom:1px solid #ddd;color:#888}
+td{padding:7px 10px;border-bottom:1px solid #ddd;text-align:center}
+td:first-child{text-align:left;font-weight:600}
+.delta{font-weight:700;color:#6B4DAA}
+.section-title{font-size:14px;font-weight:600;color:#777;margin-bottom:10px;text-align:center}
+.side-panel-title{font-size:14px;font-weight:600;color:#777;text-align:center;margin-bottom:10px}
+.insights{background:#f8f8f8;border:1px solid #e0e0e0;border-radius:14px;padding:22px 24px;margin-top:16px}
+.insights-title{font-size:14px;font-weight:600;color:#555;margin-bottom:14px}
+.insight-item{font-size:13px;line-height:1.7;color:#444;margin-bottom:8px;padding-left:18px;position:relative}
+.insight-item::before{content:'';position:absolute;left:0;top:8px;width:8px;height:8px;border-radius:50%}
+.insight-item.positive::before{background:#0F6E56}
+.insight-item.negative::before{background:#E24B4A}
+.insight-item.neutral::before{background:#6B4DAA}
+.insight-item strong{font-weight:600;color:#1a1a1a}
+#content{min-height:400px}
+.heatmap-wrap{background:#f8f8f8;border:1px solid #e0e0e0;border-radius:14px;padding:22px 24px;margin-top:20px}
+.heatmap-title{font-size:14px;font-weight:600;color:#555;margin-bottom:14px;text-align:center}
+.heatmap-table{width:100%;border-collapse:separate;border-spacing:3px;font-size:12px}
+.heatmap-table th{padding:8px 10px;font-weight:600;font-size:11px;color:#666;text-align:center;background:transparent;text-transform:uppercase;letter-spacing:.4px;border:none}
+.heatmap-table th:first-child{text-align:left}
+.heatmap-table td{padding:9px 10px;text-align:center;font-weight:600;border-radius:4px;color:#2a2a2a}
+.heatmap-table td:first-child{text-align:left;background:transparent;color:#333;font-weight:600;padding-left:0}
+.heatmap-table td.none{background:#f5f5f5;color:#bbb;font-weight:400}
+/* Scorecard styles */
+.scorecard-section-label{font-size:15px;font-weight:600;color:#555;margin:24px 0 12px;padding-bottom:8px;border-bottom:2px solid #f0f0f0}
+.scorecard-section-label:first-child{margin-top:0}
+.scorecard-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:8px}
+.scorecard-card{background:#f8f8f8;border:1px solid #e0e0e0;border-radius:14px;padding:18px 20px}
+.scorecard-card-title{font-size:14px;font-weight:600;color:#333;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #eee}
+.metric-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.metric-label{font-size:12px;color:#888}
+.metric-values{display:flex;gap:8px;align-items:center}
+.metric-prev{font-size:11px;color:#bbb}
+.metric-curr{font-size:13px;font-weight:600;color:#1a1a1a}
+.metric-badge{font-size:11px;font-weight:700;padding:2px 7px;border-radius:100px}
+.metric-badge.up{background:#E6F5EE;color:#0F6E56}
+.metric-badge.down{background:#FCEAEA;color:#E24B4A}
+.metric-badge.flat{background:#f0f0f0;color:#888}
+.summary-banner{background:linear-gradient(135deg,#f8f7ff 0%,#eff8f4 100%);border:1px solid #e0e0e0;border-radius:14px;padding:20px 24px;margin-bottom:24px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px;text-align:center}
+.summary-stat-val{font-size:28px;font-weight:700;color:#6B4DAA;margin-bottom:4px}
+.summary-stat-label{font-size:11px;color:#888;font-weight:500;text-transform:uppercase;letter-spacing:.4px}
+@media(max-width:640px){
+  .year-row,.scorecard-grid,.summary-banner{grid-template-columns:1fr}
+  .summary-banner{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+<h1>Student Learning Growth</h1>
+<p class="subtitle">2 Year Comparison (2024–26)</p>
+<div style="text-align:center;margin-bottom:12px"><a href="index.html" style="font-size:12px;color:#888;text-decoration:none;display:inline-flex;align-items:center;gap:4px">&larr; Back to Reports</a></div>
+<div class="nav" id="mainNav"></div>
+<div id="content"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+<script>
+Chart.register(ChartDataLabels);
+
+/* ── DATA ─────────────────────────────────────────────────────────────── */
+const ALL_DATA={'HYD Govt - GP':{grades:['Grade 2','Grade 3','Grade 4','Grade 5'],English:{'Grade 2':{'2024-25':{SOY:[100,0,0,0],EOY:[83,14,2,0]},'2025-26':{SOY:[95,5,0,0],EOY:[83,17,0,0]}},'Grade 3':{'2024-25':{SOY:[80,20,0,0],EOY:[51,28,20,0]},'2025-26':{SOY:[92,8,0,0],EOY:[72,27,0,0]}},'Grade 4':{'2024-25':{SOY:[77,19,4,0],EOY:[60,18,13,8]},'2025-26':{SOY:[81,17,1,0],EOY:[63,34,1,1]}},'Grade 5':{'2024-25':{SOY:[63,28,9,0],EOY:[51,24,11,14]},'2025-26':{SOY:[66,30,4,0],EOY:[44,47,3,6]}}},Maths:{'Grade 2':{'2024-25':{SOY:[93,10,1,0],EOY:[59,22,17,0]},'2025-26':{SOY:[97,3,0,0],EOY:[81,17,2,0]}},'Grade 3':{'2024-25':{SOY:[58,31,11,0],EOY:[32,20,48,0]},'2025-26':{SOY:[83,13,4,0],EOY:[61,18,21,0]}},'Grade 4':{'2024-25':{SOY:[55,29,10,5],EOY:[23,20,29,28]},'2025-26':{SOY:[80,16,5,0],EOY:[46,21,24,9]}},'Grade 5':{'2024-25':{SOY:[36,29,20,15],EOY:[16,16,19,51]},'2025-26':{SOY:[69,17,14,0],EOY:[34,21,10,35]}}}},'Foundations':{grades:['Grade 2','Grade 3','Grade 4','Grade 5','Grade 6','Grade 7','Grade 8'],English:{'Grade 2':{'2024-25':{SOY:[55,28,17,0],EOY:[35,33,32,0]},'2025-26':{SOY:[71,25,4,0],EOY:[37,45,18,0]}},'Grade 3':{'2024-25':{SOY:[50,31,19,0],EOY:[28,25,31,17]},'2025-26':{SOY:[64,23,13,0],EOY:[30,43,26,2]}},'Grade 4':{'2024-25':{SOY:[34,24,21,20],EOY:[20,22,26,32]},'2025-26':{SOY:[55,27,18,1],EOY:[27,31,24,17]}},'Grade 5':{'2024-25':{SOY:[28,22,24,27],EOY:[15,22,30,34]},'2025-26':{SOY:[47,29,16,8],EOY:[22,25,26,27]}},'Grade 6':{'2024-25':{SOY:[26,24,28,21],EOY:[14,19,25,43]},'2025-26':{SOY:[29,26,29,15],EOY:[18,22,29,32]}},'Grade 7':{'2024-25':{SOY:[17,23,39,21],EOY:[20,22,19,40]},'2025-26':{SOY:[28,27,26,19],EOY:[8,18,29,44]}},'Grade 8':{'2024-25':{SOY:[19,33,33,15],EOY:[19,22,26,32]},'2025-26':{SOY:[24,21,36,19],EOY:[3,20,27,50]}}},Maths:{'Grade 2':{'2024-25':{SOY:[43,35,22,0],EOY:[19,23,34,25]},'2025-26':{SOY:[67,27,6,0],EOY:[26,35,38,1]}},'Grade 3':{'2024-25':{SOY:[33,30,37,0],EOY:[17,21,51,11]},'2025-26':{SOY:[54,27,18,0],EOY:[17,25,55,3]}},'Grade 4':{'2024-25':{SOY:[19,27,26,28],EOY:[17,16,30,38]},'2025-26':{SOY:[49,22,22,7],EOY:[22,19,31,28]}},'Grade 5':{'2024-25':{SOY:[17,26,27,30],EOY:[15,9,16,59]},'2025-26':{SOY:[35,27,23,16],EOY:[18,16,31,35]}},'Grade 6':{'2024-25':{SOY:[20,23,29,28],EOY:[12,15,26,47]},'2025-26':{SOY:[12,22,39,26],EOY:[10,10,36,44]}},'Grade 7':{'2024-25':{SOY:[10,20,32,38],EOY:[21,12,16,51]},'2025-26':{SOY:[22,20,31,27],EOY:[3,13,23,60]}},'Grade 8':{'2024-25':{SOY:[10,18,32,39],EOY:[19,20,22,39]},'2025-26':{SOY:[35,19,9,37],EOY:[3,7,23,67]}}}},'AMC - Model':{grades:['Grade 2','Grade 3','Grade 4','Grade 5'],English:{'Grade 2':{'2024-25':{SOY:[80,11,9,0],EOY:[37,33,31,0]},'2025-26':{SOY:[64,35,2,0],EOY:[36,47,17,0]}},'Grade 3':{'2024-25':{SOY:[22,20,58,0],EOY:[36,36,28,0]},'2025-26':{SOY:[60,29,11,0],EOY:[15,67,17,0]}},'Grade 4':{'2024-25':{SOY:[37,33,21,10],EOY:[44,17,18,22]},'2025-26':{SOY:[34,50,9,8],EOY:[31,44,15,9]}},'Grade 5':{'2024-25':{SOY:[34,27,36,4],EOY:[45,29,10,16]},'2025-26':{SOY:[24,36,19,21],EOY:[21,38,23,18]}}},Maths:{'Grade 2':{'2024-25':{SOY:[41,10,48,0],EOY:[28,17,55,0]},'2025-26':{SOY:[53,39,8,0],EOY:[34,21,45,0]}},'Grade 3':{'2024-25':{SOY:[29,11,61,0],EOY:[19,14,68,0]},'2025-26':{SOY:[48,37,15,0],EOY:[7,30,63,0]}},'Grade 4':{'2024-25':{SOY:[22,12,25,41],EOY:[17,3,33,47]},'2025-26':{SOY:[35,52,14,0],EOY:[5,11,23,60]}},'Grade 5':{'2024-25':{SOY:[31,13,31,24],EOY:[15,6,35,44]},'2025-26':{SOY:[13,38,38,13],EOY:[6,7,14,74]}}}},'AMC - Non - Model':{grades:['Grade 2','Grade 3','Grade 4','Grade 5'],English:{'Grade 2':{'2024-25':{SOY:[40,28,32,0],EOY:[32,26,42,0]},'2025-26':{SOY:[53,35,12,0],EOY:[29,47,24,0]}},'Grade 3':{'2024-25':{SOY:[32,22,46,0],EOY:[22,30,48,0]},'2025-26':{SOY:[48,38,14,0],EOY:[26,39,35,0]}},'Grade 4':{'2024-25':{SOY:[34,27,30,9],EOY:[36,22,16,27]},'2025-26':{SOY:[33,36,15,15],EOY:[19,21,23,36]}},'Grade 5':{'2024-25':{SOY:[23,21,41,14],EOY:[22,22,13,42]},'2025-26':{SOY:[30,32,25,13],EOY:[15,27,21,37]}}},Maths:{'Grade 2':{'2024-25':{SOY:[26,10,64,0],EOY:[14,10,77,0]},'2025-26':{SOY:[34,37,27,2],EOY:[23,18,59,0]}},'Grade 3':{'2024-25':{SOY:[16,12,72,0],EOY:[9,10,81,1]},'2025-26':{SOY:[30,36,33,0],EOY:[17,21,62,0]}},'Grade 4':{'2024-25':{SOY:[13,11,40,36],EOY:[9,9,33,50]},'2025-26':{SOY:[24,27,34,15],EOY:[13,14,20,53]}},'Grade 5':{'2024-25':{SOY:[8,11,29,52],EOY:[6,6,24,64]},'2025-26':{SOY:[21,27,31,20],EOY:[7,8,14,71]}}}},
+'MTAR':{grades:['Grade 2','Grade 3','Grade 4','Grade 5'],English:{'Grade 2':{'2024-25':{SOY:[100,0,0,0],EOY:[100,0,0,0]},'2025-26':{SOY:[79,21,0,0],EOY:[7,77,6,0]}},'Grade 3':{'2024-25':{SOY:[98,2,0,0],EOY:[97,3,0,0]},'2025-26':{SOY:[63,37,0,0],EOY:[2,36,61,0]}},'Grade 4':{'2024-25':{SOY:[75,24,2,0],EOY:[76,19,4,2]},'2025-26':{SOY:[34,66,0,0],EOY:[3,31,40,26]}},'Grade 5':{'2024-25':{SOY:[74,11,15,0],EOY:[53,44,3,0]},'2025-26':{SOY:[38,62,0,0],EOY:[0,15,58,27]}}}}};
+
+/* ── CONSTANTS ────────────────────────────────────────────────────────── */
+const verticals=Object.keys(ALL_DATA).filter(v=>v!=='HYD Govt - GP');
+const vShort={'HYD Govt - GP':'HYD Govt','Foundations':'Foundations','AMC - Model':'AMC Model','AMC - Non - Model':'AMC Non-Model','MTAR':'MTAR'};
+const commonGrades=['Grade 2','Grade 3','Grade 4','Grade 5'];
+const allGrades=['Grade 2','Grade 3','Grade 4','Grade 5','Grade 6','Grade 7','Grade 8'];
+const levels=['L1','L2','L3','L4'];
+const themes={English:{soy:'#A8CBE8',eoy:'#185FA5',soyLabel:'#333',eoyLabel:'#fff',tabActive:'#185FA5'},Maths:{soy:'#9FE1CB',eoy:'#0F6E56',soyLabel:'#333',eoyLabel:'#fff',tabActive:'#0F6E56'}};
+const segC=['#E24B4A','#EF9F27','#3266ad','#1D9E75'];
+const deltaC='#6B4DAA';
+
+/* ── STATE ────────────────────────────────────────────────────────────── */
+let currentView='OneView';
+let oneViewSubject='English', oneViewGrade='Grade 2';
+let soySubject='English', soyGrade='Grade 2';
+let yoySubject='English';
+let detailSubject='English', detailGrade='Grade 2';
+let charts=[];
+
+/* ── HELPERS ──────────────────────────────────────────────────────────── */
+function getData(v,s,g,y){const d=ALL_DATA[v][s];if(!d||!d[g]||!d[g][y])return null;return d[g][y];}
+function getL1Drop(v,s,g,y){const d=getData(v,s,g,y);return d?d.SOY[0]-d.EOY[0]:null;}
+function destroyCharts(){charts.forEach(c=>c.destroy());charts=[];}
+function updateNav(){document.querySelectorAll('#mainNav button').forEach(btn=>btn.classList.toggle('active',btn.dataset.view===currentView));}
+
+function heatRedScale(val,max){if(val===null||val===undefined)return{bg:'#f5f5f5',text:'#bbb'};const t=Math.max(0,Math.min(1,val/max));const r=Math.round(252+(226-252)*t),g=Math.round(235+(75-235)*t),b=Math.round(235+(74-235)*t);return{bg:'rgb('+r+','+g+','+b+')',text:t>0.55?'#fff':'#7a1b1b'};}
+function heatPurpleScale(val,max){if(val===null||val===undefined)return{bg:'#f5f5f5',text:'#bbb'};if(val<=0){const t=Math.min(1,Math.abs(val)/20);const r=Math.round(252+(226-252)*t),g=Math.round(235+(75-235)*t),b=Math.round(235+(74-235)*t);return{bg:'rgb('+r+','+g+','+b+')',text:t>0.55?'#fff':'#7a1b1b'};}const t=Math.max(0,Math.min(1,val/max));const r=Math.round(238+(107-238)*t),g=Math.round(237+(77-237)*t),b=Math.round(254+(170-254)*t);return{bg:'rgb('+r+','+g+','+b+')',text:t>0.5?'#fff':'#3c2870'};}
+function heatGreenScale(val,max){if(val===null||val===undefined)return{bg:'#f5f5f5',text:'#bbb'};if(val<=0){const t=Math.min(1,Math.abs(val)/20);const r=Math.round(252+(226-252)*t),g=Math.round(235+(75-235)*t),b=Math.round(235+(74-235)*t);return{bg:'rgb('+r+','+g+','+b+')',text:t>0.55?'#fff':'#7a1b1b'};}const t=Math.max(0,Math.min(1,val/max));const r=Math.round(225+(15-225)*t),g=Math.round(245+(110-245)*t),b=Math.round(238+(86-238)*t);return{bg:'rgb('+r+','+g+','+b+')',text:t>0.5?'#fff':'#0a3d2d'};}
+function renderCell(val,scale,max,fmt){if(val===null||val===undefined)return'<td class="none">—</td>';const c=scale(val,max);const text=fmt?fmt(val):val;return'<td style="background:'+c.bg+';color:'+c.text+'">'+text+'</td>';}
+
+/* ── INSIGHT GENERATORS ───────────────────────────────────────────────── */
+function generateInsights(subject,grade){
+  const insights=[];const curYear='2025-26',prevYear='2024-25';
+  const data={};
+  verticals.forEach(v=>{const dCur=getData(v,subject,grade,curYear);const dPrev=getData(v,subject,grade,prevYear);if(!dCur)return;data[v]={l1drop:dCur.SOY[0]-dCur.EOY[0],l1dropPrev:dPrev?dPrev.SOY[0]-dPrev.EOY[0]:null,l1eoy:dCur.EOY[0],l1eoyPrev:dPrev?dPrev.EOY[0]:null,l34:dCur.EOY[2]+dCur.EOY[3],l34Prev:dPrev?dPrev.EOY[2]+dPrev.EOY[3]:null,l4:dCur.EOY[3],l4Prev:dPrev?dPrev.EOY[3]:null};});
+  const available=Object.keys(data);if(available.length===0)return[];
+  let bestV=null,bestVal=-999;available.forEach(v=>{if(data[v].l1drop>bestVal){bestVal=data[v].l1drop;bestV=v;}});
+  if(bestV&&bestVal>0){const d=data[bestV];let text='<strong>'+vShort[bestV]+'</strong> is leading this year with <strong>'+bestVal+'%</strong> L1 reduction';if(d.l1dropPrev!==null){const diff=d.l1drop-d.l1dropPrev;if(diff>0)text+=' (up from \u25BC'+d.l1dropPrev+' last year)';else if(diff<0)text+=' (down from \u25BC'+d.l1dropPrev+' last year)';else text+=' (same as last year)';}text+='.';insights.push({type:'positive',text});}
+  const improved=[],declined=[];available.forEach(v=>{if(data[v].l1dropPrev===null)return;const diff=data[v].l1drop-data[v].l1dropPrev;if(diff>=5)improved.push({v,diff});else if(diff<=-5)declined.push({v,diff});});
+  if(improved.length>0){improved.sort((a,b)=>b.diff-a.diff);const top=improved[0];insights.push({type:'positive',text:'<strong>'+vShort[top.v]+'</strong> improved the most this year. L1 reduction is up <strong>'+top.diff+' points</strong> vs last year.'});}
+  if(declined.length>0){declined.sort((a,b)=>a.diff-b.diff);const worst=declined[0];insights.push({type:'negative',text:'<strong>'+vShort[worst.v]+'</strong> slowed down this year. L1 reduction dropped by <strong>'+Math.abs(worst.diff)+' points</strong> vs last year.'});}
+  available.forEach(v=>{if(data[v].l1drop<0){insights.push({type:'negative',text:'<strong>'+vShort[v]+'</strong> had L1 <strong>increase of '+Math.abs(data[v].l1drop)+'%</strong> this year. More students moved into L1 than out.'});}});
+  let hiL34V=null,hiL34=-1;available.forEach(v=>{if(data[v].l34>hiL34){hiL34=data[v].l34;hiL34V=v;}});
+  if(hiL34V&&hiL34>=20){const d=data[hiL34V];let text='<strong>'+vShort[hiL34V]+'</strong> has the highest L3+L4 at EOY this year at <strong>'+hiL34+'%</strong>';if(d.l34Prev!==null){const diff=d.l34-d.l34Prev;if(diff>0)text+=' (up '+diff+' points from '+d.l34Prev+'% last year)';else if(diff<0)text+=' (down '+Math.abs(diff)+' points from '+d.l34Prev+'% last year)';}text+='.';insights.push({type:'positive',text});}
+  let hiL1V=null,hiL1=-1;available.forEach(v=>{if(data[v].l1eoy>hiL1){hiL1=data[v].l1eoy;hiL1V=v;}});
+  if(hiL1V&&hiL1>=40){const d=data[hiL1V];let text='<strong>'+vShort[hiL1V]+'</strong> still has <strong>'+hiL1+'%</strong> at L1 by EOY this year';if(d.l1eoyPrev!==null){const diff=d.l1eoy-d.l1eoyPrev;if(diff>0)text+=' (worse than last year at '+d.l1eoyPrev+'%)';else if(diff<0)text+=' (better than last year at '+d.l1eoyPrev+'%)';else text+=' (same as last year)';}text+='.';insights.push({type:'negative',text});}
+  let hiL4V=null,hiL4=-1;available.forEach(v=>{if(data[v].l4>hiL4){hiL4=data[v].l4;hiL4V=v;}});
+  if(hiL4V&&hiL4>=25){const d=data[hiL4V];let text='<strong>'+vShort[hiL4V]+'</strong> reached <strong>'+hiL4+'%</strong> at L4 this year';if(d.l4Prev!==null&&d.l4-d.l4Prev>=5)text+=' — up '+(d.l4-d.l4Prev)+' points from last year.';else text+='.';insights.push({type:'neutral',text});}
+  return insights;
+}
+
+function generateSoyEoyInsights(subject,grade){
+  const insights=[];const data={};
+  verticals.forEach(v=>{const d24=getData(v,subject,grade,'2024-25');const d25=getData(v,subject,grade,'2025-26');if(!d25)return;data[v]={l1drop25:d25.SOY[0]-d25.EOY[0],l1drop24:d24?d24.SOY[0]-d24.EOY[0]:null,l34gain25:(d25.EOY[2]+d25.EOY[3])-(d25.SOY[2]+d25.SOY[3]),l34gain24:d24?(d24.EOY[2]+d24.EOY[3])-(d24.SOY[2]+d24.SOY[3]):null,l1soy25:d25.SOY[0],l1eoy25:d25.EOY[0]};});
+  const available=Object.keys(data);if(available.length===0)return[];
+  let bestV=null,bestVal=-999;available.forEach(v=>{if(data[v].l1drop25>bestVal){bestVal=data[v].l1drop25;bestV=v;}});
+  if(bestV&&bestVal>0){const d=data[bestV];let text='<strong>'+vShort[bestV]+'</strong> moved the most students out of L1 in 2025-26: <strong>'+bestVal+'%</strong> reduction ('+d.l1soy25+'% \u2192 '+d.l1eoy25+'%)';if(d.l1drop24!==null){const diff=bestVal-d.l1drop24;if(diff>0)text+=', <strong>\u25B2 '+diff+' pts</strong> better than last year';else if(diff<0)text+=', <strong>\u25BC '+Math.abs(diff)+' pts</strong> below last year';else text+=', same as last year';}text+='.';insights.push({type:'positive',text});}
+  let impV=null,impDiff=-999;available.forEach(v=>{if(data[v].l1drop24===null)return;const diff=data[v].l1drop25-data[v].l1drop24;if(diff>impDiff){impDiff=diff;impV=v;}});
+  if(impV&&impDiff>=5&&impV!==bestV)insights.push({type:'positive',text:'<strong>'+vShort[impV]+'</strong> showed the biggest year-over-year improvement: L1 drop up by <strong>'+impDiff+' points</strong> vs 2024-25.'});
+  available.forEach(v=>{if(data[v].l1drop24!==null&&data[v].l1drop25-data[v].l1drop24<=-8)insights.push({type:'negative',text:'<strong>'+vShort[v]+'</strong> regressed this year: L1 drop fell by <strong>'+Math.abs(data[v].l1drop25-data[v].l1drop24)+' points</strong> vs 2024-25.'});if(data[v].l1drop25<0)insights.push({type:'negative',text:'<strong>'+vShort[v]+'</strong> saw L1 <strong>increase by '+Math.abs(data[v].l1drop25)+'%</strong> this year — more students moved into L1 than out.'});});
+  let bestL34V=null,bestL34=-999;available.forEach(v=>{if(data[v].l34gain25>bestL34){bestL34=data[v].l34gain25;bestL34V=v;}});
+  if(bestL34V&&bestL34>0&&bestL34V!==bestV){const d=data[bestL34V];let text='<strong>'+vShort[bestL34V]+'</strong> had the strongest L3+L4 gain in 2025-26: <strong>+'+bestL34+' points</strong>';if(d.l34gain24!==null){const diff=bestL34-d.l34gain24;if(diff>0)text+=' (\u25B2 '+diff+' pts YoY)';else if(diff<0)text+=' (\u25BC '+Math.abs(diff)+' pts YoY)';else text+=' (same as last year)';}text+='.';insights.push({type:'positive',text});}
+  return insights;
+}
+
+/* ── EOY COMPARISON (OneView) ─────────────────────────────────────────── */
+function renderOneView(){
+  destroyCharts();const el=document.getElementById('content');
+  el.innerHTML='<div class="toggle-row" id="ovSubj"></div><div class="toggle-row" id="ovGr" style="margin-bottom:20px"></div><div id="ovBody"></div>';
+  const th=themes[oneViewSubject];
+  ['English','Maths'].forEach(s=>{const btn=document.createElement('button');btn.textContent=s;if(oneViewSubject===s)btn.style.cssText='background:#6B4DAA;color:#fff;font-weight:600;border-color:#6B4DAA';btn.addEventListener('click',()=>{oneViewSubject=s;renderOneView();});document.getElementById('ovSubj').appendChild(btn);});
+  commonGrades.forEach(g=>{const btn=document.createElement('button');btn.textContent=g;if(oneViewGrade===g)btn.style.cssText='background:'+th.tabActive+';color:#fff;font-weight:600;border-color:'+th.tabActive;btn.addEventListener('click',()=>{oneViewGrade=g;renderOneView();});document.getElementById('ovGr').appendChild(btn);});
+  let legendH='<div style="display:flex;justify-content:center;gap:14px;margin-bottom:14px;font-size:12px;color:#888">';
+  ['L1','L2','L3','L4'].forEach((l,i)=>{legendH+='<span style="display:flex;align-items:center;gap:4px"><span style="width:11px;height:11px;border-radius:2px;background:'+segC[i]+';display:inline-block"></span>'+l+'</span>';});
+  legendH+='<span style="font-weight:700;color:'+deltaC+'">&#9660; L1 drop</span></div>';
+  const body=document.getElementById('ovBody');
+  body.innerHTML=legendH+'<div style="background:#f8f8f8;border:1px solid #e0e0e0;border-radius:14px;padding:24px 16px 16px"><div style="font-size:14px;font-weight:600;color:#777;text-align:center;margin-bottom:14px">EOY distribution across all verticals: '+oneViewSubject+', '+oneViewGrade+'</div><div style="position:relative;width:100%;height:420px"><canvas id="oneViewCanvas"></canvas></div></div>';
+  const labels=[],l1Data=[],l2Data=[],l3Data=[],l4Data=[],l1Drops=[],availV=[];
+  verticals.forEach(v=>{const d=ALL_DATA[v][oneViewSubject];if(!d[oneViewGrade])return;availV.push(v);['2024-25','2025-26'].forEach(year=>{labels.push(year);const eoy=d[oneViewGrade][year].EOY,soy=d[oneViewGrade][year].SOY;l1Data.push(eoy[0]);l2Data.push(eoy[1]);l3Data.push(eoy[2]);l4Data.push(eoy[3]);l1Drops.push(soy[0]-eoy[0]);});});
+  const dropPlugin={id:'bucketsAndDrops',beforeDatasetsDraw(chart){const ctx=chart.ctx,meta=chart.getDatasetMeta(0),ca=chart.chartArea;if(!meta.data.length)return;ctx.save();for(let i=0;i<meta.data.length;i+=2){if(i+1>=meta.data.length)break;const b0=meta.data[i],b1=meta.data[i+1],pad=12,left=b0.x-b0.width/2-pad,right=b1.x+b1.width/2+pad;ctx.fillStyle=(i/2)%2===0?'rgba(0,0,0,0.025)':'rgba(0,0,0,0.045)';ctx.beginPath();if(ctx.roundRect)ctx.roundRect(left,ca.top-24,right-left,ca.bottom-ca.top+28,6);else ctx.rect(left,ca.top-24,right-left,ca.bottom-ca.top+28);ctx.fill();}ctx.restore();},afterDatasetsDraw(chart){const ctx=chart.ctx,meta=chart.getDatasetMeta(0),ca=chart.chartArea,lastMeta=chart.getDatasetMeta(chart.data.datasets.length-1);if(!meta.data.length)return;ctx.save();ctx.textAlign='center';ctx.textBaseline='bottom';ctx.font='600 12px -apple-system,sans-serif';ctx.fillStyle='#555';for(let i=0;i<meta.data.length;i+=2){if(i+1>=meta.data.length)break;ctx.fillText(vShort[availV[i/2]],(meta.data[i].x+meta.data[i+1].x)/2,ca.top-8);}ctx.font='bold 11px -apple-system,sans-serif';ctx.fillStyle=deltaC;l1Drops.forEach((drop,i)=>{const x=meta.data[i].x,topY=lastMeta.data[i].y;ctx.fillText(drop>0?'\u25BC '+drop:drop<0?'\u25B2 '+Math.abs(drop):'-',x,topY-4);});ctx.restore();}};
+  const cv=document.getElementById('oneViewCanvas');
+  const c=new Chart(cv,{type:'bar',data:{labels,datasets:[{label:'L1',data:l1Data,backgroundColor:segC[0],borderWidth:0,stack:'a'},{label:'L2',data:l2Data,backgroundColor:segC[1],borderWidth:0,stack:'a'},{label:'L3',data:l3Data,backgroundColor:segC[2],borderWidth:0,stack:'a'},{label:'L4',data:l4Data,backgroundColor:segC[3],borderWidth:0,stack:'a'}]},plugins:[dropPlugin],options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:36}},plugins:{legend:{display:false},tooltip:{callbacks:{title:ctx=>{const i=ctx[0].dataIndex;return vShort[availV[Math.floor(i/2)]]+' ('+ctx[0].label+')';},label:ctx=>ctx.dataset.label+': '+ctx.raw+'%'}},datalabels:{display:ctx=>ctx.dataset.data[ctx.dataIndex]>=8,color:ctx=>ctx.datasetIndex===0?'#fff':ctx.datasetIndex===1?'#5a3e00':'#fff',font:{size:10,weight:'600'},formatter:v=>v+'%'}},scales:{x:{stacked:true,ticks:{color:'#333',font:{size:11,weight:'600'},autoSkip:false,maxRotation:0},grid:{display:false}},y:{stacked:true,max:110,ticks:{color:'#999',callback:v=>v<=100?v+'%':'',font:{size:11},stepSize:25},grid:{color:'rgba(0,0,0,0.06)'}}}}});
+  charts.push(c);
+  const insights=generateInsights(oneViewSubject,oneViewGrade);
+  if(insights.length>0){let ih='<div class="insights"><div class="insights-title">Key insights for 2025-26: '+oneViewSubject+', '+oneViewGrade+'</div>';insights.forEach(ins=>{ih+='<div class="insight-item '+ins.type+'">'+ins.text+'</div>';});ih+='</div>';body.insertAdjacentHTML('beforeend',ih);}
+  let heatH='<div class="heatmap-wrap"><div class="heatmap-title">EOY L1 % heatmap (darker = more students stuck at L1): '+oneViewSubject+', '+oneViewGrade+'</div>';
+  heatH+='<table class="heatmap-table"><thead><tr><th>Vertical</th><th>2024-25 EOY L1</th><th>2025-26 EOY L1</th><th>YoY change</th></tr></thead><tbody>';
+  verticals.forEach(v=>{const d24=getData(v,oneViewSubject,oneViewGrade,'2024-25');const d25=getData(v,oneViewSubject,oneViewGrade,'2025-26');const l1_24=d24?d24.EOY[0]:null,l1_25=d25?d25.EOY[0]:null,yoy=(l1_24!==null&&l1_25!==null)?l1_25-l1_24:null;heatH+='<tr><td>'+vShort[v]+'</td>';heatH+=renderCell(l1_24,heatRedScale,100,v=>v+'%');heatH+=renderCell(l1_25,heatRedScale,100,v=>v+'%');heatH+=renderCell(yoy===null?null:-yoy,heatPurpleScale,30,v=>{const a=-v;return a===0?'-':a>0?'\u25B2 +'+a:'\u25BC '+a;});heatH+='</tr>';});
+  heatH+='</tbody></table></div>';body.insertAdjacentHTML('beforeend',heatH);
+}
+
+/* ── SOY → EOY (BOTH YEARS) ───────────────────────────────────────────── */
+function renderSoyEoy(){
+  destroyCharts();const el=document.getElementById('content');
+  el.innerHTML='<div class="toggle-row" id="soySubj"></div><div class="toggle-row" id="soyGr" style="margin-bottom:20px"></div><div id="soyBody"></div>';
+  const th=themes[soySubject];
+  ['English','Maths'].forEach(s=>{const btn=document.createElement('button');btn.textContent=s;if(soySubject===s)btn.style.cssText='background:#6B4DAA;color:#fff;font-weight:600;border-color:#6B4DAA';btn.addEventListener('click',()=>{soySubject=s;renderSoyEoy();});document.getElementById('soySubj').appendChild(btn);});
+  commonGrades.forEach(g=>{const btn=document.createElement('button');btn.textContent=g;if(soyGrade===g)btn.style.cssText='background:'+th.tabActive+';color:#fff;font-weight:600;border-color:'+th.tabActive;btn.addEventListener('click',()=>{soyGrade=g;renderSoyEoy();});document.getElementById('soyGr').appendChild(btn);});
+
+  let legendH='<div style="display:flex;justify-content:center;gap:16px;margin-bottom:16px;font-size:12px;color:#888;flex-wrap:wrap">';
+  ['L1','L2','L3','L4'].forEach((l,i)=>{legendH+='<span style="display:flex;align-items:center;gap:4px"><span style="width:11px;height:11px;border-radius:2px;background:'+segC[i]+';display:inline-block"></span>'+l+'</span>';});
+  legendH+='<span style="display:flex;align-items:center;gap:6px"><span style="width:24px;height:3px;background:#185FA5;display:inline-block;border-radius:2px"></span>2024-25</span>';
+  legendH+='<span style="display:flex;align-items:center;gap:6px"><span style="width:24px;height:3px;background:#0F6E56;display:inline-block;border-radius:2px"></span>2025-26</span>';
+  legendH+='<span style="font-weight:700;color:'+deltaC+'">&#9660; L1 drop</span></div>';
+
+  const body=document.getElementById('soyBody');
+  body.innerHTML=legendH+
+    '<div style="background:#f8f8f8;border:1px solid #e0e0e0;border-radius:14px;padding:24px 16px 16px">'+
+      '<div style="font-size:13px;font-weight:600;color:#777;text-align:center;margin-bottom:14px">SOY \u2192 EOY movement across verticals: '+soySubject+', '+soyGrade+'</div>'+
+      '<div style="position:relative;width:100%;height:460px"><canvas id="soyMainCanvas"></canvas></div>'+
+    '</div>'+
+    '<div id="soyHeatInsights"></div>';
+
+  // Build data: per vertical, 4 bars in order: SOY-24, SOY-25, EOY-24, EOY-25
+  // Groups of 4, labeled: SOY 24-25 | SOY 25-26 | EOY 24-25 | EOY 25-26
+  const labels=[],l1D=[],l2D=[],l3D=[],l4D=[];
+  const availV=[],drops=[];
+  // Track bar positions for plugin: index → {v, period, year}
+  const barMeta=[];
+
+  verticals.forEach(v=>{
+    const d24=getData(v,soySubject,soyGrade,'2024-25');
+    const d25=getData(v,soySubject,soyGrade,'2025-26');
+    if(!d24&&!d25)return;
+    availV.push(v);
+    // SOY 24-25
+    labels.push("24-25");
+    l1D.push(d24?d24.SOY[0]:0);l2D.push(d24?d24.SOY[1]:0);l3D.push(d24?d24.SOY[2]:0);l4D.push(d24?d24.SOY[3]:0);
+    barMeta.push({v,period:'SOY',year:'2024-25',drop:null});
+    // SOY 25-26
+    labels.push("25-26");
+    l1D.push(d25?d25.SOY[0]:0);l2D.push(d25?d25.SOY[1]:0);l3D.push(d25?d25.SOY[2]:0);l4D.push(d25?d25.SOY[3]:0);
+    barMeta.push({v,period:'SOY',year:'2025-26',drop:null});
+    // EOY 24-25
+    labels.push("24-25");
+    l1D.push(d24?d24.EOY[0]:0);l2D.push(d24?d24.EOY[1]:0);l3D.push(d24?d24.EOY[2]:0);l4D.push(d24?d24.EOY[3]:0);
+    barMeta.push({v,period:'EOY',year:'2024-25',drop:d24?d24.SOY[0]-d24.EOY[0]:null});
+    // EOY 25-26
+    labels.push("25-26");
+    l1D.push(d25?d25.EOY[0]:0);l2D.push(d25?d25.EOY[1]:0);l3D.push(d25?d25.EOY[2]:0);l4D.push(d25?d25.EOY[3]:0);
+    barMeta.push({v,period:'EOY',year:'2025-26',drop:d25?d25.SOY[0]-d25.EOY[0]:null});
+  });
+
+  // Plugin: vertical name labels + SOY/EOY sub-group labels + bucket backgrounds + L1 drop
+  const mainPlugin={
+    id:'soyMainPlugin',
+    beforeDatasetsDraw(chart){
+      const ctx=chart.ctx,meta=chart.getDatasetMeta(0),ca=chart.chartArea;
+      if(!meta.data.length)return;
+      ctx.save();
+      // Draw bucket backgrounds per vertical (groups of 4)
+      for(let i=0;i<meta.data.length;i+=4){
+        if(i+3>=meta.data.length)break;
+        const b0=meta.data[i],b3=meta.data[i+3];
+        const pad=10,left=b0.x-b0.width/2-pad,right=b3.x+b3.width/2+pad;
+        // Alternating fills — more contrast
+        ctx.fillStyle=(i/4)%2===0?'rgba(0,0,0,0.04)':'rgba(0,0,0,0.08)';
+        ctx.beginPath();
+        if(ctx.roundRect)ctx.roundRect(left,ca.top-38,right-left,ca.bottom-ca.top+42,8);
+        else ctx.rect(left,ca.top-38,right-left,ca.bottom-ca.top+42);
+        ctx.fill();
+        // Border around each bucket
+        ctx.strokeStyle=(i/4)%2===0?'rgba(0,0,0,0.12)':'rgba(0,0,0,0.18)';
+        ctx.lineWidth=1.5;
+        ctx.beginPath();
+        if(ctx.roundRect)ctx.roundRect(left,ca.top-38,right-left,ca.bottom-ca.top+42,8);
+        else ctx.rect(left,ca.top-38,right-left,ca.bottom-ca.top+42);
+        ctx.stroke();
+        // SOY sub-group shade (bars 0-1)
+        const b1=meta.data[i+1];
+        const soyLeft=b0.x-b0.width/2-3,soyRight=b1.x+b1.width/2+3;
+        ctx.fillStyle='rgba(24,95,165,0.09)';
+        ctx.beginPath();
+        if(ctx.roundRect)ctx.roundRect(soyLeft,ca.top-6,soyRight-soyLeft,ca.bottom-ca.top+10,4);
+        else ctx.rect(soyLeft,ca.top-6,soyRight-soyLeft,ca.bottom-ca.top+10);
+        ctx.fill();
+        // EOY sub-group shade (bars 2-3)
+        const b2=meta.data[i+2];
+        const eoyLeft=b2.x-b2.width/2-3,eoyRight=b3.x+b3.width/2+3;
+        ctx.fillStyle='rgba(15,110,86,0.09)';
+        ctx.beginPath();
+        if(ctx.roundRect)ctx.roundRect(eoyLeft,ca.top-6,eoyRight-eoyLeft,ca.bottom-ca.top+10,4);
+        else ctx.rect(eoyLeft,ca.top-6,eoyRight-eoyLeft,ca.bottom-ca.top+10);
+        ctx.fill();
+      }
+      ctx.restore();
+    },
+    afterDatasetsDraw(chart){
+      const ctx=chart.ctx,meta=chart.getDatasetMeta(0),ca=chart.chartArea;
+      const lastMeta=chart.getDatasetMeta(chart.data.datasets.length-1);
+      if(!meta.data.length)return;
+      ctx.save();
+      ctx.textAlign='center';ctx.textBaseline='bottom';
+      // Vertical name labels (above each group of 4)
+      ctx.font='700 12px -apple-system,sans-serif';ctx.fillStyle='#444';
+      for(let i=0;i<meta.data.length;i+=4){
+        if(i+3>=meta.data.length)break;
+        const cx=(meta.data[i].x+meta.data[i+3].x)/2;
+        ctx.fillText(vShort[availV[i/4]],cx,ca.top-22);
+      }
+      // SOY / EOY sub-labels
+      ctx.font='600 10px -apple-system,sans-serif';
+      for(let i=0;i<meta.data.length;i+=4){
+        if(i+3>=meta.data.length)break;
+        const soyX=(meta.data[i].x+meta.data[i+1].x)/2;
+        const eoyX=(meta.data[i+2].x+meta.data[i+3].x)/2;
+        ctx.fillStyle='#185FA5';ctx.fillText('SOY',soyX,ca.top-8);
+        ctx.fillStyle='#0F6E56';ctx.fillText('EOY',eoyX,ca.top-8);
+      }
+      // L1 drop on EOY bars
+      ctx.font='bold 10px -apple-system,sans-serif';ctx.fillStyle=deltaC;
+      barMeta.forEach((m,i)=>{
+        if(m.drop===null)return;
+        const x=meta.data[i].x,topY=lastMeta.data[i].y;
+        const d=m.drop;
+        ctx.fillText(d>0?'\u25BC'+d:d<0?'\u25B2'+Math.abs(d):'-',x,topY-3);
+      });
+      ctx.restore();
+    }
+  };
+
+  const cv=document.getElementById('soyMainCanvas');
+  const c=new Chart(cv,{
+    type:'bar',
+    data:{labels,datasets:[
+      {label:'L1',data:l1D,backgroundColor:segC[0],borderWidth:0,stack:'a'},
+      {label:'L2',data:l2D,backgroundColor:segC[1],borderWidth:0,stack:'a'},
+      {label:'L3',data:l3D,backgroundColor:segC[2],borderWidth:0,stack:'a'},
+      {label:'L4',data:l4D,backgroundColor:segC[3],borderWidth:0,stack:'a'}
+    ]},
+    plugins:[mainPlugin],
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      layout:{padding:{top:44}},
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{
+          title:ctx=>{const m=barMeta[ctx[0].dataIndex];return vShort[m.v]+' · '+m.period+' '+m.year;},
+          label:ctx=>ctx.dataset.label+': '+ctx.raw+'%'
+        }},
+        datalabels:{
+          display:ctx=>ctx.dataset.data[ctx.dataIndex]>=10,
+          color:ctx=>ctx.datasetIndex===1?'#5a3e00':'#fff',
+          font:{size:9,weight:'600'},
+          formatter:v=>v+'%'
+        }
+      },
+      scales:{
+        x:{stacked:true,ticks:{color:'#555',font:{size:9,weight:'600'},autoSkip:false,maxRotation:0},grid:{display:false}},
+        y:{stacked:true,max:110,ticks:{color:'#999',callback:v=>v<=100?v+'%':'',font:{size:11},stepSize:25},grid:{color:'rgba(0,0,0,0.06)'}}
+      }
+    }
+  });
+  charts.push(c);
+
+  // Movement comparison heatmap
+  let heatH='<div class="heatmap-wrap"><div class="heatmap-title">SOY \u2192 EOY movement — both years: '+soySubject+', '+soyGrade+'</div>';
+  heatH+='<table class="heatmap-table"><thead><tr><th>Vertical</th><th>L1 Drop 24-25</th><th>L1 Drop 25-26</th><th>YoY \u0394</th><th>L3+L4 Gain 24-25</th><th>L3+L4 Gain 25-26</th><th>YoY \u0394</th></tr></thead><tbody>';
+  verticals.forEach(v=>{
+    const d24=getData(v,soySubject,soyGrade,'2024-25'),d25=getData(v,soySubject,soyGrade,'2025-26');
+    const l1d24=d24?d24.SOY[0]-d24.EOY[0]:null,l1d25=d25?d25.SOY[0]-d25.EOY[0]:null;
+    const l34g24=d24?(d24.EOY[2]+d24.EOY[3])-(d24.SOY[2]+d24.SOY[3]):null;
+    const l34g25=d25?(d25.EOY[2]+d25.EOY[3])-(d25.SOY[2]+d25.SOY[3]):null;
+    const l1chg=(l1d24!==null&&l1d25!==null)?l1d25-l1d24:null;
+    const l34chg=(l34g24!==null&&l34g25!==null)?l34g25-l34g24:null;
+    heatH+='<tr><td>'+vShort[v]+'</td>';
+    heatH+=renderCell(l1d24,heatPurpleScale,40,v=>v>0?'\u25BC '+v:v<0?'\u25B2 '+Math.abs(v):'-');
+    heatH+=renderCell(l1d25,heatPurpleScale,40,v=>v>0?'\u25BC '+v:v<0?'\u25B2 '+Math.abs(v):'-');
+    heatH+=renderCell(l1chg,heatPurpleScale,20,v=>v>0?'\u25B2 +'+v:v<0?'\u25BC '+v:'-');
+    heatH+=renderCell(l34g24,heatGreenScale,40,v=>v>0?'\u25B2 +'+v:v<0?'\u25BC '+Math.abs(v):'-');
+    heatH+=renderCell(l34g25,heatGreenScale,40,v=>v>0?'\u25B2 +'+v:v<0?'\u25BC '+Math.abs(v):'-');
+    heatH+=renderCell(l34chg,heatGreenScale,20,v=>v>0?'\u25B2 +'+v:v<0?'\u25BC '+v:'-');
+    heatH+='</tr>';
+  });
+  heatH+='</tbody></table></div>';
+
+  const ins=generateSoyEoyInsights(soySubject,soyGrade);
+  let insH='';
+  if(ins.length>0){insH='<div class="insights"><div class="insights-title">SOY \u2192 EOY insights: '+soySubject+', '+soyGrade+'</div>';ins.forEach(i=>{insH+='<div class="insight-item '+i.type+'">'+i.text+'</div>';});insH+='</div>';}
+  document.getElementById('soyHeatInsights').innerHTML=heatH+insH;
+}
+
+/* ── YOY CHANGE ───────────────────────────────────────────────────────── */
+// Neutral purple scale: both +ve and -ve get purple shading; darker = bigger absolute change
+function heatNeutralPurple(val,max){
+  if(val===null||val===undefined)return{bg:'#f5f5f5',text:'#bbb'};
+  const t=Math.max(0,Math.min(1,Math.abs(val)/max));
+  const r=Math.round(238+(107-238)*t),g=Math.round(237+(77-237)*t),b=Math.round(254+(170-254)*t);
+  return{bg:'rgb('+r+','+g+','+b+')',text:t>0.5?'#fff':'#3c2870'};
+}
+
+function renderYoyChange(){
+  destroyCharts();const el=document.getElementById('content');
+  el.innerHTML='<div class="toggle-row" id="yoySubj" style="margin-bottom:20px"></div><div id="yoyBody"></div>';
+  ['English','Maths'].forEach(s=>{const btn=document.createElement('button');btn.textContent=s;if(yoySubject===s)btn.style.cssText='background:#6B4DAA;color:#fff;font-weight:600;border-color:#6B4DAA';btn.addEventListener('click',()=>{yoySubject=s;renderYoyChange();});document.getElementById('yoySubj').appendChild(btn);});
+
+  const body=document.getElementById('yoyBody');
+
+  // L1 Drop heatmap (purple = improved, red = declined — existing logic)
+  const buildL1Heatmap=()=>{
+    let h='<div class="heatmap-wrap" style="margin-bottom:20px"><div class="heatmap-title">L1 Drop — Year over Year Change ('+yoySubject+') &nbsp;·&nbsp; darker purple = bigger improvement &nbsp; red = declined</div>';
+    h+='<table class="heatmap-table"><thead><tr><th>Vertical</th>';
+    allGrades.forEach(g=>{h+='<th>'+g.replace('Grade ','G')+'</th>';});
+    h+='</tr></thead><tbody>';
+    verticals.forEach(v=>{
+      h+='<tr><td>'+vShort[v]+'</td>';
+      allGrades.forEach(g=>{
+        const d24=getData(v,yoySubject,g,'2024-25'),d25=getData(v,yoySubject,g,'2025-26');
+        if(!d24||!d25){h+='<td class="none">—</td>';return;}
+        const val24=d24.SOY[0]-d24.EOY[0],val25=d25.SOY[0]-d25.EOY[0],chg=val25-val24;
+        const c=chg>0?heatGreenScale(chg,30):chg<0?heatRedScale(-chg,30):{bg:'#f5f5f5',text:'#999'};
+        const arrow=chg>0?'\u25B2 +'+chg:chg<0?'\u25BC '+chg:'\u2014';
+        h+='<td style="background:'+c.bg+';color:'+c.text+';line-height:1.5;cursor:default" title="24-25: '+val24+' | 25-26: '+val25+'">';
+        h+='<div style="font-size:12px;font-weight:700">'+arrow+'</div>';
+        h+='<div style="font-size:9px;opacity:0.75">'+val24+' \u2192 '+val25+'</div>';
+        h+='</td>';
+      });
+      h+='</tr>';
+    });
+    h+='</tbody></table></div>';return h;
+  };
+
+  // L2 / L3 / L4 EOY change heatmap — neutral purple, no gain/loss framing
+  const buildLevelHeatmap=(lvlIdx,lvlName)=>{
+    let h='<div class="heatmap-wrap" style="margin-bottom:20px"><div class="heatmap-title">'+lvlName+' EOY % — Year over Year Change ('+yoySubject+') &nbsp;·&nbsp; darker = bigger change</div>';
+    h+='<table class="heatmap-table"><thead><tr><th>Vertical</th>';
+    allGrades.forEach(g=>{h+='<th>'+g.replace('Grade ','G')+'</th>';});
+    h+='</tr></thead><tbody>';
+    verticals.forEach(v=>{
+      h+='<tr><td>'+vShort[v]+'</td>';
+      allGrades.forEach(g=>{
+        const d24=getData(v,yoySubject,g,'2024-25'),d25=getData(v,yoySubject,g,'2025-26');
+        if(!d24||!d25){h+='<td class="none">—</td>';return;}
+        const val24=d24.EOY[lvlIdx],val25=d25.EOY[lvlIdx],chg=val25-val24;
+        const c=heatNeutralPurple(chg,30);
+        const arrow=chg>0?'+'+chg:chg<0?''+chg:'\u2014';
+        h+='<td style="background:'+c.bg+';color:'+c.text+';line-height:1.5;cursor:default" title="24-25 EOY: '+val24+'% | 25-26 EOY: '+val25+'%">';
+        h+='<div style="font-size:12px;font-weight:700">'+arrow+'</div>';
+        h+='<div style="font-size:9px;opacity:0.75">'+val24+' \u2192 '+val25+'</div>';
+        h+='</td>';
+      });
+      h+='</tr>';
+    });
+    h+='</tbody></table></div>';return h;
+  };
+
+  // L3+L4 growth heatmap — same green/red theme as L1 drop
+  const buildL34Heatmap=()=>{
+    let h='<div class="heatmap-wrap" style="margin-bottom:20px"><div class="heatmap-title">L3+L4 Growth — Year over Year Change ('+yoySubject+') &nbsp;·&nbsp; green = grew &nbsp; red = declined</div>';
+    h+='<table class="heatmap-table"><thead><tr><th>Vertical</th>';
+    allGrades.forEach(g=>{h+='<th>'+g.replace('Grade ','G')+'</th>';});
+    h+='</tr></thead><tbody>';
+    verticals.forEach(v=>{
+      h+='<tr><td>'+vShort[v]+'</td>';
+      allGrades.forEach(g=>{
+        const d24=getData(v,yoySubject,g,'2024-25'),d25=getData(v,yoySubject,g,'2025-26');
+        if(!d24||!d25){h+='<td class="none">—</td>';return;}
+        const val24=(d24.EOY[2]+d24.EOY[3]),val25=(d25.EOY[2]+d25.EOY[3]),chg=val25-val24;
+        const c=chg>0?heatGreenScale(chg,30):chg<0?heatRedScale(-chg,30):{bg:'#f5f5f5',text:'#999'};
+        const arrow=chg>0?'\u25B2 +'+chg:chg<0?'\u25BC '+chg:'\u2014';
+        h+='<td style="background:'+c.bg+';color:'+c.text+';line-height:1.5;cursor:default" title="24-25 EOY L3+L4: '+val24+'% | 25-26 EOY L3+L4: '+val25+'%">';
+        h+='<div style="font-size:12px;font-weight:700">'+arrow+'</div>';
+        h+='<div style="font-size:9px;opacity:0.75">'+val24+' \u2192 '+val25+'</div>';
+        h+='</td>';
+      });
+      h+='</tr>';
+    });
+    h+='</tbody></table></div>';return h;
+  };
+
+  body.innerHTML=
+    '<p style="font-size:12px;color:#aaa;text-align:center;margin-bottom:16px">Each cell shows the year-over-year change (25-26 minus 24-25). Hover for raw values. — = no data.</p>'+
+    buildL1Heatmap()+
+    buildL34Heatmap()+
+    buildLevelHeatmap(1,'L2')+
+    buildLevelHeatmap(2,'L3')+
+    buildLevelHeatmap(3,'L4');
+}
+
+/* ── SCORECARD ────────────────────────────────────────────────────────── */
+function renderScorecard(){
+  destroyCharts();const body=document.getElementById('content');
+
+  // Compute overall stats
+  let totalCombos=0,improvedCombos=0,sumChg=0,countChg=0;
+  ['English','Maths'].forEach(s=>{verticals.forEach(v=>{ALL_DATA[v].grades.forEach(g=>{const d24=getData(v,s,g,'2024-25'),d25=getData(v,s,g,'2025-26');if(!d24||!d25)return;totalCombos++;const chg=(d25.SOY[0]-d25.EOY[0])-(d24.SOY[0]-d24.EOY[0]);if(chg>0)improvedCombos++;sumChg+=chg;countChg++;});});});
+  const avgChg=countChg>0?(sumChg/countChg).toFixed(1):0;
+  const impPct=totalCombos>0?Math.round(improvedCombos/totalCombos*100):0;
+
+  const badge=(val)=>{const cls=val>0?'up':val<0?'down':'flat';const txt=val>0?'\u25B2 +'+val:val<0?'\u25BC '+val:'\u2014';return'<span class="metric-badge '+cls+'">'+txt+'</span>';};
+  const metRow=(label,v24,v25,trend)=>'<div class="metric-row"><div class="metric-label">'+label+'</div><div class="metric-values"><span class="metric-prev">'+v24+'%</span><span style="color:#ddd;font-size:11px;margin:0 2px"> \u2192 </span><span class="metric-curr">'+v25+'%</span>'+badge(trend)+'</div></div>';
+
+  let html='<div class="summary-banner">';
+  html+='<div><div class="summary-stat-val">'+totalCombos+'</div><div class="summary-stat-label">Grade × Vertical combos</div></div>';
+  html+='<div><div class="summary-stat-val">'+impPct+'%</div><div class="summary-stat-label">Improved L1 drop YoY</div></div>';
+  html+='<div><div class="summary-stat-val">'+(avgChg>0?'+':'')+avgChg+'</div><div class="summary-stat-label">Avg L1 drop change (pts)</div></div>';
+  html+='<div><div class="summary-stat-val">4</div><div class="summary-stat-label">Verticals tracked</div></div>';
+  html+='</div>';
+
+  ['English','Maths'].forEach(subject=>{
+    html+='<div class="scorecard-section-label">'+subject+'</div><div class="scorecard-grid">';
+    verticals.forEach(v=>{
+      if(!ALL_DATA[v][subject])return;
+      const valid=ALL_DATA[v].grades.filter(g=>getData(v,subject,g,'2024-25')&&getData(v,subject,g,'2025-26'));
+      if(!valid.length)return;
+      let sL1d24=0,sL1d25=0,sL34g24=0,sL34g25=0,bestG='',bestGVal=-999,worstG='',worstGVal=999;
+      valid.forEach(g=>{
+        const d24=getData(v,subject,g,'2024-25'),d25=getData(v,subject,g,'2025-26');
+        const l1d24=d24.SOY[0]-d24.EOY[0],l1d25=d25.SOY[0]-d25.EOY[0];
+        const l34g24=(d24.EOY[2]+d24.EOY[3])-(d24.SOY[2]+d24.SOY[3]);
+        const l34g25=(d25.EOY[2]+d25.EOY[3])-(d25.SOY[2]+d25.SOY[3]);
+        sL1d24+=l1d24;sL1d25+=l1d25;sL34g24+=l34g24;sL34g25+=l34g25;
+        const chg=l1d25-l1d24;
+        if(chg>bestGVal){bestGVal=chg;bestG=g;}
+        if(chg<worstGVal){worstGVal=chg;worstG=g;}
+      });
+      const n=valid.length;
+      const aL1d24=Math.round(sL1d24/n),aL1d25=Math.round(sL1d25/n);
+      const aL34g24=Math.round(sL34g24/n),aL34g25=Math.round(sL34g25/n);
+      const l1t=aL1d25-aL1d24,l34t=aL34g25-aL34g24;
+      html+='<div class="scorecard-card">';
+      html+='<div class="scorecard-card-title">'+vShort[v]+'<span style="font-size:11px;font-weight:400;color:#aaa;margin-left:8px">'+n+' grade'+(n>1?'s':'')+'</span></div>';
+      html+=metRow('Avg L1 Drop',aL1d24,aL1d25,l1t);
+      html+=metRow('Avg L3+L4 Gain',aL34g24,aL34g25,l34t);
+      html+='<div style="font-size:11px;color:#aaa;margin-top:10px;padding-top:8px;border-top:1px solid #f0f0f0;display:flex;justify-content:space-between">';
+      if(bestG)html+='<span>Most improved: <strong style="color:#6B4DAA">'+bestG+'</strong> <span style="color:#0F6E56">(\u25B2+'+(bestGVal>0?bestGVal:0)+' pts)</span></span>';
+      if(worstG&&worstGVal<0)html+='<span>Declined: <strong style="color:#6B4DAA">'+worstG+'</strong> <span style="color:#E24B4A">(\u25BC'+Math.abs(worstGVal)+' pts)</span></span>';
+      html+='</div></div>';
+    });
+    html+='</div>';
+  });
+  body.innerHTML=html;
+}
+
+/* ── PER-VERTICAL DETAIL ──────────────────────────────────────────────── */
+const deltaPlugin={id:'deltaAbove',afterDraw(chart){const ctx=chart.ctx,m0=chart.getDatasetMeta(0),m1=chart.getDatasetMeta(1),s=chart.data.datasets[0].data,e=chart.data.datasets[1].data;ctx.save();ctx.textAlign='center';ctx.textBaseline='bottom';ctx.font='bold 12px -apple-system,sans-serif';ctx.fillStyle=deltaC;for(let i=0;i<s.length;i++){const d=e[i]-s[i];if(d===0&&s[i]===0)continue;const cx=(m0.data[i].x+m1.data[i].x)/2,ty=Math.min(m0.data[i].y,m1.data[i].y);ctx.fillText(d>0?'\u25B2 +'+d:d<0?'\u25BC '+d:'-',cx,ty-10);}ctx.restore();}};
+
+function renderVertical(vName){
+  destroyCharts();const el=document.getElementById('content');
+  el.innerHTML='<div class="toggle-row" id="detSubj"></div><div class="toggle-row" id="detGr" style="margin-bottom:14px"></div><div id="detLegend"></div><div id="detBody"></div>';
+  const vData=ALL_DATA[vName],gr=vData.grades,th=themes[detailSubject];
+  const availSubjects=['English','Maths'].filter(s=>vData[s]&&Object.keys(vData[s]).length>0);
+  if(!availSubjects.includes(detailSubject))detailSubject=availSubjects[0];
+  availSubjects.forEach(s=>{const btn=document.createElement('button');btn.textContent=s;if(detailSubject===s)btn.style.cssText='background:#6B4DAA;color:#fff;font-weight:600;border-color:#6B4DAA';btn.addEventListener('click',()=>{detailSubject=s;renderVertical(vName);});document.getElementById('detSubj').appendChild(btn);});
+  gr.forEach(g=>{const btn=document.createElement('button');btn.textContent=g;if(detailGrade===g)btn.style.cssText='background:'+th.tabActive+';color:#fff;font-weight:600;border-color:'+th.tabActive;btn.addEventListener('click',()=>{detailGrade=g;renderVertical(vName);});document.getElementById('detGr').appendChild(btn);});
+  if(!vData[detailSubject][detailGrade]){detailGrade=gr[0];renderVertical(vName);return;}
+  document.getElementById('detLegend').innerHTML='<div class="legend"><span><span class="dot" style="background:'+th.soy+'"></span> SOY</span><span><span class="dot" style="background:'+th.eoy+'"></span> EOY</span><span style="font-weight:700;color:'+deltaC+'">\u25B2\u25BC Change</span></div>';
+  const years=vData[detailSubject][detailGrade];const card=document.createElement('div');card.className='card';
+  const row=document.createElement('div');row.className='year-row';
+  ['2024-25','2025-26'].forEach(year=>{const panel=document.createElement('div');const yl=document.createElement('div');yl.className='year-label';yl.textContent=year;panel.appendChild(yl);const cw=document.createElement('div');cw.className='canvas-wrap';const cv=document.createElement('canvas');cw.appendChild(cv);panel.appendChild(cw);row.appendChild(panel);
+  const sD=years[year].SOY,eD=years[year].EOY;
+  const c=new Chart(cv,{type:'bar',data:{labels:levels,datasets:[{label:'SOY',data:sD,backgroundColor:th.soy,borderWidth:0,borderRadius:4,barPercentage:.8,categoryPercentage:.6},{label:'EOY',data:eD,backgroundColor:th.eoy,borderWidth:0,borderRadius:4,barPercentage:.8,categoryPercentage:.6}]},plugins:[deltaPlugin],options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:36}},plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+ctx.raw+'%'}},datalabels:{anchor:'end',align:'start',offset:2,clip:true,font:{size:10,weight:'600'},formatter:v=>v>=8?v+'%':'',color:ctx=>ctx.datasetIndex===0?th.soyLabel:th.eoyLabel}},scales:{x:{ticks:{color:'#333',font:{size:15,weight:'600'}},grid:{display:false}},y:{max:110,ticks:{color:'#999',callback:v=>v<=100?v+'%':'',font:{size:12},stepSize:25},grid:{color:'rgba(0,0,0,0.06)'}}}}});charts.push(c);});
+  card.appendChild(row);card.appendChild(Object.assign(document.createElement('div'),{className:'divider'}));
+  const tWrap=document.createElement('div');tWrap.className='table-row';
+  ['2024-25','2025-26'].forEach(year=>{const d=years[year],col=document.createElement('div');const yl=document.createElement('div');yl.className='table-year';yl.textContent=year;col.appendChild(yl);const tbl=document.createElement('table');const thead=document.createElement('thead'),hr=document.createElement('tr');['','SOY','EOY','Change'].forEach(h=>{const t=document.createElement('th');t.textContent=h;hr.appendChild(t);});thead.appendChild(hr);tbl.appendChild(thead);const tbody=document.createElement('tbody');levels.forEach((lv,i)=>{const tr=document.createElement('tr'),delta=d.EOY[i]-d.SOY[i];[{text:lv},{text:d.SOY[i]+'%'},{text:d.EOY[i]+'%'},{text:(delta===0&&d.SOY[i]===0)?'-':(delta>0?'\u25B2 +'+delta:(delta<0?'\u25BC '+delta:'-')),cls:'delta'}].forEach(c=>{const td=document.createElement('td');td.textContent=c.text;if(c.cls)td.className=c.cls;tr.appendChild(td);});tbody.appendChild(tr);});tbl.appendChild(tbody);col.appendChild(tbl);tWrap.appendChild(col);});
+  card.appendChild(tWrap);document.getElementById('detBody').appendChild(card);
+}
+
+/* ── RENDER & NAV ─────────────────────────────────────────────────────── */
+function render(){
+  updateNav();
+  if(currentView==='OneView')renderOneView();
+  else if(currentView==='SoyEoy')renderSoyEoy();
+  else if(currentView==='YoYChange')renderYoyChange();
+  else if(currentView==='Scorecard')renderScorecard();
+  else renderVertical(currentView);
+}
+
+function buildNav(){
+  const navEl=document.getElementById('mainNav');navEl.innerHTML='';
+  const items=[
+    {key:'SoyEoy',label:'SOY \u2192 EOY'},
+    {key:'YoYChange',label:'YoY Change'},
+    ...verticals.filter(v=>v!=='HYD Govt - GP').map(v=>({key:v,label:v}))
+  ];
+  items.forEach(({key,label})=>{
+    const btn=document.createElement('button');
+    btn.textContent=label;btn.dataset.view=key;
+    btn.addEventListener('click',()=>{
+      currentView=key;
+      if(!['OneView','SoyEoy','YoYChange','Scorecard'].includes(key))detailGrade=ALL_DATA[key].grades[0];
+      render();
+    });
+    navEl.appendChild(btn);
+  });
+}
+
+buildNav();currentView='SoyEoy';render();
+</script>
+</body>
+</html>

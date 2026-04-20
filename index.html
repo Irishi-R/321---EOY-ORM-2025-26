@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>321 April ORM Dashboards</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cream: #F7F5F0;
+  --white: #FFFFFF;
+  --ink: #111111;
+  --ink-light: #555555;
+  --ink-muted: #999999;
+  --rule: #E5E2DC;
+  --accent-blue: #1A5FA8;
+  --accent-blue-pale: #EBF2FB;
+  --accent-green: #0D6B50;
+  --accent-green-pale: #E8F5EF;
+  --accent-amber: #C47A1A;
+  --shadow-soft: 0 2px 12px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
+  --shadow-hover: 0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06);
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Geist', -apple-system, sans-serif;
+  background: var(--cream);
+  color: var(--ink);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── GRAIN TEXTURE ─────────────────────── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── LAYOUT ────────────────────────────── */
+.wrapper {
+  position: relative;
+  z-index: 1;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+/* ── HEADER ────────────────────────────── */
+header {
+  padding: 56px 0 0;
+}
+
+.header-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 32px;
+  opacity: 0;
+  animation: rise 0.7s 0.1s ease forwards;
+}
+
+.dot-cluster {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.dot-cluster span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-amber);
+  opacity: 0.6;
+}
+
+.dot-cluster span:nth-child(2) { opacity: 0.4; }
+.dot-cluster span:nth-child(3) { opacity: 0.2; }
+
+.header-tag {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.header-rule {
+  border: none;
+  border-top: 1px solid var(--rule);
+  margin: 0 0 48px;
+  opacity: 0;
+  animation: rise 0.7s 0.15s ease forwards;
+}
+
+.title-block {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 24px;
+  margin-bottom: 20px;
+  opacity: 0;
+  animation: rise 0.7s 0.2s ease forwards;
+}
+
+h1 {
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(38px, 5.5vw, 60px);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+
+h1 em {
+  font-style: normal;
+  color: var(--accent-blue);
+}
+
+.header-stats {
+  display: flex;
+  gap: 24px;
+  padding-bottom: 6px;
+}
+
+.stat {
+  text-align: right;
+}
+
+.stat-val {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1;
+  display: block;
+}
+
+.stat-label {
+  font-size: 10px;
+  color: var(--ink-muted);
+  letter-spacing: 0.5px;
+  margin-top: 3px;
+  display: block;
+}
+
+.header-desc {
+  font-size: 15px;
+  color: var(--ink-light);
+  font-weight: 400;
+  line-height: 1.7;
+  max-width: 520px;
+  margin-bottom: 52px;
+  opacity: 0;
+  animation: rise 0.7s 0.3s ease forwards;
+}
+
+/* ── DIVIDER ───────────────────────────── */
+.section-divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 28px;
+  opacity: 0;
+  animation: rise 0.7s 0.35s ease forwards;
+}
+
+.section-divider-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+.section-divider-line {
+  flex: 1;
+  height: 1px;
+  background: var(--rule);
+}
+
+/* ── CARDS ─────────────────────────────── */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-bottom: 64px;
+}
+
+.card.cls::before { background: linear-gradient(90deg, #7B4FAA, #A97DD4, #CDB8EA); }
+.card.cls .card-bg { background: #7B4FAA; }
+.card.cls .card-badge { background: #F3EEF9; color: #7B4FAA; }
+.card.cls .card-cta { color: #7B4FAA; }
+.card.cls .card-cta-arrow { background: #F3EEF9; color: #7B4FAA; }
+.card:nth-child(3) { animation: rise 0.7s 0.6s ease forwards; }
+.card.tcb::before { background: linear-gradient(90deg, #0D6B50, #1D9E75, #5FC9A0); }
+.card.tcb .card-bg { background: #0D6B50; }
+.card.tcb .card-badge { background: #E8F5EF; color: #0D6B50; }
+.card.tcb .card-cta { color: #0D6B50; }
+.card.tcb .card-cta-arrow { background: #E8F5EF; color: #0D6B50; }
+.card:nth-child(4) { animation: rise 0.7s 0.7s ease forwards; }
+
+.card {
+  position: relative;
+  background: var(--white);
+  border: 1px solid var(--rule);
+  border-radius: 20px;
+  padding: 36px 32px 28px;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: var(--shadow-soft);
+  transition: box-shadow 0.35s ease, transform 0.35s ease, border-color 0.35s ease;
+  opacity: 0;
+}
+
+.card:nth-child(1) { animation: rise 0.7s 0.4s ease forwards; }
+.card:nth-child(2) { animation: rise 0.7s 0.5s ease forwards; }
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+  border-color: #D5D0C8;
+}
+
+/* Corner accent stripe */
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  border-radius: 20px 20px 0 0;
+  transition: opacity 0.3s ease;
+}
+
+.card.slg::before { background: linear-gradient(90deg, #1A5FA8, #4B8FD4, #7BBCE8); }
+.card.sda::before { background: linear-gradient(90deg, #0D6B50, #1D9E75, #5FC9A0); }
+
+/* Background geometric accent */
+.card-bg {
+  position: absolute;
+  bottom: -20px;
+  right: -20px;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  opacity: 0.035;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.card.slg .card-bg { background: #1A5FA8; }
+.card.sda .card-bg { background: #0D6B50; }
+.card:hover .card-bg { opacity: 0.06; transform: scale(1.1); }
+
+/* Card internals */
+.card-eyebrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.card-badge {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  border-radius: 100px;
+}
+
+.card.slg .card-badge { background: var(--accent-blue-pale); color: var(--accent-blue); }
+.card.sda .card-badge { background: var(--accent-green-pale); color: var(--accent-green); }
+
+.card-index {
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  color: var(--ink-muted);
+  font-weight: 500;
+}
+
+.card-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+
+.card-subtitle {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-muted);
+  margin-bottom: 16px;
+  letter-spacing: 0.2px;
+}
+
+.card-desc {
+  font-size: 13.5px;
+  color: var(--ink-light);
+  line-height: 1.75;
+  flex: 1;
+  font-weight: 400;
+}
+
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--rule);
+}
+
+.card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.card-tag {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 100px;
+  background: var(--cream);
+  color: var(--ink-muted);
+  letter-spacing: 0.2px;
+  border: 1px solid var(--rule);
+}
+
+.card-cta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  transition: gap 0.2s ease;
+  white-space: nowrap;
+}
+
+.card.slg .card-cta { color: var(--accent-blue); }
+.card.sda .card-cta { color: var(--accent-green); }
+.card:hover .card-cta { gap: 10px; }
+
+.card-cta-arrow {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.card.slg .card-cta-arrow { background: var(--accent-blue-pale); color: var(--accent-blue); }
+.card.sda .card-cta-arrow { background: var(--accent-green-pale); color: var(--accent-green); }
+.card:hover .card-cta-arrow { transform: translateX(2px); }
+
+/* ── FOOTER ────────────────────────────── */
+footer {
+  border-top: 1px solid var(--rule);
+  padding: 28px 0 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  opacity: 0;
+  animation: rise 0.7s 0.6s ease forwards;
+}
+
+.footer-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.footer-logo {
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.footer-sep { width: 1px; height: 14px; background: var(--rule); }
+
+.footer-note {
+  font-size: 11px;
+  color: var(--ink-muted);
+  letter-spacing: 0.2px;
+}
+
+.footer-right {
+  font-size: 11px;
+  color: var(--ink-muted);
+}
+
+/* ── ANIMATIONS ────────────────────────── */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── RESPONSIVE ────────────────────────── */
+@media (max-width: 680px) {
+  .wrapper { padding: 0 20px; }
+  header { padding: 36px 0 0; }
+  .title-block { grid-template-columns: 1fr; gap: 16px; }
+  .header-stats { justify-content: flex-start; }
+  .stat { text-align: left; }
+  .cards { grid-template-columns: 1fr; }
+  .card { padding: 28px 24px 22px; }
+  .card-title { font-size: 24px; }
+  footer { flex-direction: column; gap: 12px; align-items: flex-start; }
+}
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-meta">
+      <div class="dot-cluster">
+        <span></span><span></span><span></span>
+      </div>
+      <span class="header-tag">ORM Dashboards · April 2026</span>
+    </div>
+
+    <hr class="header-rule">
+
+    <div class="title-block">
+      <h1>321 April<br><em>ORM Dashboards</em></h1>
+      <div class="header-stats">
+        <div class="stat">
+          <span class="stat-val">4</span>
+          <span class="stat-label">Reports</span>
+        </div>
+        <div class="stat">
+          <span class="stat-val">8</span>
+          <span class="stat-label">Grades</span>
+        </div>
+        <div class="stat">
+          <span class="stat-val">2</span>
+          <span class="stat-label">Years</span>
+        </div>
+      </div>
+    </div>
+
+  <!-- SECTION LABEL -->
+  <div class="section-divider">
+    <span class="section-divider-label">Reports</span>
+    <div class="section-divider-line"></div>
+  </div>
+
+  <!-- CARDS -->
+  <div class="cards">
+
+    <a class="card slg" href="student_learning_growth.html">
+      <div class="card-bg"></div>
+      <div class="card-eyebrow">
+        <span class="card-badge">2-Year View</span>
+        <span class="card-index">01</span>
+      </div>
+      <div class="card-title">Student Learning Growth</div>
+      <div class="card-subtitle">2024–25 &nbsp;vs&nbsp; 2025–26</div>
+      <p class="card-desc">
+        Compare EOY distributions across verticals, track SOY to EOY movement for both years side by side, and explore year-over-year changes with full grade and vertical breakdowns.
+      </p>
+      <div class="card-footer">
+        <div class="card-tags">
+          <span class="card-tag">EOY Comparison</span>
+          <span class="card-tag">YoY Change</span>
+          <span class="card-tag">Scorecard</span>
+        </div>
+        <div class="card-cta">
+          Open
+          <div class="card-cta-arrow">→</div>
+        </div>
+      </div>
+    </a>
+
+    <a class="card sda" href="student_data_analysis_2025_26.html">
+      <div class="card-bg"></div>
+      <div class="card-eyebrow">
+        <span class="card-badge">Current Year</span>
+        <span class="card-index">02</span>
+      </div>
+      <div class="card-title">Student Data Analysis</div>
+      <div class="card-subtitle">2025–26</div>
+      <p class="card-desc">
+        Deep dive into this year's SOY to EOY movement across all verticals. Track L1 reduction, L3+L4 growth, and identify where students are progressing fastest.
+      </p>
+      <div class="card-footer">
+        <div class="card-tags">
+          <span class="card-tag">SOY to EOY</span>
+          <span class="card-tag">Movement</span>
+          <span class="card-tag">Heatmaps</span>
+        </div>
+        <div class="card-cta">
+          Open
+          <div class="card-cta-arrow">→</div>
+        </div>
+      </div>
+    </a>
+
+    <a class="card cls" href="classroom_observation.html">
+      <div class="card-bg"></div>
+      <div class="card-eyebrow">
+        <span class="card-badge">Observation</span>
+        <span class="card-index">03</span>
+      </div>
+      <div class="card-title">Classroom Observation</div>
+      <div class="card-subtitle">2025–26</div>
+      <p class="card-desc">
+        Explore SOY to EOY shifts in classroom observation metrics across verticals. Compare CFU, practice time, student engagement, and teaching quality indicators.
+      </p>
+      <div class="card-footer">
+        <div class="card-tags">
+          <span class="card-tag">SOY → EOY</span>
+          <span class="card-tag">5 Verticals</span>
+          <span class="card-tag">Cross-Compare</span>
+        </div>
+        <div class="card-cta">
+          Open
+          <div class="card-cta-arrow">→</div>
+        </div>
+      </div>
+    </a>
+
+    <a class="card tcb" href="tcb_student_learning.html">
+      <div class="card-bg"></div>
+      <div class="card-eyebrow">
+        <span class="card-badge">TCB</span>
+        <span class="card-index">04</span>
+      </div>
+      <div class="card-title">TCB - Student Learning</div>
+      <div class="card-subtitle">HYD Govt - GP · 2024–26</div>
+      <p class="card-desc">
+        Two-year learning outcomes for HYD Govt - GP across English and Maths. Track SOY to EOY movement, year-over-year changes and grade-level performance.
+      </p>
+      <div class="card-footer">
+        <div class="card-tags">
+          <span class="card-tag">SOY → EOY</span>
+          <span class="card-tag">YoY Change</span>
+          <span class="card-tag">Grades 2–5</span>
+        </div>
+        <div class="card-cta">
+          Open
+          <div class="card-cta-arrow">→</div>
+        </div>
+      </div>
+    </a>
+
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-left">
+      <span class="footer-logo">321 April ORM Dashboards</span>
+      <div class="footer-sep"></div>
+      <span class="footer-note">English &amp; Maths &nbsp;·&nbsp; Grades 1–8 &nbsp;·&nbsp; 5 Verticals</span>
+    </div>
+    <span class="footer-right">2024–26 Academic Years</span>
+  </footer>
+
+</div>
+</body>
+</html>

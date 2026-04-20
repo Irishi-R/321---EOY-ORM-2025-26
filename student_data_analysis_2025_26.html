@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Data Analysis - 2025-26</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#fff;color:#1a1a1a;padding:32px 24px;max-width:1100px;margin:0 auto}
+h1{font-size:26px;font-weight:600;text-align:center;margin-bottom:4px}
+.subtitle{font-size:15px;color:#777;text-align:center;margin-bottom:20px}
+.nav{display:flex;justify-content:center;flex-wrap:wrap;gap:0;margin-bottom:20px}
+.nav button{padding:11px 18px;font-size:13px;font-weight:400;border:1px solid #ccc;background:#f0f0f0;color:#666;cursor:pointer;transition:all .15s}
+.nav button:first-child{border-radius:8px 0 0 8px}
+.nav button:last-child{border-radius:0 8px 8px 0}
+.nav button:not(:first-child):not(:last-child){border-radius:0}
+.nav button.active{background:#333;color:#fff;font-weight:600;border-color:#333}
+.toggle-row{display:flex;justify-content:center;flex-wrap:wrap;gap:0;margin-bottom:14px}
+.toggle-row button{padding:10px 22px;font-size:13px;font-weight:400;border:1px solid #ccc;background:#f0f0f0;color:#666;cursor:pointer;transition:all .15s}
+.toggle-row button:first-child{border-radius:8px 0 0 8px}
+.toggle-row button:last-child{border-radius:0 8px 8px 0}
+.toggle-row button:not(:first-child):not(:last-child){border-radius:0}
+.legend{display:flex;justify-content:center;gap:24px;margin-bottom:20px;font-size:13px;color:#555}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend .dot{width:12px;height:12px;border-radius:3px;display:inline-block}
+.card{background:#f8f8f8;border:1px solid #e0e0e0;border-radius:14px;padding:24px 20px 20px;margin-bottom:20px}
+.year-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.year-label{font-size:15px;font-weight:600;text-align:center;margin-bottom:10px;color:#777}
+.canvas-wrap{position:relative;width:100%;height:300px}
+.divider{border-top:1px solid #ddd;margin:20px 0 8px}
+.table-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin-top:4px}
+.table-year{font-size:13px;font-weight:600;text-align:center;margin-bottom:6px;color:#777}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{padding:8px 10px;font-weight:600;font-size:12px;background:#eee;border-bottom:1px solid #ddd;color:#888}
+td{padding:7px 10px;border-bottom:1px solid #ddd;text-align:center}
+td:first-child{text-align:left;font-weight:600}
+.delta{font-weight:700;color:#6B4DAA}
+.section-title{font-size:14px;font-weight:600;color:#777;margin-bottom:10px;text-align:center}
+.side-by-side{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin-bottom:24px}
+.side-panel-title{font-size:14px;font-weight:600;color:#777;text-align:center;margin-bottom:10px}
+.horiz-bar-row{display:flex;align-items:center;margin-bottom:8px;gap:8px}
+.horiz-bar-label{width:100px;font-size:11px;font-weight:600;text-align:right;flex-shrink:0;color:#555}
+.horiz-bar-track{flex:1;height:24px;background:#f0f0f0;border-radius:5px;overflow:hidden;display:flex}
+.horiz-bar-seg{height:100%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:#fff;overflow:hidden}
+.horiz-bar-val{width:38px;font-size:11px;font-weight:700;color:#6B4DAA;text-align:left;flex-shrink:0}
+.insights{background:#f8f8f8;border:1px solid #e0e0e0;border-radius:14px;padding:22px 24px;margin-top:4px}
+.insights-title{font-size:14px;font-weight:600;color:#555;margin-bottom:14px}
+.insight-item{font-size:13px;line-height:1.7;color:#444;margin-bottom:8px;padding-left:18px;position:relative}
+.insight-item::before{content:'';position:absolute;left:0;top:8px;width:8px;height:8px;border-radius:50%}
+.insight-item.positive::before{background:#0F6E56}
+.insight-item.negative::before{background:#E24B4A}
+.insight-item.neutral::before{background:#6B4DAA}
+.insight-item strong{font-weight:600;color:#1a1a1a}
+#content{min-height:400px}
+.heatmap-wrap{background:#f8f8f8;border:1px solid #e0e0e0;border-radius:14px;padding:22px 24px;margin-top:20px}
+.heatmap-title{font-size:14px;font-weight:600;color:#555;margin-bottom:14px;text-align:center}
+.heatmap-table{width:100%;border-collapse:separate;border-spacing:3px;font-size:12px}
+.heatmap-table th{padding:8px 10px;font-weight:600;font-size:11px;color:#666;text-align:center;background:transparent;text-transform:uppercase;letter-spacing:.4px;border:none}
+.heatmap-table th:first-child{text-align:left}
+.heatmap-table td{padding:9px 10px;text-align:center;font-weight:600;border-radius:4px;color:#2a2a2a}
+.heatmap-table td:first-child{text-align:left;background:transparent;color:#333;font-weight:600;padding-left:0}
+.heatmap-table td.none{background:#f5f5f5;color:#bbb;font-weight:400}
+</style>
+</head>
+<body>
+<h1>Student Data Analysis</h1>
+<p class="subtitle">SOY to EOY Comparison (2025-26)</p>
+<div style="text-align:center;margin-bottom:12px"><a href="index.html" style="font-size:12px;color:#888;text-decoration:none;display:inline-flex;align-items:center;gap:4px">&larr; Back to Reports</a></div>
+<div class="nav" id="mainNav"></div>
+<div id="content"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+<script>
+Chart.register(ChartDataLabels);
+const ALL_DATA={'HYD Govt - GP':{grades:['Grade 2','Grade 3','Grade 4','Grade 5'],English:{'Grade 2':{'2024-25':{SOY:[100,0,0,0],EOY:[83,14,2,0]},'2025-26':{SOY:[95,5,0,0],EOY:[83,17,0,0]}},'Grade 3':{'2024-25':{SOY:[80,20,0,0],EOY:[51,28,20,0]},'2025-26':{SOY:[92,8,0,0],EOY:[72,27,0,0]}},'Grade 4':{'2024-25':{SOY:[77,19,4,0],EOY:[60,18,13,8]},'2025-26':{SOY:[81,17,1,0],EOY:[63,34,1,1]}},'Grade 5':{'2024-25':{SOY:[63,28,9,0],EOY:[51,24,11,14]},'2025-26':{SOY:[66,30,4,0],EOY:[44,47,3,6]}}},Maths:{'Grade 2':{'2024-25':{SOY:[93,10,1,0],EOY:[59,22,17,0]},'2025-26':{SOY:[97,3,0,0],EOY:[81,17,2,0]}},'Grade 3':{'2024-25':{SOY:[58,31,11,0],EOY:[32,20,48,0]},'2025-26':{SOY:[83,13,4,0],EOY:[61,18,21,0]}},'Grade 4':{'2024-25':{SOY:[55,29,10,5],EOY:[23,20,29,28]},'2025-26':{SOY:[80,16,5,0],EOY:[46,21,24,9]}},'Grade 5':{'2024-25':{SOY:[36,29,20,15],EOY:[16,16,19,51]},'2025-26':{SOY:[69,17,14,0],EOY:[34,21,10,35]}}}},'Foundations':{grades:['Grade 2','Grade 3','Grade 4','Grade 5','Grade 6','Grade 7','Grade 8'],English:{'Grade 2':{'2024-25':{SOY:[55,28,17,0],EOY:[35,33,32,0]},'2025-26':{SOY:[71,25,4,0],EOY:[37,45,18,0]}},'Grade 3':{'2024-25':{SOY:[50,31,19,0],EOY:[28,25,31,17]},'2025-26':{SOY:[64,23,13,0],EOY:[30,43,26,2]}},'Grade 4':{'2024-25':{SOY:[34,24,21,20],EOY:[20,22,26,32]},'2025-26':{SOY:[55,27,18,1],EOY:[27,31,24,17]}},'Grade 5':{'2024-25':{SOY:[28,22,24,27],EOY:[15,22,30,34]},'2025-26':{SOY:[47,29,16,8],EOY:[22,25,26,27]}},'Grade 6':{'2024-25':{SOY:[26,24,28,21],EOY:[14,19,25,43]},'2025-26':{SOY:[29,26,29,15],EOY:[18,22,29,32]}},'Grade 7':{'2024-25':{SOY:[17,23,39,21],EOY:[20,22,19,40]},'2025-26':{SOY:[28,27,26,19],EOY:[8,18,29,44]}},'Grade 8':{'2024-25':{SOY:[19,33,33,15],EOY:[19,22,26,32]},'2025-26':{SOY:[24,21,36,19],EOY:[3,20,27,50]}}},Maths:{'Grade 2':{'2024-25':{SOY:[43,35,22,0],EOY:[19,23,34,25]},'2025-26':{SOY:[67,27,6,0],EOY:[26,35,38,1]}},'Grade 3':{'2024-25':{SOY:[33,30,37,0],EOY:[17,21,51,11]},'2025-26':{SOY:[54,27,18,0],EOY:[17,25,55,3]}},'Grade 4':{'2024-25':{SOY:[19,27,26,28],EOY:[17,16,30,38]},'2025-26':{SOY:[49,22,22,7],EOY:[22,19,31,28]}},'Grade 5':{'2024-25':{SOY:[17,26,27,30],EOY:[15,9,16,59]},'2025-26':{SOY:[35,27,23,16],EOY:[18,16,31,35]}},'Grade 6':{'2024-25':{SOY:[20,23,29,28],EOY:[12,15,26,47]},'2025-26':{SOY:[12,22,39,26],EOY:[10,10,36,44]}},'Grade 7':{'2024-25':{SOY:[10,20,32,38],EOY:[21,12,16,51]},'2025-26':{SOY:[22,20,31,27],EOY:[3,13,23,60]}},'Grade 8':{'2024-25':{SOY:[10,18,32,39],EOY:[19,20,22,39]},'2025-26':{SOY:[35,19,9,37],EOY:[3,7,23,67]}}}},'AMC - Model':{grades:['Grade 2','Grade 3','Grade 4','Grade 5'],English:{'Grade 2':{'2024-25':{SOY:[80,11,9,0],EOY:[37,33,31,0]},'2025-26':{SOY:[64,35,2,0],EOY:[36,47,17,0]}},'Grade 3':{'2024-25':{SOY:[22,20,58,0],EOY:[36,36,28,0]},'2025-26':{SOY:[60,29,11,0],EOY:[15,67,17,0]}},'Grade 4':{'2024-25':{SOY:[37,33,21,10],EOY:[44,17,18,22]},'2025-26':{SOY:[34,50,9,8],EOY:[31,44,15,9]}},'Grade 5':{'2024-25':{SOY:[34,27,36,4],EOY:[45,29,10,16]},'2025-26':{SOY:[24,36,19,21],EOY:[21,38,23,18]}}},Maths:{'Grade 2':{'2024-25':{SOY:[41,10,48,0],EOY:[28,17,55,0]},'2025-26':{SOY:[53,39,8,0],EOY:[34,21,45,0]}},'Grade 3':{'2024-25':{SOY:[29,11,61,0],EOY:[19,14,68,0]},'2025-26':{SOY:[48,37,15,0],EOY:[7,30,63,0]}},'Grade 4':{'2024-25':{SOY:[22,12,25,41],EOY:[17,3,33,47]},'2025-26':{SOY:[35,52,14,0],EOY:[5,11,23,60]}},'Grade 5':{'2024-25':{SOY:[31,13,31,24],EOY:[15,6,35,44]},'2025-26':{SOY:[13,38,38,13],EOY:[6,7,14,74]}}}},'AMC - Non - Model':{grades:['Grade 2','Grade 3','Grade 4','Grade 5'],English:{'Grade 2':{'2024-25':{SOY:[40,28,32,0],EOY:[32,26,42,0]},'2025-26':{SOY:[53,35,12,0],EOY:[29,47,24,0]}},'Grade 3':{'2024-25':{SOY:[32,22,46,0],EOY:[22,30,48,0]},'2025-26':{SOY:[48,38,14,0],EOY:[26,39,35,0]}},'Grade 4':{'2024-25':{SOY:[34,27,30,9],EOY:[36,22,16,27]},'2025-26':{SOY:[33,36,15,15],EOY:[19,21,23,36]}},'Grade 5':{'2024-25':{SOY:[23,21,41,14],EOY:[22,22,13,42]},'2025-26':{SOY:[30,32,25,13],EOY:[15,27,21,37]}}},Maths:{'Grade 2':{'2024-25':{SOY:[26,10,64,0],EOY:[14,10,77,0]},'2025-26':{SOY:[34,37,27,2],EOY:[23,18,59,0]}},'Grade 3':{'2024-25':{SOY:[16,12,72,0],EOY:[9,10,81,1]},'2025-26':{SOY:[30,36,33,0],EOY:[17,21,62,0]}},'Grade 4':{'2024-25':{SOY:[13,11,40,36],EOY:[9,9,33,50]},'2025-26':{SOY:[24,27,34,15],EOY:[13,14,20,53]}},'Grade 5':{'2024-25':{SOY:[8,11,29,52],EOY:[6,6,24,64]},'2025-26':{SOY:[21,27,31,20],EOY:[7,8,14,71]}}}},
+'MTAR':{grades:['Grade 2','Grade 3','Grade 4','Grade 5'],English:{'Grade 2':{'2024-25':{SOY:[100,0,0,0],EOY:[100,0,0,0]},'2025-26':{SOY:[79,21,0,0],EOY:[7,77,6,0]}},'Grade 3':{'2024-25':{SOY:[98,2,0,0],EOY:[97,3,0,0]},'2025-26':{SOY:[63,37,0,0],EOY:[2,36,61,0]}},'Grade 4':{'2024-25':{SOY:[75,24,2,0],EOY:[76,19,4,2]},'2025-26':{SOY:[34,66,0,0],EOY:[3,31,40,26]}},'Grade 5':{'2024-25':{SOY:[74,11,15,0],EOY:[53,44,3,0]},'2025-26':{SOY:[38,62,0,0],EOY:[0,15,58,27]}}}}};
+const verticals=Object.keys(ALL_DATA).filter(v=>v!=='HYD Govt - GP');
+const vShort={'HYD Govt - GP':'HYD Govt','Foundations':'Foundations','AMC - Model':'AMC Model','AMC - Non - Model':'AMC Non-Model','MTAR':'MTAR'};
+const commonGrades=['Grade 2','Grade 3','Grade 4','Grade 5'];
+const levels=['L1','L2','L3','L4'];
+const themes={English:{soy:'#A8CBE8',eoy:'#185FA5',soyLabel:'#333',eoyLabel:'#fff',tabActive:'#185FA5'},Maths:{soy:'#9FE1CB',eoy:'#0F6E56',soyLabel:'#333',eoyLabel:'#fff',tabActive:'#0F6E56'}};
+const segC=['#E24B4A','#EF9F27','#3266ad','#1D9E75'];
+const deltaC='#6B4DAA';
+let currentView='Comparison',cmpSubject='English',cmpGrade='Grade 2',detailSubject='English',detailGrade='Grade 2',charts=[];
+
+function getData(v,s,g,y){const d=ALL_DATA[v][s];if(!d||!d[g]||!d[g][y])return null;return d[g][y];}
+function getL1Drop(v,s,g,y){const d=getData(v,s,g,y);return d?d.SOY[0]-d.EOY[0]:null;}
+function destroyCharts(){charts.forEach(c=>c.destroy());charts=[];}
+function updateNav(){document.querySelectorAll('#mainNav button').forEach(btn=>btn.classList.toggle('active',btn.dataset.view===currentView));}
+
+// Heatmap helpers
+// Color scales: returns bg color and text color based on value and scale type
+function heatRedScale(val, max) {
+  // Higher = worse (redder). max is the reference max.
+  if (val === null || val === undefined) return { bg: '#f5f5f5', text: '#bbb' };
+  const t = Math.max(0, Math.min(1, val / max));
+  // blend: light red #FCEBEB (t=0) to strong red #E24B4A (t=1)
+  const r = Math.round(252 + (226 - 252) * t);
+  const g = Math.round(235 + (75 - 235) * t);
+  const b = Math.round(235 + (74 - 235) * t);
+  const text = t > 0.55 ? '#fff' : '#7a1b1b';
+  return { bg: 'rgb('+r+','+g+','+b+')', text };
+}
+
+function heatPurpleScale(val, max) {
+  // Higher = better (more purple). For positive values only.
+  if (val === null || val === undefined) return { bg: '#f5f5f5', text: '#bbb' };
+  if (val <= 0) {
+    // Negative values get a muted red instead
+    const t = Math.min(1, Math.abs(val) / 20);
+    const r = Math.round(252 + (226 - 252) * t);
+    const g = Math.round(235 + (75 - 235) * t);
+    const b = Math.round(235 + (74 - 235) * t);
+    return { bg: 'rgb('+r+','+g+','+b+')', text: t > 0.55 ? '#fff' : '#7a1b1b' };
+  }
+  const t = Math.max(0, Math.min(1, val / max));
+  // blend: light purple #EEEDFE (t=0) to strong purple #6B4DAA (t=1)
+  const r = Math.round(238 + (107 - 238) * t);
+  const g = Math.round(237 + (77 - 237) * t);
+  const b = Math.round(254 + (170 - 254) * t);
+  const text = t > 0.5 ? '#fff' : '#3c2870';
+  return { bg: 'rgb('+r+','+g+','+b+')', text };
+}
+
+function heatGreenScale(val, max) {
+  if (val === null || val === undefined) return { bg: '#f5f5f5', text: '#bbb' };
+  if (val <= 0) {
+    const t = Math.min(1, Math.abs(val) / 20);
+    const r = Math.round(252 + (226 - 252) * t);
+    const g = Math.round(235 + (75 - 235) * t);
+    const b = Math.round(235 + (74 - 235) * t);
+    return { bg: 'rgb('+r+','+g+','+b+')', text: t > 0.55 ? '#fff' : '#7a1b1b' };
+  }
+  const t = Math.max(0, Math.min(1, val / max));
+  const r = Math.round(225 + (15 - 225) * t);
+  const g = Math.round(245 + (110 - 245) * t);
+  const b = Math.round(238 + (86 - 238) * t);
+  const text = t > 0.5 ? '#fff' : '#0a3d2d';
+  return { bg: 'rgb('+r+','+g+','+b+')', text };
+}
+
+function renderCell(val, scale, max, fmt) {
+  if (val === null || val === undefined) return '<td class="none">-</td>';
+  const c = scale(val, max);
+  const text = fmt ? fmt(val) : val;
+  return '<td style="background:'+c.bg+';color:'+c.text+'">'+text+'</td>';
+}
+
+function generateInsights(subject, grade) {
+  const insights = [];
+  const curYear = '2025-26', prevYear = '2024-25';
+
+  // Build metrics per vertical for 2025-26, with delta vs 2024-25
+  const data = {};
+  verticals.forEach(v => {
+    const dCur = getData(v, subject, grade, curYear);
+    const dPrev = getData(v, subject, grade, prevYear);
+    if (!dCur) return;
+    data[v] = {
+      l1drop: dCur.SOY[0] - dCur.EOY[0],
+      l1dropPrev: dPrev ? dPrev.SOY[0] - dPrev.EOY[0] : null,
+      l1eoy: dCur.EOY[0],
+      l1eoyPrev: dPrev ? dPrev.EOY[0] : null,
+      l34: dCur.EOY[2] + dCur.EOY[3],
+      l34Prev: dPrev ? dPrev.EOY[2] + dPrev.EOY[3] : null,
+      l4: dCur.EOY[3],
+      l4Prev: dPrev ? dPrev.EOY[3] : null
+    };
+  });
+
+  const available = Object.keys(data);
+  if (available.length === 0) return [];
+
+  // INSIGHT 1: Best performer this year
+  let bestV = null, bestVal = -999;
+  available.forEach(v => { if(data[v].l1drop > bestVal){ bestVal=data[v].l1drop; bestV=v; }});
+  if (bestV && bestVal > 0) {
+    const d = data[bestV];
+    let text = '<strong>'+vShort[bestV]+'</strong> is leading this year with <strong>'+bestVal+'%</strong> L1 reduction';
+    if (d.l1dropPrev !== null) {
+      const diff = d.l1drop - d.l1dropPrev;
+      if (diff > 0) text += ' (up from \u25BC'+d.l1dropPrev+' last year)';
+      else if (diff < 0) text += ' (down from \u25BC'+d.l1dropPrev+' last year)';
+      else text += ' (same as last year)';
+    }
+    text += '.';
+    insights.push({ type:'positive', text });
+  }
+
+  // INSIGHT 2: Year-over-year improvements
+  const improved = [];
+  const declined = [];
+  available.forEach(v => {
+    if (data[v].l1dropPrev === null) return;
+    const diff = data[v].l1drop - data[v].l1dropPrev;
+    if (diff >= 5) improved.push({ v, diff });
+    else if (diff <= -5) declined.push({ v, diff });
+  });
+
+  if (improved.length > 0) {
+    improved.sort((a,b) => b.diff - a.diff);
+    const top = improved[0];
+    insights.push({ type:'positive', text:'<strong>'+vShort[top.v]+'</strong> improved the most this year. L1 reduction is up <strong>'+top.diff+' points</strong> vs last year.' });
+  }
+
+  if (declined.length > 0) {
+    declined.sort((a,b) => a.diff - b.diff);
+    const worst = declined[0];
+    insights.push({ type:'negative', text:'<strong>'+vShort[worst.v]+'</strong> slowed down this year. L1 reduction dropped by <strong>'+Math.abs(worst.diff)+' points</strong> vs last year.' });
+  }
+
+  // INSIGHT 3: L1 increased (students moved backwards) this year
+  available.forEach(v => {
+    if (data[v].l1drop < 0) {
+      insights.push({ type:'negative', text:'<strong>'+vShort[v]+'</strong> had L1 <strong>increase of '+Math.abs(data[v].l1drop)+'%</strong> this year. More students moved into L1 than out.' });
+    }
+  });
+
+  // INSIGHT 4: Highest L3+L4 at EOY this year, with year-over-year
+  let hiL34V = null, hiL34 = -1;
+  available.forEach(v => { if(data[v].l34 > hiL34){ hiL34=data[v].l34; hiL34V=v; }});
+  if (hiL34V && hiL34 >= 20) {
+    const d = data[hiL34V];
+    let text = '<strong>'+vShort[hiL34V]+'</strong> has the highest L3+L4 at EOY this year at <strong>'+hiL34+'%</strong>';
+    if (d.l34Prev !== null) {
+      const diff = d.l34 - d.l34Prev;
+      if (diff > 0) text += ' (up '+diff+' points from '+d.l34Prev+'% last year)';
+      else if (diff < 0) text += ' (down '+Math.abs(diff)+' points from '+d.l34Prev+'% last year)';
+    }
+    text += '.';
+    insights.push({ type:'positive', text });
+  }
+
+  // INSIGHT 5: Concern - highest remaining L1 this year
+  let hiL1V = null, hiL1 = -1;
+  available.forEach(v => { if(data[v].l1eoy > hiL1){ hiL1=data[v].l1eoy; hiL1V=v; }});
+  if (hiL1V && hiL1 >= 40) {
+    const d = data[hiL1V];
+    let text = '<strong>'+vShort[hiL1V]+'</strong> still has <strong>'+hiL1+'%</strong> at L1 by EOY this year';
+    if (d.l1eoyPrev !== null) {
+      const diff = d.l1eoy - d.l1eoyPrev;
+      if (diff > 0) text += ' (worse than last year at '+d.l1eoyPrev+'%)';
+      else if (diff < 0) text += ' (better than last year at '+d.l1eoyPrev+'%)';
+      else text += ' (same as last year)';
+    }
+    text += '.';
+    insights.push({ type:'negative', text });
+  }
+
+  // INSIGHT 6: L4 growth story this year
+  let hiL4V = null, hiL4 = -1;
+  available.forEach(v => { if(data[v].l4 > hiL4){ hiL4=data[v].l4; hiL4V=v; }});
+  if (hiL4V && hiL4 >= 25) {
+    const d = data[hiL4V];
+    let text = '<strong>'+vShort[hiL4V]+'</strong> reached <strong>'+hiL4+'%</strong> at L4 this year';
+    if (d.l4Prev !== null && d.l4 - d.l4Prev >= 5) {
+      text += '  up '+(d.l4 - d.l4Prev)+' points from last year.';
+    } else {
+      text += '.';
+    }
+    insights.push({ type:'neutral', text });
+  }
+
+  return insights;
+}
+
+function buildHorizBars(year){let h='';verticals.forEach(v=>{const d=ALL_DATA[v][cmpSubject];if(!d[cmpGrade])return;const eoy=d[cmpGrade][year].EOY,soy=d[cmpGrade][year].SOY,l1d=soy[0]-eoy[0];h+='<div class="horiz-bar-row"><div class="horiz-bar-label">'+vShort[v]+'</div><div class="horiz-bar-track">';eoy.forEach((val,i)=>{if(val===0)return;h+='<div class="horiz-bar-seg" style="width:'+val+'%;background:'+segC[i]+'">'+(val>=7?val+'%':'')+'</div>';});h+='</div><div class="horiz-bar-val">'+(l1d>0?'\u25BC'+l1d:l1d<0?'\u25B2'+Math.abs(l1d):'-')+'</div></div>';});return h;}
+
+function renderComparison(){
+  destroyCharts();
+  const el=document.getElementById('content');
+  el.innerHTML='<div class="toggle-row" id="cmpSubj"></div><div class="toggle-row" id="cmpGr" style="margin-bottom:20px"></div><div id="cmpBody"></div>';
+  const th=themes[cmpSubject];
+  ['English','Maths'].forEach(s=>{const btn=document.createElement('button');btn.textContent=s;if(cmpSubject===s)btn.style.cssText='background:#6B4DAA;color:#fff;font-weight:600;border-color:#6B4DAA';btn.addEventListener('click',()=>{cmpSubject=s;renderComparison();});document.getElementById('cmpSubj').appendChild(btn);});
+  commonGrades.forEach(g=>{const btn=document.createElement('button');btn.textContent=g;if(cmpGrade===g)btn.style.cssText='background:'+th.tabActive+';color:#fff;font-weight:600;border-color:'+th.tabActive;btn.addEventListener('click',()=>{cmpGrade=g;renderComparison();});document.getElementById('cmpGr').appendChild(btn);});
+
+  let h = '';
+  h+='<div style="display:flex;justify-content:center;gap:14px;margin-bottom:6px;font-size:11px;color:#888">';
+  ['L1','L2','L3','L4'].forEach((l,i)=>{h+='<span style="display:flex;align-items:center;gap:3px"><span style="width:9px;height:9px;border-radius:2px;background:'+segC[i]+';display:inline-block"></span>'+l+'</span>';});
+  h+='<span style="font-weight:700;color:'+deltaC+'">\u25BC L1 drop</span></div>';
+  h+='<div class="section-title" style="margin-top:8px">EOY distribution: '+cmpSubject+', '+cmpGrade+'</div>';
+  h+='<div class="side-by-side"><div><div class="side-panel-title">2024-25</div>'+buildHorizBars('2024-25')+'</div><div><div class="side-panel-title">2025-26</div>'+buildHorizBars('2025-26')+'</div></div>';
+
+  const insights = generateInsights(cmpSubject, cmpGrade);
+  if (insights.length > 0) {
+    h += '<div class="insights"><div class="insights-title">Key insights for 2025-26: '+cmpSubject+', '+cmpGrade+'</div>';
+    insights.forEach(ins => { h += '<div class="insight-item '+ins.type+'">'+ins.text+'</div>'; });
+    h += '</div>';
+  }
+
+  // Full matrix heatmap: L1 reduction by grade and year for all verticals
+  h += '<div class="heatmap-wrap"><div class="heatmap-title">L1 reduction matrix (darker = bigger drop): '+cmpSubject+'</div>';
+  h += '<table class="heatmap-table"><thead><tr><th>Vertical</th>';
+  commonGrades.forEach(g => { h += '<th>'+g.replace('Grade ','G')+' 24-25</th><th>'+g.replace('Grade ','G')+' 25-26</th>'; });
+  h += '</tr></thead><tbody>';
+  verticals.forEach(v => {
+    h += '<tr><td>'+vShort[v]+'</td>';
+    commonGrades.forEach(g => {
+      const d24 = getL1Drop(v, cmpSubject, g, '2024-25');
+      const d25 = getL1Drop(v, cmpSubject, g, '2025-26');
+      h += renderCell(d24, heatPurpleScale, 40, v => v > 0 ? '\u25BC '+v : v < 0 ? '\u25B2 '+Math.abs(v) : '-');
+      h += renderCell(d25, heatPurpleScale, 40, v => v > 0 ? '\u25BC '+v : v < 0 ? '\u25B2 '+Math.abs(v) : '-');
+    });
+    h += '</tr>';
+  });
+  h += '</tbody></table></div>';
+
+  document.getElementById('cmpBody').innerHTML=h;
+}
+
+const deltaPlugin={id:'deltaAbove',afterDraw(chart){const ctx=chart.ctx,m0=chart.getDatasetMeta(0),m1=chart.getDatasetMeta(1),s=chart.data.datasets[0].data,e=chart.data.datasets[1].data;ctx.save();ctx.textAlign='center';ctx.textBaseline='bottom';ctx.font='bold 12px -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif';ctx.fillStyle=deltaC;for(let i=0;i<s.length;i++){const d=e[i]-s[i];if(d===0&&s[i]===0)continue;const cx=(m0.data[i].x+m1.data[i].x)/2,ty=Math.min(m0.data[i].y,m1.data[i].y);ctx.fillText(d>0?'\u25B2 +'+d:d<0?'\u25BC '+d:'-',cx,ty-10);}ctx.restore();}};
+
+function renderVertical(vName){
+  destroyCharts();const el=document.getElementById('content');
+  el.innerHTML='<div class="toggle-row" id="detSubj"></div><div class="toggle-row" id="detGr" style="margin-bottom:14px"></div><div id="detLegend"></div><div id="detBody"></div>';
+  const vData=ALL_DATA[vName],gr=vData.grades,th=themes[detailSubject];
+  ['English','Maths'].forEach(s=>{const btn=document.createElement('button');btn.textContent=s;if(detailSubject===s)btn.style.cssText='background:#6B4DAA;color:#fff;font-weight:600;border-color:#6B4DAA';btn.addEventListener('click',()=>{detailSubject=s;renderVertical(vName);});document.getElementById('detSubj').appendChild(btn);});
+  gr.forEach(g=>{const btn=document.createElement('button');btn.textContent=g;if(detailGrade===g)btn.style.cssText='background:'+th.tabActive+';color:#fff;font-weight:600;border-color:'+th.tabActive;btn.addEventListener('click',()=>{detailGrade=g;renderVertical(vName);});document.getElementById('detGr').appendChild(btn);});
+  if(!vData[detailSubject][detailGrade]){detailGrade=gr[0];renderVertical(vName);return;}
+  document.getElementById('detLegend').innerHTML='<div class="legend"><span><span class="dot" style="background:'+th.soy+'"></span> SOY</span><span><span class="dot" style="background:'+th.eoy+'"></span> EOY</span><span style="font-weight:700;color:'+deltaC+'">\u25B2\u25BC Change</span></div>';
+  const years=vData[detailSubject][detailGrade];const card=document.createElement('div');card.className='card';
+  const row=document.createElement('div');row.className='year-row';
+  ['2024-25','2025-26'].forEach(year=>{const panel=document.createElement('div');const yl=document.createElement('div');yl.className='year-label';yl.textContent=year;panel.appendChild(yl);const cw=document.createElement('div');cw.className='canvas-wrap';const cv=document.createElement('canvas');cw.appendChild(cv);panel.appendChild(cw);row.appendChild(panel);
+  const sD=years[year].SOY,eD=years[year].EOY;
+  const c=new Chart(cv,{type:'bar',data:{labels:levels,datasets:[{label:'SOY',data:sD,backgroundColor:th.soy,borderWidth:0,borderRadius:4,barPercentage:.8,categoryPercentage:.6},{label:'EOY',data:eD,backgroundColor:th.eoy,borderWidth:0,borderRadius:4,barPercentage:.8,categoryPercentage:.6}]},plugins:[deltaPlugin],options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:36}},plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+ctx.raw+'%'}},datalabels:{anchor:'end',align:'start',offset:2,clip:true,font:{size:10,weight:'600'},formatter:v=>v>=8?v+'%':'',color:ctx=>ctx.datasetIndex===0?th.soyLabel:th.eoyLabel}},scales:{x:{ticks:{color:'#333',font:{size:15,weight:'600'}},grid:{display:false}},y:{max:110,ticks:{color:'#999',callback:v=>v<=100?v+'%':'',font:{size:12},stepSize:25},grid:{color:'rgba(0,0,0,0.06)'}}}}});charts.push(c);});
+  card.appendChild(row);card.appendChild(Object.assign(document.createElement('div'),{className:'divider'}));
+  const tWrap=document.createElement('div');tWrap.className='table-row';
+  ['2024-25','2025-26'].forEach(year=>{const d=years[year],col=document.createElement('div');const yl=document.createElement('div');yl.className='table-year';yl.textContent=year;col.appendChild(yl);const tbl=document.createElement('table');const thead=document.createElement('thead'),hr=document.createElement('tr');['','SOY','EOY','Change'].forEach(h=>{const t=document.createElement('th');t.textContent=h;if(h==='')t.style.textAlign='left';else t.style.textAlign='center';hr.appendChild(t);});thead.appendChild(hr);tbl.appendChild(thead);const tbody=document.createElement('tbody');levels.forEach((lv,i)=>{const tr=document.createElement('tr'),delta=d.EOY[i]-d.SOY[i];[{text:lv,cls:''},{text:d.SOY[i]+'%',cls:''},{text:d.EOY[i]+'%',cls:''},{text:(delta===0&&d.SOY[i]===0)?'-':(delta>0?'\u25B2 +'+delta:(delta<0?'\u25BC '+delta:'-')),cls:'delta'}].forEach(c=>{const td=document.createElement('td');td.textContent=c.text;if(c.cls)td.className=c.cls;tr.appendChild(td);});tbody.appendChild(tr);});tbl.appendChild(tbody);col.appendChild(tbl);tWrap.appendChild(col);});
+  card.appendChild(tWrap);document.getElementById('detBody').appendChild(card);
+}
+
+let oneViewSubject = 'English', oneViewGrade = 'Grade 2';
+
+function renderOneView() {
+  destroyCharts();
+  const el = document.getElementById('content');
+  el.innerHTML = '<div class="toggle-row" id="ovSubj"></div><div class="toggle-row" id="ovGr" style="margin-bottom:20px"></div><div id="ovBody"></div>';
+
+  const th = themes[oneViewSubject];
+  ['English','Maths'].forEach(s=>{const btn=document.createElement('button');btn.textContent=s;if(oneViewSubject===s)btn.style.cssText='background:#6B4DAA;color:#fff;font-weight:600;border-color:#6B4DAA';btn.addEventListener('click',()=>{oneViewSubject=s;renderOneView();});document.getElementById('ovSubj').appendChild(btn);});
+  commonGrades.forEach(g=>{const btn=document.createElement('button');btn.textContent=g;if(oneViewGrade===g)btn.style.cssText='background:'+th.tabActive+';color:#fff;font-weight:600;border-color:'+th.tabActive;btn.addEventListener('click',()=>{oneViewGrade=g;renderOneView();});document.getElementById('ovGr').appendChild(btn);});
+
+  // Legend
+  let legendH = '<div style="display:flex;justify-content:center;gap:14px;margin-bottom:14px;font-size:12px;color:#888">';
+  ['L1','L2','L3','L4'].forEach((l,i)=>{legendH+='<span style="display:flex;align-items:center;gap:4px"><span style="width:11px;height:11px;border-radius:2px;background:'+segC[i]+';display:inline-block"></span>'+l+'</span>';});
+  legendH += '<span style="font-weight:700;color:'+deltaC+'">&#9660; L1 drop</span></div>';
+
+  // Build canvas container
+  const body = document.getElementById('ovBody');
+  body.innerHTML = legendH + '<div style="background:#f8f8f8;border:1px solid #e0e0e0;border-radius:14px;padding:24px 16px 16px"><div style="font-size:14px;font-weight:600;color:#777;text-align:center;margin-bottom:14px">EOY distribution across verticals: '+oneViewSubject+', '+oneViewGrade+'</div><div style="position:relative;width:100%;height:420px"><canvas id="oneViewCanvas"></canvas></div></div>';
+
+  // Prepare data: 8 stacked bars (4 verticals x 2 years)
+  const labels = [];
+  const l1Data = [], l2Data = [], l3Data = [], l4Data = [];
+  const l1Drops = [];
+  const availableVerticalsOV = [];
+
+  verticals.forEach(v => {
+    const d = ALL_DATA[v][oneViewSubject];
+    if (!d[oneViewGrade]) return;
+    availableVerticalsOV.push(v);
+    ['2024-25','2025-26'].forEach(year => {
+      labels.push(year);
+      const eoy = d[oneViewGrade][year].EOY;
+      const soy = d[oneViewGrade][year].SOY;
+      l1Data.push(eoy[0]); l2Data.push(eoy[1]); l3Data.push(eoy[2]); l4Data.push(eoy[3]);
+      l1Drops.push(soy[0] - eoy[0]);
+    });
+  });
+
+  // Combined plugin: bucket backgrounds + vertical group labels + L1 drop arrows
+  const dropPlugin = {
+    id: 'bucketsAndDrops',
+    beforeDatasetsDraw(chart) {
+      const ctx = chart.ctx;
+      const meta = chart.getDatasetMeta(0);
+      const chartArea = chart.chartArea;
+      if (!meta.data.length) return;
+      ctx.save();
+      for (let i = 0; i < meta.data.length; i += 2) {
+        if (i + 1 >= meta.data.length) break;
+        const bar0 = meta.data[i];
+        const bar1 = meta.data[i + 1];
+        const padding = 12;
+        const left = bar0.x - bar0.width / 2 - padding;
+        const right = bar1.x + bar1.width / 2 + padding;
+        const top = chartArea.top - 24;
+        const bottom = chartArea.bottom + 4;
+        ctx.fillStyle = (i / 2) % 2 === 0 ? 'rgba(0,0,0,0.025)' : 'rgba(0,0,0,0.045)';
+        ctx.beginPath();
+        if (ctx.roundRect) { ctx.roundRect(left, top, right - left, bottom - top, 6); }
+        else { ctx.rect(left, top, right - left, bottom - top); }
+        ctx.fill();
+      }
+      ctx.restore();
+    },
+    afterDatasetsDraw(chart) {
+      const ctx = chart.ctx;
+      const meta = chart.getDatasetMeta(0);
+      const chartArea = chart.chartArea;
+      if (!meta.data.length) return;
+
+      // Draw vertical name labels above each pair
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.font = '600 12px -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif';
+      ctx.fillStyle = '#555';
+      for (let i = 0; i < meta.data.length; i += 2) {
+        if (i + 1 >= meta.data.length) break;
+        const bar0 = meta.data[i];
+        const bar1 = meta.data[i + 1];
+        const centerX = (bar0.x + bar1.x) / 2;
+        const vIdx = i / 2;
+        const vName = vShort[availableVerticalsOV[vIdx]];
+        ctx.fillText(vName, centerX, chartArea.top - 8);
+      }
+
+      // Draw L1 drop arrows above each bar
+      ctx.font = 'bold 11px -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif';
+      ctx.fillStyle = deltaC;
+      l1Drops.forEach((drop, i) => {
+        const bar = meta.data[i];
+        const x = bar.x;
+        const lastMeta = chart.getDatasetMeta(chart.data.datasets.length - 1);
+        const topY = lastMeta.data[i].y;
+        let text = drop > 0 ? '\u25BC ' + drop : drop < 0 ? '\u25B2 ' + Math.abs(drop) : '-';
+        ctx.fillText(text, x, topY - 4);
+      });
+      ctx.restore();
+    }
+  };
+
+  const cv = document.getElementById('oneViewCanvas');
+  const c = new Chart(cv, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        { label:'L1', data:l1Data, backgroundColor:segC[0], borderWidth:0, stack:'a' },
+        { label:'L2', data:l2Data, backgroundColor:segC[1], borderWidth:0, stack:'a' },
+        { label:'L3', data:l3Data, backgroundColor:segC[2], borderWidth:0, stack:'a' },
+        { label:'L4', data:l4Data, backgroundColor:segC[3], borderWidth:0, stack:'a' }
+      ]
+    },
+    plugins: [dropPlugin],
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { top: 36 } },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: ctx => { const i = ctx[0].dataIndex; const vName = vShort[availableVerticalsOV[Math.floor(i/2)]]; return vName + ' (' + ctx[0].label + ')'; },
+            label: ctx => ctx.dataset.label + ': ' + ctx.raw + '%'
+          }
+        },
+        datalabels: {
+          display: ctx => ctx.dataset.data[ctx.dataIndex] >= 8,
+          color: ctx => ctx.datasetIndex === 0 ? '#fff' : (ctx.datasetIndex === 1 ? '#5a3e00' : '#fff'),
+          font: { size: 10, weight: '600' },
+          formatter: v => v + '%'
+        }
+      },
+      scales: {
+        x: {
+          stacked: true,
+          ticks: { color: '#333', font: { size: 11, weight: '600' }, autoSkip: false, maxRotation: 0 },
+          grid: { display: false }
+        },
+        y: {
+          stacked: true,
+          max: 110,
+          ticks: { color: '#999', callback: v => v <= 100 ? v + '%' : '', font: { size: 11 }, stepSize: 25 },
+          grid: { color: 'rgba(0,0,0,0.06)' }
+        }
+      }
+    }
+  });
+  charts.push(c);
+
+  // Append insights below the chart
+  const insights = generateInsights(oneViewSubject, oneViewGrade);
+  if (insights.length > 0) {
+    let ih = '<div class="insights" style="margin-top:20px"><div class="insights-title">Key insights for 2025-26: '+oneViewSubject+', '+oneViewGrade+'</div>';
+    insights.forEach(ins => { ih += '<div class="insight-item '+ins.type+'">'+ins.text+'</div>'; });
+    ih += '</div>';
+    body.insertAdjacentHTML('beforeend', ih);
+  }
+
+  // Heatmap: EOY L1 % across verticals and years (for this grade)
+  let heatH = '<div class="heatmap-wrap"><div class="heatmap-title">EOY L1 % heatmap (darker = more students stuck at L1): '+oneViewSubject+', '+oneViewGrade+'</div>';
+  heatH += '<table class="heatmap-table"><thead><tr><th>Vertical</th><th>2024-25 EOY L1</th><th>2025-26 EOY L1</th><th>YoY change</th></tr></thead><tbody>';
+  verticals.forEach(v => {
+    const d24 = getData(v, oneViewSubject, oneViewGrade, '2024-25');
+    const d25 = getData(v, oneViewSubject, oneViewGrade, '2025-26');
+    const l1_24 = d24 ? d24.EOY[0] : null;
+    const l1_25 = d25 ? d25.EOY[0] : null;
+    const yoy = (l1_24 !== null && l1_25 !== null) ? l1_25 - l1_24 : null;
+    heatH += '<tr><td>'+vShort[v]+'</td>';
+    heatH += renderCell(l1_24, heatRedScale, 100, v => v + '%');
+    heatH += renderCell(l1_25, heatRedScale, 100, v => v + '%');
+    // YoY: negative (L1 went down) = good = purple. positive = bad = red.
+    heatH += renderCell(yoy === null ? null : -yoy, heatPurpleScale, 30, v => {
+      const actual = -v;
+      if (actual === 0) return '-';
+      return actual > 0 ? '\u25B2 +'+actual : '\u25BC '+actual;
+    });
+    heatH += '</tr>';
+  });
+  heatH += '</tbody></table></div>';
+  body.insertAdjacentHTML('beforeend', heatH);
+}
+
+function render(){updateNav();if(currentView==='SoyEoy')renderSoyEoy();else if(ALL_DATA[currentView])renderVertical(currentView);else{currentView='SoyEoy';renderSoyEoy();}}
+
+let soySubject = 'English', soyGrade = 'Grade 2';
+
+function generateSoyEoyInsights(subject, grade) {
+  const insights = [];
+  const year = '2025-26';
+  const data = {};
+
+  verticals.forEach(v => {
+    const d = getData(v, subject, grade, year);
+    if (!d) return;
+    data[v] = {
+      l1drop: d.SOY[0] - d.EOY[0],
+      l34gain: (d.EOY[2] + d.EOY[3]) - (d.SOY[2] + d.SOY[3]),
+      l1soy: d.SOY[0], l1eoy: d.EOY[0],
+      l34soy: d.SOY[2] + d.SOY[3], l34eoy: d.EOY[2] + d.EOY[3]
+    };
+  });
+
+  const available = Object.keys(data);
+  if (available.length === 0) return [];
+
+  // Biggest L1 drop
+  let bestL1V = null, bestL1 = -999;
+  available.forEach(v => { if (data[v].l1drop > bestL1) { bestL1 = data[v].l1drop; bestL1V = v; }});
+  if (bestL1V && bestL1 > 0) {
+    insights.push({ type:'positive', text:'<strong>'+vShort[bestL1V]+'</strong> moved the most students out of L1 this year, reducing it by <strong>'+bestL1+'%</strong> (from '+data[bestL1V].l1soy+'% to '+data[bestL1V].l1eoy+'%).' });
+  }
+
+  // Biggest L3+L4 gain
+  let bestL34V = null, bestL34 = -999;
+  available.forEach(v => { if (data[v].l34gain > bestL34) { bestL34 = data[v].l34gain; bestL34V = v; }});
+  if (bestL34V && bestL34 > 0) {
+    insights.push({ type:'positive', text:'<strong>'+vShort[bestL34V]+'</strong> grew L3+L4 the most, adding <strong>'+bestL34+' points</strong> (from '+data[bestL34V].l34soy+'% to '+data[bestL34V].l34eoy+'%).' });
+  }
+
+  // Smallest L1 movement
+  let weakV = null, weakVal = 999;
+  available.forEach(v => { if (data[v].l1drop < weakVal) { weakVal = data[v].l1drop; weakV = v; }});
+  if (weakV && weakVal < 5) {
+    if (weakVal < 0) {
+      insights.push({ type:'negative', text:'<strong>'+vShort[weakV]+'</strong> saw L1 <strong>increase by '+Math.abs(weakVal)+'%</strong> this year (more students moved into L1 than out).' });
+    } else {
+      insights.push({ type:'negative', text:'<strong>'+vShort[weakV]+'</strong> had the least L1 movement this year, only <strong>'+weakVal+'%</strong> of students moved out of L1.' });
+    }
+  }
+
+  // Balanced mover - biggest combined L1 drop + L3+L4 gain
+  let balancedV = null, balancedScore = -999;
+  available.forEach(v => { const score = data[v].l1drop + data[v].l34gain; if (score > balancedScore) { balancedScore = score; balancedV = v; }});
+  if (balancedV && balancedScore > 0 && balancedV !== bestL1V && balancedV !== bestL34V) {
+    insights.push({ type:'neutral', text:'<strong>'+vShort[balancedV]+'</strong> showed the most balanced progress, with strong movement both out of L1 and into L3+L4.' });
+  }
+
+  return insights;
+}
+
+function renderSoyEoy() {
+  destroyCharts();
+  const el = document.getElementById('content');
+  el.innerHTML = '<div class="toggle-row" id="soySubj"></div><div class="toggle-row" id="soyGr" style="margin-bottom:20px"></div><div id="soyBody"></div>';
+
+  const th = themes[soySubject];
+  ['English','Maths'].forEach(s=>{const btn=document.createElement('button');btn.textContent=s;if(soySubject===s)btn.style.cssText='background:#6B4DAA;color:#fff;font-weight:600;border-color:#6B4DAA';btn.addEventListener('click',()=>{soySubject=s;renderSoyEoy();});document.getElementById('soySubj').appendChild(btn);});
+  commonGrades.forEach(g=>{const btn=document.createElement('button');btn.textContent=g;if(soyGrade===g)btn.style.cssText='background:'+th.tabActive+';color:#fff;font-weight:600;border-color:'+th.tabActive;btn.addEventListener('click',()=>{soyGrade=g;renderSoyEoy();});document.getElementById('soyGr').appendChild(btn);});
+
+  // Legend
+  let legendH = '<div style="display:flex;justify-content:center;gap:14px;margin-bottom:14px;font-size:12px;color:#888">';
+  ['L1','L2','L3','L4'].forEach((l,i)=>{legendH+='<span style="display:flex;align-items:center;gap:4px"><span style="width:11px;height:11px;border-radius:2px;background:'+segC[i]+';display:inline-block"></span>'+l+'</span>';});
+  legendH += '<span style="font-weight:700;color:'+deltaC+'">&#9660; L1 drop &nbsp; &#9650; L3+L4 gain</span></div>';
+
+  // Summary cards
+  let summaryH = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px">';
+  verticals.forEach(v => {
+    const d = getData(v, soySubject, soyGrade, '2025-26');
+    if (!d) { summaryH += '<div></div>'; return; }
+    const l1drop = d.SOY[0] - d.EOY[0];
+    const l34gain = (d.EOY[2] + d.EOY[3]) - (d.SOY[2] + d.SOY[3]);
+    const l1Text = l1drop > 0 ? '\u25BC'+l1drop+'%' : l1drop < 0 ? '\u25B2'+Math.abs(l1drop)+'%' : '-';
+    const l34Text = l34gain > 0 ? '\u25B2'+l34gain+'%' : l34gain < 0 ? '\u25BC'+Math.abs(l34gain)+'%' : '-';
+    summaryH += '<div style="background:#f8f8f8;border:1px solid #e0e0e0;border-radius:10px;padding:14px 10px;text-align:center"><div style="font-size:11px;font-weight:600;color:#888;margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">'+vShort[v]+'</div><div style="display:flex;justify-content:center;gap:14px"><div><div style="font-size:10px;color:#999">L1 drop</div><div style="font-size:18px;font-weight:600;color:'+deltaC+'">'+l1Text+'</div></div><div><div style="font-size:10px;color:#999">L3+L4 gain</div><div style="font-size:18px;font-weight:600;color:'+deltaC+'">'+l34Text+'</div></div></div></div>';
+  });
+  summaryH += '</div>';
+
+  const body = document.getElementById('soyBody');
+  body.innerHTML = summaryH + legendH + '<div style="background:#f8f8f8;border:1px solid #e0e0e0;border-radius:14px;padding:24px 16px 16px"><div style="font-size:14px;font-weight:600;color:#777;text-align:center;margin-bottom:14px">SOY to EOY movement (2025-26): '+soySubject+', '+soyGrade+'</div><div style="position:relative;width:100%;height:420px"><canvas id="soyEoyCanvas"></canvas></div></div>';
+
+  // Prepare data: SOY bar + EOY bar for each vertical (8 bars)
+  const labels = [];
+  const l1Data = [], l2Data = [], l3Data = [], l4Data = [];
+  const availableVerticals = [];
+
+  verticals.forEach(v => {
+    const d = getData(v, soySubject, soyGrade, '2025-26');
+    if (!d) return;
+    availableVerticals.push(v);
+    labels.push('SOY');
+    l1Data.push(d.SOY[0]); l2Data.push(d.SOY[1]); l3Data.push(d.SOY[2]); l4Data.push(d.SOY[3]);
+    labels.push('EOY');
+    l1Data.push(d.EOY[0]); l2Data.push(d.EOY[1]); l3Data.push(d.EOY[2]); l4Data.push(d.EOY[3]);
+  });
+
+  // Plugin: draw vertical group labels above each pair + subtle bucket background
+  const bucketPlugin = {
+    id: 'bucketBackground',
+    beforeDatasetsDraw(chart) {
+      const ctx = chart.ctx;
+      const meta = chart.getDatasetMeta(0);
+      const chartArea = chart.chartArea;
+      if (!meta.data.length) return;
+
+      ctx.save();
+      // Draw bucket backgrounds (every pair)
+      for (let i = 0; i < meta.data.length; i += 2) {
+        if (i + 1 >= meta.data.length) break;
+        const bar0 = meta.data[i];
+        const bar1 = meta.data[i + 1];
+        const padding = 12;
+        const left = bar0.x - bar0.width / 2 - padding;
+        const right = bar1.x + bar1.width / 2 + padding;
+        const top = chartArea.top - 24;
+        const bottom = chartArea.bottom + 4;
+
+        // Alternating subtle bucket shade
+        ctx.fillStyle = (i / 2) % 2 === 0 ? 'rgba(0,0,0,0.025)' : 'rgba(0,0,0,0.045)';
+        ctx.beginPath();
+        if (ctx.roundRect) {
+          ctx.roundRect(left, top, right - left, bottom - top, 6);
+        } else {
+          ctx.rect(left, top, right - left, bottom - top);
+        }
+        ctx.fill();
+      }
+      ctx.restore();
+    },
+    afterDraw(chart) {
+      const ctx = chart.ctx;
+      const meta = chart.getDatasetMeta(0);
+      const chartArea = chart.chartArea;
+      if (!meta.data.length) return;
+
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.font = '600 12px -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif';
+      ctx.fillStyle = '#555';
+      for (let i = 0; i < meta.data.length; i += 2) {
+        if (i + 1 >= meta.data.length) break;
+        const bar0 = meta.data[i];
+        const bar1 = meta.data[i + 1];
+        const centerX = (bar0.x + bar1.x) / 2;
+        const y = chartArea.top - 8;
+        const vIdx = i / 2;
+        const vName = vShort[availableVerticals[vIdx]];
+        ctx.fillText(vName, centerX, y);
+      }
+      ctx.restore();
+    }
+  };
+
+  const cv = document.getElementById('soyEoyCanvas');
+  const c = new Chart(cv, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        { label:'L1', data:l1Data, backgroundColor:segC[0], borderWidth:0, stack:'a' },
+        { label:'L2', data:l2Data, backgroundColor:segC[1], borderWidth:0, stack:'a' },
+        { label:'L3', data:l3Data, backgroundColor:segC[2], borderWidth:0, stack:'a' },
+        { label:'L4', data:l4Data, backgroundColor:segC[3], borderWidth:0, stack:'a' }
+      ]
+    },
+    plugins: [bucketPlugin],
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { top: 32 } },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: ctx => { const i = ctx[0].dataIndex; const vName = vShort[availableVerticals[Math.floor(i/2)]]; return vName + ' (' + ctx[0].label + ')'; },
+            label: ctx => ctx.dataset.label + ': ' + ctx.raw + '%'
+          }
+        },
+        datalabels: {
+          display: ctx => ctx.dataset.data[ctx.dataIndex] >= 8,
+          color: ctx => ctx.datasetIndex === 1 ? '#5a3e00' : '#fff',
+          font: { size: 10, weight: '600' },
+          formatter: v => v + '%'
+        }
+      },
+      scales: {
+        x: {
+          stacked: true,
+          ticks: { color: '#666', font: { size: 11, weight: '500' }, autoSkip: false, maxRotation: 0 },
+          grid: { display: false }
+        },
+        y: {
+          stacked: true,
+          max: 110,
+          ticks: { color: '#999', callback: v => v <= 100 ? v + '%' : '', font: { size: 11 }, stepSize: 25 },
+          grid: { color: 'rgba(0,0,0,0.06)' }
+        }
+      }
+    }
+  });
+  charts.push(c);
+
+  // Insights
+  const insights = generateSoyEoyInsights(soySubject, soyGrade);
+  if (insights.length > 0) {
+    let ih = '<div class="insights" style="margin-top:20px"><div class="insights-title">SOY to EOY insights for 2025-26: '+soySubject+', '+soyGrade+'</div>';
+    insights.forEach(ins => { ih += '<div class="insight-item '+ins.type+'">'+ins.text+'</div>'; });
+    ih += '</div>';
+    body.insertAdjacentHTML('beforeend', ih);
+  }
+
+  // Heatmap: SOY to EOY movement (L1 drop + L3+L4 gain) for 2025-26
+  let heatH = '<div class="heatmap-wrap"><div class="heatmap-title">SOY to EOY movement heatmap (2025-26, darker = more movement): '+soySubject+', '+soyGrade+'</div>';
+  heatH += '<table class="heatmap-table"><thead><tr><th>Vertical</th><th>L1 drop</th><th>L3+L4 gain</th><th>L1 (SOY\u2192EOY)</th><th>L4 (SOY\u2192EOY)</th></tr></thead><tbody>';
+  verticals.forEach(v => {
+    const d = getData(v, soySubject, soyGrade, '2025-26');
+    if (!d) { heatH += '<tr><td>'+vShort[v]+'</td><td class="none">-</td><td class="none">-</td><td class="none">-</td><td class="none">-</td></tr>'; return; }
+    const l1drop = d.SOY[0] - d.EOY[0];
+    const l34gain = (d.EOY[2] + d.EOY[3]) - (d.SOY[2] + d.SOY[3]);
+    heatH += '<tr><td>'+vShort[v]+'</td>';
+    heatH += renderCell(l1drop, heatPurpleScale, 50, v => v > 0 ? '\u25BC '+v : v < 0 ? '\u25B2 '+Math.abs(v) : '-');
+    heatH += renderCell(l34gain, heatGreenScale, 50, v => v > 0 ? '\u25B2 +'+v : v < 0 ? '\u25BC '+Math.abs(v) : '-');
+    heatH += '<td style="background:transparent;color:#555;font-weight:500">'+d.SOY[0]+'% \u2192 '+d.EOY[0]+'%</td>';
+    heatH += '<td style="background:transparent;color:#555;font-weight:500">'+d.SOY[3]+'% \u2192 '+d.EOY[3]+'%</td>';
+    heatH += '</tr>';
+  });
+  heatH += '</tbody></table></div>';
+  body.insertAdjacentHTML('beforeend', heatH);
+}
+
+let showComparison = false;
+currentView = 'SoyEoy';
+
+/* ── LEVEL JUMP DATA ──────────────────────────────────────────────────── */
+const JUMP_DATA = {
+  'Foundations': {
+    English: {
+      grades: ['Grade 1','Grade 2','Grade 3','Grade 4','Grade 5','Grade 6','Grade 7','Grade 8'],
+      L1: {
+        'Grade 1':{soy:406,eoy:[228,122,56,0]},
+        'Grade 2':{soy:355,eoy:[144,175,35,1]},
+        'Grade 3':{soy:385,eoy:[156,181,45,3]},
+        'Grade 4':{soy:251,eoy:[115,89,30,17]},
+        'Grade 5':{soy:251,eoy:[91,82,50,28]},
+        'Grade 6':{soy:86,eoy:[24,36,13,13]},
+        'Grade 7':{soy:42,eoy:[11,11,13,7]},
+        'Grade 8':{soy:34,eoy:[6,16,8,4]}
+      },
+      L2: {
+        'Grade 1':{soy:28,eoy:[3,17,8,0]},
+        'Grade 2':{soy:117,eoy:[26,45,45,1]},
+        'Grade 3':{soy:124,eoy:[14,47,60,3]},
+        'Grade 4':{soy:142,eoy:[11,45,60,26]},
+        'Grade 5':{soy:162,eoy:[10,45,59,48]},
+        'Grade 6':{soy:70,eoy:[7,21,15,27]},
+        'Grade 7':{soy:34,eoy:[1,11,10,12]},
+        'Grade 8':{soy:36,eoy:[0,8,15,13]}
+      },
+      L3: {
+        'Grade 1':{soy:3,eoy:[0,2,1,0]},
+        'Grade 2':{soy:16,eoy:[2,5,9,0]},
+        'Grade 3':{soy:78,eoy:[3,18,51,6]},
+        'Grade 4':{soy:73,eoy:[3,11,24,35]},
+        'Grade 5':{soy:71,eoy:[2,4,28,37]},
+        'Grade 6':{soy:64,eoy:[1,7,30,26]},
+        'Grade 7':{soy:63,eoy:[1,4,35,23]},
+        'Grade 8':{soy:48,eoy:[0,6,11,31]}
+      },
+      L4: {
+        'Grade 2':{soy:1,eoy:[0,0,1,0]},
+        'Grade 3':{soy:2,eoy:[1,0,1,0]},
+        'Grade 4':{soy:6,eoy:[0,3,0,3]},
+        'Grade 5':{soy:51,eoy:[3,4,8,36]},
+        'Grade 6':{soy:23,eoy:[1,0,4,18]},
+        'Grade 7':{soy:49,eoy:[2,2,5,40]},
+        'Grade 8':{soy:30,eoy:[0,1,3,26]}
+      }
+    },
+    Maths: {
+      grades: ['Grade 1','Grade 2','Grade 3','Grade 4','Grade 5','Grade 6','Grade 7','Grade 8'],
+      L1: {
+        'Grade 1':{soy:327,eoy:[129,134,64,0]},
+        'Grade 2':{soy:251,eoy:[71,89,89,2]},
+        'Grade 3':{soy:227,eoy:[61,69,90,7]},
+        'Grade 4':{soy:156,eoy:[56,47,34,19]},
+        'Grade 5':{soy:169,eoy:[54,48,39,28]},
+        'Grade 6':{soy:32,eoy:[5,4,9,14]},
+        'Grade 7':{soy:14,eoy:[1,5,3,5]},
+        'Grade 8':{soy:14,eoy:[2,3,3,6]}
+      },
+      L2: {
+        'Grade 1':{soy:47,eoy:[9,17,20,1]},
+        'Grade 2':{soy:116,eoy:[14,37,65,0]},
+        'Grade 3':{soy:156,eoy:[6,39,109,2]},
+        'Grade 4':{soy:113,eoy:[7,25,55,26]},
+        'Grade 5':{soy:144,eoy:[22,26,60,36]},
+        'Grade 6':{soy:60,eoy:[3,12,19,26]},
+        'Grade 7':{soy:36,eoy:[0,11,12,13]},
+        'Grade 8':{soy:23,eoy:[2,2,10,9]}
+      },
+      L3: {
+        'Grade 1':{soy:16,eoy:[1,3,12,0]},
+        'Grade 2':{soy:37,eoy:[3,8,25,1]},
+        'Grade 3':{soy:126,eoy:[4,15,103,4]},
+        'Grade 4':{soy:103,eoy:[9,10,34,50]},
+        'Grade 5':{soy:137,eoy:[7,8,44,78]},
+        'Grade 6':{soy:85,eoy:[1,3,39,42]},
+        'Grade 7':{soy:58,eoy:[2,1,11,44]},
+        'Grade 8':{soy:50,eoy:[1,3,14,32]}
+      },
+      L4: {
+        'Grade 1':{soy:1,eoy:[1,0,0,0]},
+        'Grade 3':{soy:4,eoy:[0,0,4,0]},
+        'Grade 4':{soy:43,eoy:[0,1,3,39]},
+        'Grade 5':{soy:95,eoy:[0,1,4,90]},
+        'Grade 6':{soy:61,eoy:[0,2,4,55]},
+        'Grade 7':{soy:60,eoy:[1,0,5,54]},
+        'Grade 8':{soy:53,eoy:[0,2,8,43]}
+      }
+    }
+  },
+  'AMC - Model': {
+    English: {
+      grades: ['Grade 2','Grade 3','Grade 4','Grade 5'],
+      L1: {
+        'Grade 2':{soy:93,eoy:[46,40,7,0]},
+        'Grade 3':{soy:18,eoy:[4,14,0,0]},
+        'Grade 4':{soy:34,eoy:[15,14,5,0]},
+        'Grade 5':{soy:24,eoy:[6,15,1,2]}
+      },
+      L2: {
+        'Grade 2':{soy:58,eoy:[10,28,20,0]},
+        'Grade 3':{soy:8,eoy:[7,1,0,0]},
+        'Grade 4':{soy:68,eoy:[9,37,18,4]},
+        'Grade 5':{soy:46,eoy:[10,18,11,7]}
+      },
+      L3: {
+        'Grade 2':{soy:3,eoy:[0,1,2,0]},
+        'Grade 3':{soy:2,eoy:[0,0,2,0]},
+        'Grade 4':{soy:14,eoy:[0,4,5,5]},
+        'Grade 5':{soy:24,eoy:[4,6,7,7]}
+      },
+      L4: {
+        'Grade 4':{soy:9,eoy:[0,3,2,4]},
+        'Grade 5':{soy:19,eoy:[1,2,2,14]}
+      }
+    }
+  },
+  'AMC - Non - Model': {
+    English: {
+      grades: ['Grade 2','Grade 3','Grade 4','Grade 5'],
+      L1: {
+        'Grade 2':{soy:505,eoy:[177,256,72,0]},
+        'Grade 3':{soy:140,eoy:[53,66,20,1]},
+        'Grade 4':{soy:352,eoy:[125,163,39,25]},
+        'Grade 5':{soy:208,eoy:[59,92,25,32]}
+      },
+      L2: {
+        'Grade 2':{soy:350,eoy:[62,185,103,0]},
+        'Grade 3':{soy:119,eoy:[14,48,57,0]},
+        'Grade 4':{soy:380,eoy:[49,176,88,67]},
+        'Grade 5':{soy:215,eoy:[37,69,47,62]}
+      },
+      L3: {
+        'Grade 2':{soy:112,eoy:[12,40,60,0]},
+        'Grade 3':{soy:40,eoy:[2,8,30,0]},
+        'Grade 4':{soy:165,eoy:[13,30,51,71]},
+        'Grade 5':{soy:83,eoy:[10,17,19,37]}
+      },
+      L4: {
+        'Grade 2':{soy:4,eoy:[0,4,0,0]},
+        'Grade 4':{soy:171,eoy:[12,23,47,89]},
+        'Grade 5':{soy:183,eoy:[16,24,28,115]}
+      }
+    }
+  }
+};
+
+/* ── LEVEL JUMP HELPERS ───────────────────────────────────────────────── */
+function jumpStats(startLvl, eoy) {
+  // startLvl is 0-indexed (0=L1,1=L2,2=L3,3=L4)
+  const total = eoy.reduce((a,b)=>a+b,0);
+  let jumped=0, stayed=0, dropped=0;
+  eoy.forEach((n,i)=>{
+    if(i>startLvl) jumped+=n;
+    else if(i===startLvl) stayed+=n;
+    else dropped+=n;
+  });
+  return {total,jumped,stayed,dropped,
+    jumpedPct:total>0?+(jumped/total*100).toFixed(1):0,
+    stayedPct:total>0?+(stayed/total*100).toFixed(1):0,
+    droppedPct:total>0?+(dropped/total*100).toFixed(1):0};
+}
+
+function jumpDepth(startLvl, eoy) {
+  // Returns breakdown of how far students jumped
+  const res = [];
+  for(let i=startLvl+1;i<4;i++){
+    if(eoy[i]>0) res.push({label:`→ L${i+1}`,n:eoy[i]});
+  }
+  return res;
+}
+
+/* ── LEVEL JUMP STATE ─────────────────────────────────────────────────── */
+let ljView = 'standalone'; // 'standalone' or 'compare'
+let ljVertical = 'Foundations';
+let ljSubject = 'English';
+let ljGrade = 'Grade 2';
+let ljCmpGrade = 'Grade 2';
+let ljGradeCompare = false;
+
+/* ── RENDER LEVEL JUMP ────────────────────────────────────────────────── */
+function renderLevelJump() {
+  destroyCharts();
+  const el = document.getElementById('content');
+
+  // Sub-tab toggle
+  let h = `<div style="display:flex;justify-content:center;margin-bottom:24px;gap:0">
+    <button onclick="ljView='standalone';renderLevelJump()" style="padding:10px 28px;font-size:13px;font-weight:600;border:1px solid #ccc;border-radius:8px 0 0 8px;cursor:pointer;font-family:inherit;${ljView==='standalone'?'background:#333;color:#fff;border-color:#333':'background:#f0f0f0;color:#666'}">Standalone</button>
+    <button onclick="ljView='compare';renderLevelJump()" style="padding:10px 28px;font-size:13px;font-weight:600;border:1px solid #ccc;border-left:none;border-radius:0 8px 8px 0;cursor:pointer;font-family:inherit;${ljView==='compare'?'background:#333;color:#fff;border-color:#333':'background:#f0f0f0;color:#666'}">Compare (English)</button>
+  </div>`;
+  el.innerHTML = h + '<div id="lj-body"></div>';
+
+  if(ljView==='standalone') renderLJStandalone();
+  else renderLJCompare();
+}
+
+function renderLJStandalone() {
+  const el = document.getElementById('lj-body');
+  const verticals = Object.keys(JUMP_DATA);
+
+  // Subject data
+  const hasMaths = JUMP_DATA[ljVertical].Maths;
+  if(!hasMaths) ljSubject = 'English';
+  const subjectData = JUMP_DATA[ljVertical][ljSubject];
+  const grades = subjectData.grades;
+  if(!grades.includes(ljGrade)) ljGrade = grades[0];
+  const themeCol = ljSubject==='English' ? '#185FA5' : '#0F6E56';
+
+  // ── Build full nav HTML ──
+  let h = '';
+
+  // Vertical toggle
+  h += '<div style="display:flex;justify-content:center;flex-wrap:wrap;gap:0;margin-bottom:16px">';
+  verticals.forEach((v,i) => {
+    const active = v===ljVertical;
+    const first=i===0, last=i===verticals.length-1;
+    h += `<button onclick="ljVertical='${v}';ljGradeCompare=false;ljGrade=JUMP_DATA['${v}'][ljSubject]?.grades[0]||'Grade 2';renderLJStandalone()"
+      style="padding:9px 18px;font-size:12px;font-weight:600;border:1px solid #ccc;${first?'border-radius:8px 0 0 8px':last?'border-radius:0 8px 8px 0':'border-radius:0'};${i>0?'border-left:none':''};cursor:pointer;font-family:inherit;${active?'background:#333;color:#fff;border-color:#333':'background:#f0f0f0;color:#666'}">${v}</button>`;
+  });
+  h += '</div>';
+
+  // Subject toggle (Foundations only)
+  if(hasMaths) {
+    h += '<div style="display:flex;justify-content:center;gap:0;margin-bottom:16px">';
+    ['English','Maths'].forEach((s,i) => {
+      const active = s===ljSubject;
+      h += `<button onclick="ljSubject='${s}';ljGradeCompare=false;renderLJStandalone()" style="padding:8px 22px;font-size:12px;font-weight:600;border:1px solid #ccc;${i===0?'border-radius:8px 0 0 8px':'border-radius:0 8px 8px 0;border-left:none'};cursor:pointer;font-family:inherit;${active?`background:${s==='English'?'#185FA5':'#0F6E56'};color:#fff;border-color:${s==='English'?'#185FA5':'#0F6E56'}`:'background:#f0f0f0;color:#666'}">${s}</button>`;
+    });
+    h += '</div>';
+  }
+
+  // Grade tabs — "Grade Comparison" FIRST, then individual grades
+  const gcActive = ljGradeCompare===true;
+  h += '<div style="display:flex;justify-content:center;flex-wrap:wrap;gap:0;margin-bottom:24px">';
+  h += `<button onclick="ljGradeCompare=true;renderLJStandalone()" style="padding:8px 16px;font-size:12px;font-weight:700;border:1px solid #ccc;border-radius:8px 0 0 8px;cursor:pointer;font-family:inherit;${gcActive?'background:#6B4DAA;color:#fff;border-color:#6B4DAA':'background:#EEF0FF;color:#6B4DAA'}">All Grades ▾</button>`;
+  grades.forEach((g,i) => {
+    const active = g===ljGrade && !gcActive;
+    const last = i===grades.length-1;
+    h += `<button onclick="ljGradeCompare=false;ljGrade='${g}';renderLJStandalone()" style="padding:8px 13px;font-size:12px;font-weight:${active?'600':'400'};border:1px solid #ccc;border-left:none;${last?'border-radius:0 8px 8px 0':'border-radius:0'};cursor:pointer;font-family:inherit;${active?`background:${themeCol};color:#fff;border-color:${themeCol}`:'background:#f0f0f0;color:#666'}">${g.replace('Grade ','G')}</button>`;
+  });
+  h += '</div>';
+
+  // Content placeholder
+  h += '<div id="lj-standalone-content"></div>';
+
+  // Paint nav immediately
+  el.innerHTML = h;
+
+  // Now fill content
+  const contentEl = document.getElementById('lj-standalone-content');
+  if(ljGradeCompare) {
+    renderLJGradeCompare(contentEl, subjectData, grades, themeCol);
+  } else {
+    renderLJCards(contentEl, subjectData, ljGrade, themeCol);
+  }
+}
+function renderLJCards(el, subjectData, grade, themeCol) {
+  const lvlNames = ['L1','L2','L3','L4'];
+  const lvlKeys = ['L1','L2','L3','L4'];
+  const lvlColors = ['#E24B4A','#EF9F27','#3266ad','#1D9E75'];
+  const eoyColors = ['#E24B4A','#EF9F27','#3266ad','#1D9E75'];
+
+  let h = `<div style="background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;gap:28px;flex-wrap:wrap">
+    <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:1px;text-transform:uppercase">How to read</div>
+    <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start">
+      <div>
+        <div style="font-size:10px;font-weight:700;color:#555;margin-bottom:6px">EOY bar — where students ended up</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          ${['L1','L2','L3','L4'].map((l,i)=>`<div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#666"><div style="width:10px;height:10px;border-radius:2px;background:${eoyColors[i]}"></div>${l}</div>`).join('')}
+        </div>
+      </div>
+      <div style="width:1px;background:#eee;align-self:stretch"></div>
+      <div>
+        <div style="font-size:10px;font-weight:700;color:#555;margin-bottom:6px">Stat boxes</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#0D6B50;font-weight:600"><span>↑ Jumped</span><span style="color:#aaa;font-weight:400">— moved to higher level</span></div>
+          <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#666;font-weight:600"><span>→ Stayed</span><span style="color:#aaa;font-weight:400">— remained at same level</span></div>
+          <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#C0392B;font-weight:600"><span>↓ Dropped</span><span style="color:#aaa;font-weight:400">— moved to lower level</span></div>
+        </div>
+      </div>
+      <div style="width:1px;background:#eee;align-self:stretch"></div>
+      <div>
+        <div style="font-size:10px;font-weight:700;color:#555;margin-bottom:6px">Jump breakdown</div>
+        <div style="font-size:10px;color:#aaa">Purple bars show how many levels jumped (→L2, →L3, →L4)</div>
+      </div>
+    </div>
+  </div>`;
+
+  h += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px">';
+
+  lvlKeys.forEach((lk,li) => {
+    const entry = subjectData[lk]?.[grade];
+    if(!entry) return;
+    const {soy,eoy} = entry;
+    const stats = jumpStats(li, eoy);
+    const depth = jumpDepth(li, eoy);
+
+    h += `<div style="background:#fff;border:1px solid #e0e0e0;border-radius:14px;padding:22px 24px;box-shadow:0 1px 4px rgba(0,0,0,.04)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:10px;height:10px;border-radius:50%;background:${lvlColors[li]}"></div>
+          <span style="font-size:14px;font-weight:700;color:#1a1a1a">Started at ${lvlNames[li]}</span>
+        </div>
+        <span style="font-size:12px;font-weight:600;color:#888">${soy} students</span>
+      </div>
+      <div style="margin-bottom:16px">
+        <div style="font-size:10px;font-weight:600;color:#aaa;letter-spacing:.6px;text-transform:uppercase;margin-bottom:6px">EOY Distribution</div>
+        <div style="display:flex;height:28px;border-radius:6px;overflow:hidden;background:#f5f5f2">`;
+    eoy.forEach((n,i)=>{
+      if(n===0)return;
+      const pct=soy>0?(n/soy*100):0;
+      const showLbl=pct>=8;
+      h+=`<div style="width:${pct}%;background:${eoyColors[i]};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;overflow:hidden;white-space:nowrap" title="L${i+1}: ${n} (${pct.toFixed(1)}%)">${showLbl?n:''}</div>`;
+    });
+    h += `</div><div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px">`;
+    eoy.forEach((n,i)=>{
+      if(n===0)return;
+      const pct=soy>0?(n/soy*100).toFixed(1):0;
+      h+=`<div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#666"><div style="width:8px;height:8px;border-radius:2px;background:${eoyColors[i]}"></div>L${i+1}: <strong>${n}</strong> (${pct}%)</div>`;
+    });
+    h += `</div></div>`;
+    const statBoxes = [];
+    if(stats.jumped>0) statBoxes.push(`<div style="background:#E8F5EF;border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800;color:#0D6B50;line-height:1">${stats.jumped}</div><div style="font-size:10px;color:#0D6B50;font-weight:600;margin-top:3px">Jumped ↑</div><div style="font-size:11px;color:#0D6B50;font-weight:700">${stats.jumpedPct}%</div></div>`);
+    statBoxes.push(`<div style="background:#f5f5f2;border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800;color:#555;line-height:1">${stats.stayed}</div><div style="font-size:10px;color:#888;font-weight:600;margin-top:3px">Stayed →</div><div style="font-size:11px;color:#888;font-weight:700">${stats.stayedPct}%</div></div>`);
+    if(stats.dropped>0) statBoxes.push(`<div style="background:#FCEAEA;border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800;color:#C0392B;line-height:1">${stats.dropped}</div><div style="font-size:10px;color:#C0392B;font-weight:600;margin-top:3px">Dropped ↓</div><div style="font-size:11px;color:#C0392B;font-weight:700">${stats.droppedPct}%</div></div>`);
+    h += `<div style="display:grid;grid-template-columns:repeat(${statBoxes.length},1fr);gap:8px;margin-bottom:${depth.length?'14px':'0'}">${statBoxes.join('')}</div>`;
+    if(depth.length) {
+      h += `<div style="border-top:1px solid #f0f0ec;padding-top:12px">
+        <div style="font-size:10px;font-weight:600;color:#aaa;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px">Jump breakdown</div>`;
+      depth.forEach(d=>{
+        const pct=soy>0?(d.n/soy*100).toFixed(1):0;
+        h+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <div style="font-size:11px;color:#666;width:40px;flex-shrink:0">${d.label}</div>
+          <div style="flex:1;height:14px;background:#f0f0f0;border-radius:4px;overflow:hidden">
+            <div style="width:${pct}%;height:100%;background:#6B4DAA;border-radius:4px"></div>
+          </div>
+          <div style="font-size:11px;font-weight:700;color:#6B4DAA;width:60px;text-align:right">${d.n} (${pct}%)</div>
+        </div>`;
+      });
+      h += '</div>';
+    }
+    h += '</div>';
+  });
+
+  h += '</div>';
+  el.innerHTML = h;
+}
+
+function renderLJGradeCompare(el, subjectData, grades, themeCol) {
+  const lvlKeys = ['L1','L2','L3','L4'];
+  const lvlLabels = ['Level 1','Level 2','Level 3','Level 4'];
+  const lvlColors = ['#E24B4A','#EF9F27','#3266ad','#1D9E75'];
+
+  let h = `<div style="background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+    <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:1px;text-transform:uppercase">How to read</div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#0D6B50;font-weight:600"><div style="width:16px;height:10px;border-radius:2px;background:#0D6B50"></div>↑ Jumped</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#666;font-weight:600"><div style="width:16px;height:10px;border-radius:2px;background:#bbb"></div>→ Stayed</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#E24B4A;font-weight:600"><div style="width:16px;height:10px;border-radius:2px;background:#E24B4A"></div>↓ Dropped</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#6B4DAA;font-weight:600"><div style="width:16px;height:10px;border-radius:2px;background:#6B4DAA;opacity:0.8"></div>Jump depth</div>
+    </div>
+    <div style="margin-left:auto;font-size:10px;color:#ccc;font-style:italic">🏆 = highest % jumped in that level</div>
+  </div>`;
+
+  h += '<div style="display:flex;flex-direction:column;gap:20px">';
+
+  lvlKeys.forEach((lk, li) => {
+    const gradesWithData = grades.filter(g => subjectData[lk]?.[g]);
+    if(!gradesWithData.length) return;
+
+    // Find best grade (highest % jumped for L1-L3, highest % stayed for L4)
+    let bestGrade = null, bestPct = -1;
+    gradesWithData.forEach(g => {
+      const {soy,eoy} = subjectData[lk][g];
+      const s = jumpStats(li,eoy);
+      const metric = lk==='L4' ? s.stayedPct : s.jumpedPct;
+      if(metric > bestPct) { bestPct = metric; bestGrade = g; }
+    });
+
+    h += `<div style="background:#fff;border:1px solid #e0e0e0;border-radius:14px;padding:22px 24px;box-shadow:0 1px 4px rgba(0,0,0,.04)">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+        <div style="width:10px;height:10px;border-radius:50%;background:${lvlColors[li]}"></div>
+        <div style="font-size:14px;font-weight:700;color:#1a1a1a">${lvlLabels[li]} → EOY Movement</div>
+        <div style="margin-left:auto;font-size:11px;color:#aaa">${gradesWithData.length} grades · all values in %</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(${Math.min(gradesWithData.length,4)},1fr);gap:12px">`;
+
+    gradesWithData.forEach(g => {
+      const {soy,eoy} = subjectData[lk][g];
+      const stats = jumpStats(li, eoy);
+      const depth = jumpDepth(li, eoy);
+      const isBest = g === bestGrade;
+
+      h += `<div style="background:${isBest?'#F0FFF7':'#f8f8f8'};border:1px solid ${isBest?'#0D6B50':'#eee'};border-radius:10px;padding:14px;position:relative">
+        ${isBest?`<div style="position:absolute;top:8px;right:8px;font-size:12px" title="Highest % jumped">🏆</div>`:''}
+        <!-- Grade header -->
+        <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:10px">
+          <div style="font-size:15px;font-weight:800;color:${themeCol}">${g.replace('Grade ','G')}</div>
+          <div style="font-size:10px;color:#aaa">n=${soy}</div>
+        </div>
+        <!-- Main stacked bar -->
+        <div style="display:flex;height:24px;border-radius:5px;overflow:hidden;margin-bottom:6px;box-shadow:0 1px 3px rgba(0,0,0,.08)">
+          ${stats.jumped>0?`<div style="width:${stats.jumpedPct}%;background:#0D6B50;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;overflow:hidden" title="Jumped: ${stats.jumpedPct}%">${stats.jumpedPct>=15?stats.jumpedPct+'%':''}</div>`:''}
+          <div style="width:${stats.stayedPct}%;background:#bbb;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;overflow:hidden" title="Stayed: ${stats.stayedPct}%">${stats.stayedPct>=15?stats.stayedPct+'%':''}</div>
+          ${stats.dropped>0?`<div style="width:${stats.droppedPct}%;background:#E24B4A;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;overflow:hidden" title="Dropped: ${stats.droppedPct}%">${stats.droppedPct>=15?stats.droppedPct+'%':''}</div>`:''}
+        </div>
+        <!-- % labels row -->
+        <div style="display:flex;justify-content:space-around;margin-bottom:10px">
+          ${stats.jumped>0?`<div style="text-align:center"><div style="font-size:14px;font-weight:800;color:#0D6B50;line-height:1">${stats.jumpedPct}%</div><div style="font-size:9px;color:#0D6B50;margin-top:1px">↑ jumped</div></div>`:''}
+          <div style="text-align:center"><div style="font-size:14px;font-weight:700;color:#888;line-height:1">${stats.stayedPct}%</div><div style="font-size:9px;color:#aaa;margin-top:1px">→ stayed</div></div>
+          ${stats.dropped>0?`<div style="text-align:center"><div style="font-size:14px;font-weight:700;color:#E24B4A;line-height:1">${stats.droppedPct}%</div><div style="font-size:9px;color:#E24B4A;margin-top:1px">↓ dropped</div></div>`:''}
+        </div>`;
+
+      // Jump depth
+      if(depth.length) {
+        h += `<div style="border-top:1px solid #eee;padding-top:8px">`;
+        depth.forEach(d => {
+          const pct = soy>0 ? +(d.n/soy*100).toFixed(1) : 0;
+          h += `<div style="display:flex;align-items:center;gap:5px;margin-bottom:4px">
+            <div style="font-size:9px;color:#888;width:28px;flex-shrink:0">${d.label}</div>
+            <div style="flex:1;height:10px;background:#e8e8e8;border-radius:3px;overflow:hidden">
+              <div style="width:${pct}%;height:100%;background:#6B4DAA;opacity:0.8;border-radius:3px"></div>
+            </div>
+            <div style="font-size:9px;font-weight:700;color:#6B4DAA;width:34px;text-align:right">${pct}%</div>
+          </div>`;
+        });
+        h += '</div>';
+      }
+      h += '</div>';
+    });
+
+    h += '</div></div>';
+  });
+
+  h += '</div>';
+  el.innerHTML = h;
+}
+
+function renderLJCompare() {
+  const el = document.getElementById('lj-body');
+  const cmpVerticals = ['Foundations','AMC - Model','AMC - Non - Model'];
+  const vColors = {'Foundations':'#185FA5','AMC - Model':'#C47A1A','AMC - Non - Model':'#C0392B'};
+  const cmpGrades = ['Grade 2','Grade 3','Grade 4','Grade 5'];
+  const lvlNames = ['L1','L2','L3','L4'];
+
+  // Grade selector
+  let h = '<div style="display:flex;justify-content:center;gap:0;margin-bottom:24px">';
+  cmpGrades.forEach((g,i)=>{
+    const active=g===ljCmpGrade;
+    h+=`<button onclick="ljCmpGrade='${g}';renderLJCompare()" style="padding:9px 18px;font-size:13px;font-weight:600;border:1px solid #ccc;${i===0?'border-radius:8px 0 0 8px':i===cmpGrades.length-1?'border-radius:0 8px 8px 0':'border-radius:0'};${i>0?'border-left:none':''};cursor:pointer;font-family:inherit;${active?'background:#333;color:#fff;border-color:#333':'background:#f0f0f0;color:#666'}">${g}</button>`;
+  });
+  h += '</div>';
+
+  // For each starting level, show side-by-side % jumped
+  h += '<div style="display:flex;flex-direction:column;gap:16px">';
+
+  ['L1','L2','L3','L4'].forEach((lk,li)=>{
+    // Check if any vertical has data for this level+grade
+    const hasData = cmpVerticals.some(v=>JUMP_DATA[v]?.English?.[lk]?.[ljCmpGrade]);
+    if(!hasData) return;
+
+    h+=`<div style="background:#fff;border:1px solid #e0e0e0;border-radius:14px;padding:22px 24px;box-shadow:0 1px 4px rgba(0,0,0,.04)">
+      <div style="font-size:14px;font-weight:700;color:#1a1a1a;margin-bottom:18px">Students who started at ${lvlNames[li]} — % Jumped, Stayed, Dropped</div>
+      <div style="display:grid;grid-template-columns:repeat(${cmpVerticals.length},1fr);gap:16px">`;
+
+    cmpVerticals.forEach(v=>{
+      const entry = JUMP_DATA[v]?.English?.[lk]?.[ljCmpGrade];
+      const col = vColors[v];
+      if(!entry){
+        h+=`<div style="background:#f8f8f8;border-radius:10px;padding:16px;text-align:center">
+          <div style="font-size:11px;font-weight:700;color:#aaa;margin-bottom:8px">${v}</div>
+          <div style="font-size:12px;color:#ccc">No data</div>
+        </div>`;
+        return;
+      }
+      const {soy,eoy}=entry;
+      const stats=jumpStats(li,eoy);
+      const depth=jumpDepth(li,eoy);
+
+      h+=`<div style="background:#f8f8f8;border-radius:10px;padding:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div style="font-size:11px;font-weight:700;color:${col}">${v}</div>
+          <div style="font-size:10px;color:#aaa">n=${soy}</div>
+        </div>
+        <!-- stacked bar -->
+        <div style="display:flex;height:20px;border-radius:5px;overflow:hidden;margin-bottom:10px">
+          <div style="width:${stats.jumpedPct}%;background:#0D6B50" title="Jumped: ${stats.jumpedPct}%"></div>
+          <div style="width:${stats.stayedPct}%;background:#bbb" title="Stayed: ${stats.stayedPct}%"></div>
+          <div style="width:${stats.droppedPct}%;background:#E24B4A" title="Dropped: ${stats.droppedPct}%"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:12px">
+          <span style="color:#0D6B50;font-weight:700">↑ ${stats.jumpedPct}%</span>
+          <span style="color:#888;font-weight:600">→ ${stats.stayedPct}%</span>
+          <span style="color:${stats.droppedPct>0?'#E24B4A':'#ccc'};font-weight:700">↓ ${stats.droppedPct}%</span>
+        </div>
+        <!-- jump depth -->`;
+      if(depth.length){
+        depth.forEach(d=>{
+          const pct=soy>0?(d.n/soy*100).toFixed(1):0;
+          h+=`<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+            <div style="font-size:10px;color:#888;width:36px;flex-shrink:0">${d.label}</div>
+            <div style="flex:1;height:10px;background:#e8e8e8;border-radius:3px;overflow:hidden">
+              <div style="width:${pct}%;height:100%;background:${col};opacity:0.8"></div>
+            </div>
+            <div style="font-size:10px;font-weight:700;color:${col};width:42px;text-align:right">${pct}%</div>
+          </div>`;
+        });
+      }
+      h+='</div>';
+    });
+
+    h+='</div></div>';
+  });
+
+  h+='</div>';
+
+  // Legend
+  h+=`<div style="background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;gap:32px;flex-wrap:wrap">
+    <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:1px;text-transform:uppercase">How to read</div>
+    <div style="display:flex;gap:20px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:28px;height:12px;border-radius:3px;background:#0D6B50"></div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:#0D6B50">Jumped ↑</div>
+          <div style="font-size:10px;color:#aaa">moved to a higher level</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:28px;height:12px;border-radius:3px;background:#bbb"></div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:#666">Stayed →</div>
+          <div style="font-size:10px;color:#aaa">remained at same level</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:28px;height:12px;border-radius:3px;background:#E24B4A"></div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:#E24B4A">Dropped ↓</div>
+          <div style="font-size:10px;color:#aaa">moved to a lower level</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:28px;height:12px;border-radius:3px;background:#6B4DAA;opacity:0.8"></div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:#6B4DAA">→ L2 / L3 / L4</div>
+          <div style="font-size:10px;color:#aaa">depth of jump by level</div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-left:auto;font-size:10px;color:#ccc;font-style:italic">n = total students at that level at SOY</div>
+  </div>`;
+
+  el.innerHTML = h;
+}
+
+function buildNav() {
+  const navEl = document.getElementById('mainNav');
+  navEl.innerHTML = '';
+  navEl.style.display = 'flex';
+  navEl.style.justifyContent = 'center';
+
+  const tabs = [
+    {key:'SoyEoy', label:'SOY → EOY Comparison'},
+    {key:'LevelJump', label:'Level Jump'}
+  ];
+
+  tabs.forEach((tab,i) => {
+    const btn = document.createElement('button');
+    btn.textContent = tab.label;
+    btn.dataset.view = tab.key;
+    if(i===0) btn.style.borderRadius='8px 0 0 8px';
+    else if(i===tabs.length-1) btn.style.borderRadius='0 8px 8px 0';
+    btn.addEventListener('click', ()=>{
+      currentView = tab.key;
+      render();
+    });
+    navEl.appendChild(btn);
+  });
+}
+
+function render() {
+  updateNav();
+  if(currentView==='SoyEoy') renderSoyEoy();
+  else if(currentView==='LevelJump') renderLevelJump();
+}
+
+buildNav();
+render();
+
+</script>
+</body>
+</html>

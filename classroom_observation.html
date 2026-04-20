@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Classroom Observation</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Outfit',-apple-system,sans-serif;background:#F7F5F0;color:#111;min-height:100vh;padding:32px 24px}
+.page{max-width:1100px;margin:0 auto}
+.top-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:36px}
+.back-link{font-size:12px;color:#999;text-decoration:none;display:flex;align-items:center;gap:4px;transition:color .2s}
+.back-link:hover{color:#333}
+.page-title{font-size:13px;font-weight:600;color:#555;letter-spacing:.3px}
+.header{margin-bottom:32px}
+.header h1{font-size:28px;font-weight:800;color:#111;letter-spacing:-.03em;margin-bottom:4px}
+.header p{font-size:13px;color:#999;font-weight:500}
+.main-tabs{display:flex;gap:0;margin-bottom:28px;border-bottom:2px solid #E5E2DC}
+.main-tab{padding:11px 22px;font-size:13px;font-weight:600;color:#999;cursor:pointer;border:none;background:transparent;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s;font-family:'Outfit',sans-serif;letter-spacing:.2px}
+.main-tab.active{color:#111;border-bottom-color:#111}
+.main-tab:hover:not(.active):not(.disabled){color:#555}
+.main-tab.disabled{opacity:.4;cursor:not-allowed}
+.vertical-toggle{display:flex;gap:0;margin-bottom:24px;flex-wrap:wrap}
+.vtab{padding:9px 20px;font-size:12px;font-weight:600;border:1px solid #D5D0C8;background:#fff;color:#777;cursor:pointer;transition:all .15s;font-family:'Outfit',sans-serif;letter-spacing:.3px}
+.vtab:first-child{border-radius:8px 0 0 8px}
+.vtab:last-child{border-radius:0 8px 8px 0}
+.vtab:not(:first-child){border-left:none}
+.vtab.active{background:#111;color:#fff;border-color:#111}
+.metrics-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.metric-card{background:#fff;border:1px solid #E5E2DC;border-radius:16px;padding:22px 24px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.metric-card-title{font-size:13px;font-weight:700;color:#333;letter-spacing:-.01em}
+.bar-row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.bar-period{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#aaa;width:32px;flex-shrink:0}
+.bar-track{flex:1;height:28px;border-radius:6px;overflow:hidden;display:flex;background:#f5f5f2}
+.bar-seg{height:100%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;overflow:hidden;white-space:nowrap}
+.bar-seg.tiny{font-size:0}
+.change-badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:100px;flex-shrink:0;min-width:48px;text-align:center}
+.change-badge.up{background:#E8F5EF;color:#0D6B50}
+.change-badge.down{background:#FCEAEA;color:#C0392B}
+.change-badge.flat{background:#f0f0f0;color:#999}
+.legend-row{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid #f0f0ec}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:#888;font-weight:500}
+.legend-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.insights-box{background:#fff;border:1px solid #E5E2DC;border-radius:16px;padding:20px 24px;margin-bottom:20px}
+.insights-box-title{font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#bbb;margin-bottom:14px}
+.insight-item{font-size:13px;line-height:1.7;color:#444;margin-bottom:8px;padding-left:18px;position:relative}
+.insight-item:last-child{margin-bottom:0}
+.insight-item::before{content:'';position:absolute;left:0;top:8px;width:7px;height:7px;border-radius:50%}
+.insight-item.positive::before{background:#2D9E6F}
+.insight-item.negative::before{background:#E05A5A}
+.insight-item.neutral::before{background:#F0A843}
+.insight-item strong{font-weight:700;color:#111}
+@media(max-width:680px){.metrics-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="top-nav">
+    <a href="index.html" class="back-link">← Back to Dashboards</a>
+    <span class="page-title">Classroom Observation · 2025-26</span>
+  </div>
+  <div class="header">
+    <h1>Classroom Observation</h1>
+    <p>Observation data across verticals · April 2026</p>
+  </div>
+  <div class="main-tabs">
+    <button class="main-tab active" onclick="switchTab('soy-eoy')">SOY → EOY 2025-26</button>
+    <button class="main-tab" onclick="switchTab('overall')">Overall 2025-26</button>
+    <button class="main-tab disabled">2024-25 vs 2025-26</button>
+  </div>
+  <div id="tab-content"></div>
+</div>
+<script>
+const SLOT_COLORS=['#2D9E6F','#F0A843','#E05A5A','#BBBBBB'];
+const V_COLORS={'LCPS':'#1A5FA8','HYD Govt - GP':'#0D6B50','Jamnagar':'#7B4FAA','AMC - Model':'#C47A1A','AMC - Non-Model':'#C0392B'};
+
+const OBS_DATA={
+  'LCPS':{metrics:[
+    {name:'CFU',options:['Yes','No'],positive:[0],SOY:[89.7,10.3],EOY:[100,0]},
+    {name:'Practice Time',options:['Yes','Yes, but to some students','No'],positive:[0],SOY:[23.5,19.1,57.4],EOY:[45.8,41.7,12.5]},
+    {name:'Students on Task',options:['More than 75%','50–75%','Less than 50%'],positive:[0],SOY:[20.6,67.6,11.8],EOY:[41.7,58.3,0]},
+    {name:'Executing Planned Activities',options:['Yes','No'],positive:[0],SOY:[94.1,5.9],EOY:[87.5,12.5]},
+    {name:'Following the Plan',options:['Yes','No'],positive:[0],SOY:[92.6,7.4],EOY:[77.1,22.9]},
+    {name:'Planned for the Week',options:['Yes','Yes, but partial','No'],positive:[0],SOY:[89.7,2.9,7.4],EOY:[81.3,2.1,16.7]}
+  ]},
+  'HYD Govt - GP':{metrics:[
+    {name:'CFU',options:['Yes','No'],positive:[0],SOY:[67.6,32.4],EOY:[100,0]},
+    {name:'Practice Time',options:['Yes','Yes, but to some students','No'],positive:[0],SOY:[29.7,59.5,10.8],EOY:[72.2,27.8,0]},
+    {name:'Doing All Activities in Tool',options:['Yes','Some','None'],positive:[0],SOY:[47.1,5.9,47.1],EOY:[66.7,0,33.3]},
+    {name:'Errors',options:['No errors','Errors present'],positive:[0],SOY:[89.2,10.8],EOY:[88.9,11.1]},
+    {name:'Using 321 Techniques',options:['Yes','No'],positive:[0],SOY:[51.4,48.6],EOY:[97.2,2.8]},
+    {name:'Students on Task',options:['More than 75%','50–75%','Less than 50%'],positive:[0],SOY:[5.4,75.7,18.9],EOY:[25,75,0]}
+  ]}
+};
+
+const OVERALL_DATA={
+  'LCPS':{metrics:[
+    {name:'CFU',options:['Yes','No'],positive:[0],vals:[95.4,4.6]},
+    {name:'Practice Time',options:['Yes','Yes, but to some students','No'],positive:[0],vals:[33,31,36]},
+    {name:'Students on Task',options:['More than 75%','50–75%','Less than 50%'],positive:[0],vals:[37.5,54.4,8]},
+    {name:'Executing Planned Activities',options:['Yes','No'],positive:[0],vals:[87.4,12.6]},
+    {name:'Following the Plan',options:['Yes','No'],positive:[0],vals:[83.1,16.9]},
+    {name:'Planned for the Week',options:['Yes','Yes, but partial','No'],positive:[0],vals:[85.4,5,9.6]}
+  ]},
+  'HYD Govt - GP':{metrics:[
+    {name:'CFU',options:['Yes','No'],positive:[0],vals:[88.1,11.9]},
+    {name:'Practice Time',options:['Yes','Yes, but to some students','No'],positive:[0],vals:[35.7,60.1,4.2]},
+    {name:'Doing All Activities in Tool',options:['Yes','Some','None'],positive:[0],vals:[67.9,8.9,23.2]},
+    {name:'Errors',options:['No errors','Errors present'],positive:[0],vals:[83.2,16.8]},
+    {name:'Using 321 Techniques',options:['Yes','No'],positive:[0],vals:[65,35]},
+    {name:'Students on Task',options:['More than 75%','50–75%','Less than 50%'],positive:[0],vals:[30.8,61.5,7.7]}
+  ]},
+  'Jamnagar':{metrics:[
+    {name:'CFU',options:['Yes','No'],positive:[0],vals:[63.8,36.2]},
+    {name:'Clarifying Doubts',options:['Yes','No'],positive:[0],vals:[42.6,57.4]},
+    {name:'Academic Plan Implementation',options:['Yes','No'],positive:[0],vals:[21.3,78.7]},
+    {name:'Errors',options:['No errors','Errors present'],positive:[0],vals:[89.4,10.6]},
+    {name:'Using 321 Techniques',options:['Yes','No'],positive:[0],vals:[17,83]},
+    {name:'Practice Time',options:['Yes','Yes, but to some students','No'],positive:[0],vals:[60.1,35.7,4.2]},
+    {name:'Students on Task',options:['More than 75%','50–75%','Less than 50%'],positive:[0],vals:[4.3,57.4,38.3]},
+    {name:'Students Asking Questions',options:['Yes','No'],positive:[0],vals:[55.3,44.7]}
+  ]},
+  'AMC - Model':{metrics:[
+    {name:'CFU',options:['Yes','No'],positive:[0],vals:[64.7,35.3]},
+    {name:'Content Error',options:['No errors','Errors present'],positive:[0],vals:[52.9,47.1]},
+    {name:'FLN Period Allocated',options:['Yes','No'],positive:[0],vals:[84.3,15.7]},
+    {name:'FLN Coordination',options:['Yes','NA'],positive:[0],naSlot:[1],vals:[96.1,3.9]},
+    {name:'Independent Practice',options:['Yes','Yes, but to some students','No'],positive:[0],vals:[31.4,19.6,49]},
+    {name:'Teacher Following Next Steps',options:['Yes','No','NA'],positive:[0],naSlot:[2],vals:[43.1,35.3,21.6]},
+    {name:'Students on Task',options:['More than 75%','50–75%','Less than 50%'],positive:[0],vals:[37.3,29.4,33.3]}
+  ]},
+  'AMC - Non-Model':{metrics:[
+    {name:'CFU',options:['Yes','No'],positive:[0],vals:[69.4,30.6]},
+    {name:'Content Error',options:['No errors','Errors present'],positive:[0],vals:[81.6,18.4]},
+    {name:'FLN Period Allocated',options:['Yes','No','NA'],positive:[0],naSlot:[2],vals:[87.8,8.2,3.9]},
+    {name:'FLN Coordination',options:['Yes','NA'],positive:[0],naSlot:[1],vals:[98,2]},
+    {name:'Independent Practice',options:['Yes','Yes, but to some students','No'],positive:[0],vals:[28.6,8.2,63.3]},
+    {name:'Using Remedial Kit',options:['Yes','No','NA'],positive:[0],naSlot:[2],vals:[36.7,22.4,40.8]},
+    {name:'Students on Task',options:['More than 75%','50–75%','Less than 50%'],positive:[0],vals:[29.2,43.8,27.1]}
+  ]}
+};
+
+const COMMON_MAP=[
+  {label:'CFU',note:'Checking for understanding',skipVerticals:[],
+    map:{'LCPS':{metric:'CFU'},'HYD Govt - GP':{metric:'CFU'},'Jamnagar':{metric:'CFU'},'AMC - Model':{metric:'CFU'},'AMC - Non-Model':{metric:'CFU'}}},
+  {label:'Practice Time',note:'Practice time / Independent Practice (AMC)',skipVerticals:[],
+    map:{'LCPS':{metric:'Practice Time'},'HYD Govt - GP':{metric:'Practice Time'},'Jamnagar':{metric:'Practice Time'},'AMC - Model':{metric:'Independent Practice'},'AMC - Non-Model':{metric:'Independent Practice'}}},
+  {label:'Students on Task',note:'Proportion of students actively engaged',skipVerticals:[],
+    map:{'LCPS':{metric:'Students on Task'},'HYD Govt - GP':{metric:'Students on Task'},'Jamnagar':{metric:'Students on Task'},'AMC - Model':{metric:'Students on Task'},'AMC - Non-Model':{metric:'Students on Task'}}},
+  {label:'Errors',note:'Content errors observed — LCPS not tracked',skipVerticals:['LCPS'],
+    map:{'HYD Govt - GP':{metric:'Errors'},'Jamnagar':{metric:'Errors'},'AMC - Model':{metric:'Content Error'},'AMC - Non-Model':{metric:'Content Error'}}}
+];
+
+let currentTab='soy-eoy';
+let currentSoyV='LCPS';
+let currentOverallV='LCPS';
+
+function sc(m,i){return(m.naSlot&&m.naSlot.includes(i))?SLOT_COLORS[3]:(SLOT_COLORS[i]||SLOT_COLORS[2]);}
+
+function buildBar(period,vals,options,naSlot){
+  let h=`<div class="bar-row"><div class="bar-period">${period}</div><div class="bar-track">`;
+  vals.forEach((v,i)=>{
+    if(v===0)return;
+    const col=(naSlot&&naSlot.includes(i))?SLOT_COLORS[3]:(SLOT_COLORS[i]||SLOT_COLORS[2]);
+    const show=v>=8;
+    h+=`<div class="bar-seg${show?'':' tiny'}" style="width:${v}%;background:${col}" title="${options[i]}: ${v}%">${show?v+'%':''}</div>`;
+  });
+  return h+'</div></div>';
+}
+
+function badge(diff){
+  const cls=diff>1?'up':diff<-1?'down':'flat';
+  const txt=diff>0?`▲ +${diff}%`:diff<0?`▼ ${diff}%`:'—';
+  return `<span class="change-badge ${cls}">${txt}</span>`;
+}
+
+function insBox(ins){
+  if(!ins.length)return'';
+  let h='<div class="insights-box"><div class="insights-box-title">Key Insights</div>';
+  ins.forEach(i=>{h+=`<div class="insight-item ${i.type}">${i.text}</div>`;});
+  return h+'</div>';
+}
+
+/* ── INSIGHT GENERATORS ─────────────────────────────────────────────── */
+function genSoyIns(data){
+  const ins=[],ms=data.metrics;
+  let bM=null,bD=-999,wM=null,wD=999;
+  ms.forEach(m=>{const d=m.EOY[m.positive[0]]-m.SOY[m.positive[0]];if(d>bD){bD=d;bM=m;}if(d<wD){wD=d;wM=m;}});
+  if(bM&&bD>1)ins.push({type:'positive',text:`<strong>${bM.name}</strong> improved the most — up <strong>+${bD.toFixed(1)}%</strong> from SOY to EOY.`});
+  if(wM&&wD<-1)ins.push({type:'negative',text:`<strong>${wM.name}</strong> declined the most — dropped <strong>${wD.toFixed(1)}%</strong> from SOY to EOY.`});
+  ms.forEach(m=>{
+    const soy=m.SOY[m.positive[0]],eoy=m.EOY[m.positive[0]];
+    if(soy<80&&eoy>=80)ins.push({type:'positive',text:`<strong>${m.name}</strong> crossed the <strong>80% threshold</strong> by EOY (${soy}% → ${eoy}%).`});
+    else if(soy<50&&eoy>=50)ins.push({type:'positive',text:`<strong>${m.name}</strong> crossed the <strong>50% mark</strong> by EOY (${soy}% → ${eoy}%).`});
+    else if(soy>=50&&eoy<50)ins.push({type:'negative',text:`<strong>${m.name}</strong> dropped below <strong>50%</strong> by EOY (${soy}% → ${eoy}%).`});
+    if(eoy===100)ins.push({type:'positive',text:`<strong>${m.name}</strong> achieved a perfect <strong>100%</strong> positive response at EOY.`});
+    else if(eoy<50)ins.push({type:'negative',text:`<strong>${m.name}</strong> remains below 50% at EOY (<strong>${eoy}%</strong>) — a priority area.`});
+  });
+  return ins.slice(0,5);
+}
+
+function genCmpSOYIns(m1,m2,name,v1,v2){
+  const ins=[],e1=m1.EOY[0],e2=m2.EOY[0],d1=parseFloat((m1.EOY[0]-m1.SOY[0]).toFixed(1)),d2=parseFloat((m2.EOY[0]-m2.SOY[0]).toFixed(1));
+  const gap=Math.abs(e1-e2).toFixed(1);
+  if(gap>5){const ldr=e1>=e2?v1:v2;ins.push({type:'neutral',text:`<strong>${ldr}</strong> leads on <strong>${name}</strong> at EOY with <strong>${Math.max(e1,e2)}%</strong> — a ${gap}% gap.`});}
+  if(d1>0&&d2<0)ins.push({type:'neutral',text:`<strong>${v1}</strong> improved while <strong>${v2}</strong> declined on <strong>${name}</strong>.`});
+  else if(d2>0&&d1<0)ins.push({type:'neutral',text:`<strong>${v2}</strong> improved while <strong>${v1}</strong> declined on <strong>${name}</strong>.`});
+  if(d1>10)ins.push({type:'positive',text:`<strong>${v1}</strong> made a strong <strong>+${d1}%</strong> improvement on ${name}.`});
+  if(d2>10)ins.push({type:'positive',text:`<strong>${v2}</strong> made a strong <strong>+${d2}%</strong> improvement on ${name}.`});
+  return ins;
+}
+
+function genOverallIns(data,vName){
+  const ins=[],ms=data.metrics;
+  let bM=null,bV=-1,wM=null,wV=999;
+  ms.forEach(m=>{const v=m.vals[m.positive[0]];if(v>bV){bV=v;bM=m;}if(v<wV){wV=v;wM=m;}});
+  if(bM)ins.push({type:'positive',text:`<strong>${bM.name}</strong> is the strongest metric at <strong>${bV}%</strong> positive response.`});
+  if(wM&&wV<bV)ins.push({type:wV<50?'negative':'neutral',text:`<strong>${wM.name}</strong> is the weakest area at <strong>${wV}%</strong>${wV<50?' — below the 50% threshold.':'.'}` });
+  ms.forEach(m=>{const v=m.vals[m.positive[0]];if(v<50)ins.push({type:'negative',text:`<strong>${m.name}</strong> at <strong>${v}%</strong> — more than half of observations not meeting this standard.`});});
+  ms.forEach(m=>{const v=m.vals[m.positive[0]];if(v>=90)ins.push({type:'positive',text:`<strong>${m.name}</strong> is performing excellently at <strong>${v}%</strong>.`});});
+  return ins.slice(0,5);
+}
+
+function genCmpOverallIns(){
+  const ins=[],allV=Object.keys(OVERALL_DATA);
+  COMMON_MAP.forEach(cm=>{
+    const showV=allV.filter(v=>!cm.skipVerticals.includes(v)&&cm.map[v]);
+    const vals=showV.map(v=>{const mD=OVERALL_DATA[v].metrics.find(m=>m.name===cm.map[v].metric);return{v,val:mD?mD.vals[0]:0};}).sort((a,b)=>b.val-a.val);
+    const top=vals[0],bot=vals[vals.length-1],gap=(top.val-bot.val).toFixed(1);
+    if(gap>15)ins.push({type:'neutral',text:`Large gap on <strong>${cm.label}</strong>: <strong>${top.v}</strong> leads at ${top.val}% vs <strong>${bot.v}</strong> at ${bot.val}% (${gap}% spread).`});
+    if(top.val>=90)ins.push({type:'positive',text:`<strong>${top.v}</strong> tops <strong>${cm.label}</strong> at <strong>${top.val}%</strong> across all verticals.`});
+    if(bot.val<50)ins.push({type:'negative',text:`<strong>${bot.v}</strong> is below 50% on <strong>${cm.label}</strong> (<strong>${bot.val}%</strong>) — a priority area.`});
+  });
+  return ins.slice(0,6);
+}
+
+/* ── TAB SWITCH ─────────────────────────────────────────────────────── */
+function switchTab(tab){
+  currentTab=tab;
+  document.querySelectorAll('.main-tab').forEach((t,i)=>{
+    t.classList.toggle('active',(i===0&&tab==='soy-eoy')||(i===1&&tab==='overall'));
+  });
+  if(tab==='soy-eoy')renderSoyEoy();
+  else if(tab==='overall')renderOverall();
+}
+
+/* ── TAB 1 ──────────────────────────────────────────────────────────── */
+function renderSoyEoy(){
+  const el=document.getElementById('tab-content');
+  let h='<div class="vertical-toggle">';
+  Object.keys(OBS_DATA).forEach(v=>{h+=`<button class="vtab${v===currentSoyV?' active':''}" data-v="${v}" onclick="switchSoyV('${v}')">${v}</button>`;});
+  h+=`<button class="vtab${currentSoyV==='compare'?' active':''}" data-v="compare" onclick="switchSoyV('compare')" style="border-left:none">Compare Common</button>`;
+  h+='</div><div id="soy-area"></div>';
+  el.innerHTML=h;
+  paintSoy();
+}
+
+function switchSoyV(v){
+  currentSoyV=v;
+  document.querySelectorAll('#tab-content .vtab').forEach(b=>b.classList.toggle('active',b.dataset.v===v));
+  paintSoy();
+}
+
+function paintSoy(){
+  const el=document.getElementById('soy-area');
+  if(currentSoyV==='compare'){paintSoyCmp(el);return;}
+  const data=OBS_DATA[currentSoyV];
+  let h='<div class="metrics-grid">';
+  data.metrics.forEach(m=>{
+    const posIdx=m.positive[0];
+    const diff=parseFloat((m.EOY[posIdx]-m.SOY[posIdx]).toFixed(1));
+    h+=`<div class="metric-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div class="metric-card-title">${m.name}</div>${badge(diff)}
+      </div>`;
+    h+=buildBar('SOY',m.SOY,m.options,m.naSlot);
+    h+=buildBar('EOY',m.EOY,m.options,m.naSlot);
+    h+='<div class="legend-row">';
+    m.options.forEach((opt,i)=>{if(m.SOY[i]>0||m.EOY[i]>0)h+=`<div class="legend-item"><div class="legend-dot" style="background:${sc(m,i)}"></div>${opt}</div>`;});
+    h+='</div></div>';
+  });
+  h+='</div>';
+  el.innerHTML=insBox(genSoyIns(data))+h;
+}
+
+function paintSoyCmp(el){
+  const COMMON=[
+    {name:'CFU',options:['Yes','No'],note:'Checking for understanding during class'},
+    {name:'Practice Time',options:['Yes','Yes, but to some students','No'],note:'Students given dedicated practice time'},
+    {name:'Students on Task',options:['More than 75%','50–75%','Less than 50%'],note:'Proportion of students actively engaged'}
+  ];
+  const V1='LCPS',V2='HYD Govt - GP';
+  const getM=(v,name)=>OBS_DATA[v].metrics.find(m=>m.name===name);
+  let h=`<div style="background:#fff;border:1px solid #E5E2DC;border-radius:12px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+    <div style="font-size:11px;font-weight:700;color:#aaa;letter-spacing:.6px;text-transform:uppercase">Legend</div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#555"><div style="width:12px;height:12px;border-radius:3px;background:#2D9E6F"></div>Positive</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#555"><div style="width:12px;height:12px;border-radius:3px;background:#F0A843"></div>Partial</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#555"><div style="width:12px;height:12px;border-radius:3px;background:#E05A5A"></div>Negative</div>
+    </div>
+    <div style="margin-left:auto;font-size:11px;color:#bbb">3 metrics in common</div>
+  </div>`;
+  COMMON.forEach(cm=>{
+    const m1=getM(V1,cm.name),m2=getM(V2,cm.name);
+    if(!m1||!m2)return;
+    const d1=parseFloat((m1.EOY[0]-m1.SOY[0]).toFixed(1)),d2=parseFloat((m2.EOY[0]-m2.SOY[0]).toFixed(1));
+    h+=`<div class="metric-card" style="margin-bottom:16px">
+      <div style="margin-bottom:18px">
+        <div class="metric-card-title" style="font-size:15px;margin-bottom:3px">${cm.name}</div>
+        <div style="font-size:11px;color:#bbb">${cm.note}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div style="font-size:12px;font-weight:700;color:${V_COLORS[V1]}">${V1}</div>${badge(d1)}
+          </div>
+          ${buildBar('SOY',m1.SOY,cm.options,m1.naSlot)}${buildBar('EOY',m1.EOY,cm.options,m1.naSlot)}
+        </div>
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div style="font-size:12px;font-weight:700;color:${V_COLORS[V2]}">${V2}</div>${badge(d2)}
+          </div>
+          ${buildBar('SOY',m2.SOY,cm.options,m2.naSlot)}${buildBar('EOY',m2.EOY,cm.options,m2.naSlot)}
+        </div>
+      </div>
+      <div class="legend-row">`;
+    cm.options.forEach((opt,i)=>{h+=`<div class="legend-item"><div class="legend-dot" style="background:${SLOT_COLORS[i]}"></div>${opt}</div>`;});
+    const cIns=genCmpSOYIns(m1,m2,cm.name,V1,V2);
+    if(cIns.length){h+='</div><div style="margin-top:12px;padding-top:12px;border-top:1px solid #f0f0ec">';cIns.forEach(i=>{h+=`<div class="insight-item ${i.type}" style="margin-bottom:4px">${i.text}</div>`;});}
+    h+='</div></div>';
+  });
+  el.innerHTML=h;
+}
+
+/* ── TAB 2 ──────────────────────────────────────────────────────────── */
+function renderOverall(){
+  const el=document.getElementById('tab-content');
+  let h='<div class="vertical-toggle" style="flex-wrap:wrap;gap:4px;margin-bottom:24px">';
+  Object.keys(OVERALL_DATA).forEach(v=>{
+    const col=V_COLORS[v]||'#333',active=v===currentOverallV;
+    h+=`<button class="vtab${active?' active':''}" data-v="${v}" style="${active?`background:${col};border-color:${col};color:#fff`:''}" onclick="switchOverallV('${v}')">${v}</button>`;
+  });
+  const cmpA=currentOverallV==='compare';
+  h+=`<button class="vtab${cmpA?' active':''}" data-v="compare" style="${cmpA?'background:#333;border-color:#333;color:#fff;border-left:none':'border-left:none'}" onclick="switchOverallV('compare')">Compare Common</button>`;
+  h+='</div><div id="overall-area"></div>';
+  el.innerHTML=h;
+  paintOverall();
+}
+
+function switchOverallV(v){
+  currentOverallV=v;
+  document.querySelectorAll('#tab-content .vtab').forEach(b=>{
+    const a=b.dataset.v===v,col=V_COLORS[b.dataset.v]||'#333';
+    b.classList.toggle('active',a);
+    b.style.background=a?col:'';b.style.borderColor=a?col:'';b.style.color=a?'#fff':'';
+  });
+  paintOverall();
+}
+
+function paintOverall(){
+  const el=document.getElementById('overall-area');
+  if(currentOverallV==='compare'){paintOverallCmp(el);return;}
+  const data=OVERALL_DATA[currentOverallV],col=V_COLORS[currentOverallV]||'#333';
+  let h='<div class="metrics-grid">';
+  data.metrics.forEach(m=>{
+    const posVal=m.vals[m.positive[0]];
+    h+=`<div class="metric-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div class="metric-card-title">${m.name}</div>
+        <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px;background:${col}20;color:${col}">${posVal}%</span>
+      </div>
+      <div class="bar-row" style="margin-bottom:0"><div class="bar-track" style="height:32px">`;
+    m.vals.forEach((v,i)=>{
+      if(v===0)return;
+      const show=v>=8;
+      h+=`<div class="bar-seg${show?'':' tiny'}" style="width:${v}%;background:${sc(m,i)}" title="${m.options[i]}: ${v}%">${show?v+'%':''}</div>`;
+    });
+    h+=`</div></div><div class="legend-row">`;
+    m.options.forEach((opt,i)=>{if(m.vals[i]>0)h+=`<div class="legend-item"><div class="legend-dot" style="background:${sc(m,i)}"></div>${opt}: <strong>${m.vals[i]}%</strong></div>`;});
+    h+='</div></div>';
+  });
+  h+='</div>';
+  el.innerHTML=insBox(genOverallIns(data,currentOverallV))+h;
+}
+
+function paintOverallCmp(el){
+  const allV=Object.keys(OVERALL_DATA);
+  let h='<div style="display:flex;flex-direction:column;gap:24px">';
+  COMMON_MAP.forEach(cm=>{
+    const showV=allV.filter(v=>!cm.skipVerticals.includes(v)&&cm.map[v]);
+    h+=`<div class="metric-card">
+      <div style="margin-bottom:18px">
+        <div class="metric-card-title" style="font-size:15px;margin-bottom:2px">${cm.label}</div>
+        <div style="font-size:11px;color:#bbb">${cm.note}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(${showV.length},1fr);gap:16px">`;
+    showV.forEach(v=>{
+      const mD=OVERALL_DATA[v].metrics.find(m=>m.name===cm.map[v].metric);
+      if(!mD)return;
+      const col=V_COLORS[v],posVal=mD.vals[0];
+      h+=`<div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div style="font-size:11px;font-weight:700;color:${col}">${v}</div>
+          <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;background:${col}20;color:${col}">${posVal}%</span>
+        </div>
+        <div class="bar-track" style="height:28px;margin-bottom:6px">`;
+      mD.vals.forEach((val,i)=>{
+        if(val===0)return;
+        const show=val>=8;
+        h+=`<div class="bar-seg${show?'':' tiny'}" style="width:${val}%;background:${sc(mD,i)}" title="${mD.options[i]}: ${val}%">${show?val+'%':''}</div>`;
+      });
+      h+=`</div><div style="display:flex;flex-wrap:wrap;gap:5px">`;
+      mD.options.forEach((opt,i)=>{if((mD.vals[i]||0)>0)h+=`<div style="display:flex;align-items:center;gap:3px;font-size:9px;color:#888"><div style="width:7px;height:7px;border-radius:2px;background:${sc(mD,i)}"></div>${opt}</div>`;});
+      h+='</div></div>';
+    });
+    h+='</div></div>';
+  });
+  h+='</div>';
+  el.innerHTML=insBox(genCmpOverallIns())+h;
+}
+
+/* ── INIT ───────────────────────────────────────────────────────────── */
+renderSoyEoy();
+</script>
+</body>
+</html>
