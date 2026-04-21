@@ -184,127 +184,159 @@ function renderOneView(){
 }
 
 function renderSoyAllGrades(body) {
-  const eoyColors=segC;
-  let legendH='<div style="display:flex;justify-content:center;gap:16px;margin-bottom:16px;font-size:12px;color:#888;flex-wrap:wrap">';
-  ['L1','L2','L3','L4'].forEach((l,i)=>{legendH+=`<span style="display:flex;align-items:center;gap:4px"><span style="width:11px;height:11px;border-radius:2px;background:${segC[i]};display:inline-block"></span>${l}</span>`;});
-  legendH+='<span style="display:flex;align-items:center;gap:6px"><span style="width:20px;height:3px;background:#185FA5;display:inline-block;border-radius:2px"></span>2024-25</span>';
-  legendH+='<span style="display:flex;align-items:center;gap:6px"><span style="width:20px;height:3px;background:#0F6E56;display:inline-block;border-radius:2px"></span>2025-26</span>';
+  let legendH='<div style="display:flex;justify-content:center;gap:16px;margin-bottom:20px;font-size:12px;color:#888;flex-wrap:wrap">';
+  ['L1','L2','L3','L4'].forEach((l,i)=>{legendH+=`<span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;border-radius:3px;background:${segC[i]};display:inline-block"></span>${l}</span>`;});
+  legendH+='<span style="display:flex;align-items:center;gap:6px"><span style="width:24px;height:3px;background:#185FA5;display:inline-block;border-radius:2px"></span>2024-25</span>';
+  legendH+='<span style="display:flex;align-items:center;gap:6px"><span style="width:24px;height:3px;background:#0F6E56;display:inline-block;border-radius:2px"></span>2025-26</span>';
   legendH+='<span style="font-weight:700;color:'+deltaC+'">&#9660; L1 drop</span></div>';
 
-  let gridH='<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px">';
+  let html = legendH;
+  let chartIdx = 0;
 
-  commonGrades.forEach((grade,gi)=>{
-    const labels=[],l1D=[],l2D=[],l3D=[],l4D=[],barMeta=[],availV=[];
-    verticals.forEach(v=>{
-      const d24=getData(v,soySubject,grade,'2024-25');
-      const d25=getData(v,soySubject,grade,'2025-26');
-      if(!d24&&!d25)return;
-      availV.push(v);
-      labels.push('24-25'); l1D.push(d24?d24.SOY[0]:0); l2D.push(d24?d24.SOY[1]:0); l3D.push(d24?d24.SOY[2]:0); l4D.push(d24?d24.SOY[3]:0); barMeta.push({v,period:'SOY',year:'2024-25'});
-      labels.push('25-26'); l1D.push(d25?d25.SOY[0]:0); l2D.push(d25?d25.SOY[1]:0); l3D.push(d25?d25.SOY[2]:0); l4D.push(d25?d25.SOY[3]:0); barMeta.push({v,period:'SOY',year:'2025-26'});
-      labels.push('24-25'); l1D.push(d24?d24.EOY[0]:0); l2D.push(d24?d24.EOY[1]:0); l3D.push(d24?d24.EOY[2]:0); l4D.push(d24?d24.EOY[3]:0); barMeta.push({v,period:'EOY',year:'2024-25',drop:d24?d24.SOY[0]-d24.EOY[0]:null});
-      labels.push('25-26'); l1D.push(d25?d25.EOY[0]:0); l2D.push(d25?d25.EOY[1]:0); l3D.push(d25?d25.EOY[2]:0); l4D.push(d25?d25.EOY[3]:0); barMeta.push({v,period:'EOY',year:'2025-26',drop:d25?d25.SOY[0]-d25.EOY[0]:null});
+  verticals.forEach(v => {
+    html += `<div style="margin-bottom:28px">
+      <div style="font-size:15px;font-weight:800;color:#1a1a1a;margin-bottom:12px;padding-left:4px;border-left:4px solid #6B4DAA;padding-left:10px">${v}</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">`;
+
+    commonGrades.forEach((grade, gi) => {
+      const d24 = getData(v, soySubject, grade, '2024-25');
+      const d25 = getData(v, soySubject, grade, '2025-26');
+      html += `<div style="background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:12px 10px 10px;box-shadow:0 1px 4px rgba(0,0,0,.05)">
+        <div style="font-size:12px;font-weight:700;color:#555;text-align:center;margin-bottom:10px">${grade}</div>
+        <div style="position:relative;width:100%;height:220px"><canvas id="soyAllCanvas${chartIdx}"></canvas></div>
+      </div>`;
+      chartIdx++;
     });
 
-    const pid='allGrPlugin'+gi;
-    const plugin={id:pid,
-      beforeDatasetsDraw(chart){
-        const ctx=chart.ctx,meta=chart.getDatasetMeta(0),ca=chart.chartArea;
-        if(!meta.data.length)return;ctx.save();
-        for(let i=0;i<meta.data.length;i+=4){
-          if(i+3>=meta.data.length)break;
-          const b0=meta.data[i],b3=meta.data[i+3],pad=6;
-          const left=b0.x-b0.width/2-pad,right=b3.x+b3.width/2+pad;
-          ctx.fillStyle=(i/4)%2===0?'rgba(0,0,0,0.03)':'rgba(0,0,0,0.06)';
-          ctx.beginPath();if(ctx.roundRect)ctx.roundRect(left,ca.top-28,right-left,ca.bottom-ca.top+32,6);else ctx.rect(left,ca.top-28,right-left,ca.bottom-ca.top+32);ctx.fill();
-          ctx.strokeStyle=(i/4)%2===0?'rgba(0,0,0,0.08)':'rgba(0,0,0,0.14)';ctx.lineWidth=1;
-          ctx.beginPath();if(ctx.roundRect)ctx.roundRect(left,ca.top-28,right-left,ca.bottom-ca.top+32,6);else ctx.rect(left,ca.top-28,right-left,ca.bottom-ca.top+32);ctx.stroke();
-          const b1=meta.data[i+1],b2=meta.data[i+2];
-          ctx.fillStyle='rgba(24,95,165,0.07)';ctx.beginPath();if(ctx.roundRect)ctx.roundRect(b0.x-b0.width/2-2,ca.top-4,b1.x+b1.width/2+2-(b0.x-b0.width/2-2),ca.bottom-ca.top+8,3);else ctx.rect(b0.x-b0.width/2-2,ca.top-4,b1.x+b1.width/2+2-(b0.x-b0.width/2-2),ca.bottom-ca.top+8);ctx.fill();
-          ctx.fillStyle='rgba(15,110,86,0.07)';ctx.beginPath();if(ctx.roundRect)ctx.roundRect(b2.x-b2.width/2-2,ca.top-4,b3.x+b3.width/2+2-(b2.x-b2.width/2-2),ca.bottom-ca.top+8,3);else ctx.rect(b2.x-b2.width/2-2,ca.top-4,b3.x+b3.width/2+2-(b2.x-b2.width/2-2),ca.bottom-ca.top+8);ctx.fill();
-        }ctx.restore();
-      },
-      afterDatasetsDraw(chart){
-        const ctx=chart.ctx,meta=chart.getDatasetMeta(0),ca=chart.chartArea,last=chart.getDatasetMeta(chart.data.datasets.length-1);
-        if(!meta.data.length)return;ctx.save();ctx.textAlign='center';ctx.textBaseline='bottom';
-        ctx.font='700 9px -apple-system,sans-serif';ctx.fillStyle='#444';
-        for(let i=0;i<meta.data.length;i+=4){if(i+3>=meta.data.length)break;ctx.fillText(vShort[availV[i/4]],(meta.data[i].x+meta.data[i+3].x)/2,ca.top-16);}
-        ctx.font='600 8px -apple-system,sans-serif';
-        for(let i=0;i<meta.data.length;i+=4){if(i+3>=meta.data.length)break;const b0=meta.data[i],b1=meta.data[i+1],b2=meta.data[i+2],b3=meta.data[i+3];ctx.fillStyle='#185FA5';ctx.fillText('SOY',(b0.x+b1.x)/2,ca.top-4);ctx.fillStyle='#0F6E56';ctx.fillText('EOY',(b2.x+b3.x)/2,ca.top-4);}
-        ctx.font='bold 8px -apple-system,sans-serif';ctx.fillStyle=deltaC;
-        barMeta.forEach((m,i)=>{if(m.drop===null||m.drop===undefined)return;const x=meta.data[i].x,topY=last.data[i].y,d=m.drop;ctx.fillText(d>0?'\u25BC'+d:d<0?'\u25B2'+Math.abs(d):'-',x,topY-2);});
-        ctx.restore();
-      }
-    };
-
-    gridH+=`<div style="background:#f8f8f8;border:1px solid #e0e0e0;border-radius:14px;padding:16px 12px 12px">
-      <div style="font-size:12px;font-weight:700;color:#555;text-align:center;margin-bottom:10px">${grade}</div>
-      <div style="position:relative;width:100%;height:260px"><canvas id="soyAllCanvas${gi}"></canvas></div>
-    </div>`;
+    html += `</div></div>`;
   });
 
-  gridH+='</div>';
-  body.innerHTML=legendH+gridH;
+  body.innerHTML = html;
 
-  // Now create charts (after DOM is set)
-  commonGrades.forEach((grade,gi)=>{
-    const labels=[],l1D=[],l2D=[],l3D=[],l4D=[],barMeta=[],availV=[];
-    verticals.forEach(v=>{
-      const d24=getData(v,soySubject,grade,'2024-25');
-      const d25=getData(v,soySubject,grade,'2025-26');
-      if(!d24&&!d25)return;
-      availV.push(v);
-      labels.push('24-25'); l1D.push(d24?d24.SOY[0]:0); l2D.push(d24?d24.SOY[1]:0); l3D.push(d24?d24.SOY[2]:0); l4D.push(d24?d24.SOY[3]:0); barMeta.push({v,period:'SOY',year:'2024-25'});
-      labels.push('25-26'); l1D.push(d25?d25.SOY[0]:0); l2D.push(d25?d25.SOY[1]:0); l3D.push(d25?d25.SOY[2]:0); l4D.push(d25?d25.SOY[3]:0); barMeta.push({v,period:'SOY',year:'2025-26'});
-      labels.push('24-25'); l1D.push(d24?d24.EOY[0]:0); l2D.push(d24?d24.EOY[1]:0); l3D.push(d24?d24.EOY[2]:0); l4D.push(d24?d24.EOY[3]:0); barMeta.push({v,period:'EOY',year:'2024-25',drop:d24?d24.SOY[0]-d24.EOY[0]:null});
-      labels.push('25-26'); l1D.push(d25?d25.EOY[0]:0); l2D.push(d25?d25.EOY[1]:0); l3D.push(d25?d25.EOY[2]:0); l4D.push(d25?d25.EOY[3]:0); barMeta.push({v,period:'EOY',year:'2025-26',drop:d25?d25.SOY[0]-d25.EOY[0]:null});
+  // Now render charts
+  let ci = 0;
+  verticals.forEach(v => {
+    commonGrades.forEach((grade, gi) => {
+      const d24 = getData(v, soySubject, grade, '2024-25');
+      const d25 = getData(v, soySubject, grade, '2025-26');
+
+      const labels = ['24-25','25-26','24-25','25-26'];
+      const l1D=[d24?d24.SOY[0]:0, d25?d25.SOY[0]:0, d24?d24.EOY[0]:0, d25?d25.EOY[0]:0];
+      const l2D=[d24?d24.SOY[1]:0, d25?d25.SOY[1]:0, d24?d24.EOY[1]:0, d25?d25.EOY[1]:0];
+      const l3D=[d24?d24.SOY[2]:0, d25?d25.SOY[2]:0, d24?d24.EOY[2]:0, d25?d25.EOY[2]:0];
+      const l4D=[d24?d24.SOY[3]:0, d25?d25.SOY[3]:0, d24?d24.EOY[3]:0, d25?d25.EOY[3]:0];
+      const drops=[null,null,d24?d24.SOY[0]-d24.EOY[0]:null,d25?d25.SOY[0]-d25.EOY[0]:null];
+
+      const pid='agp'+ci;
+      const plugin={id:pid,
+        beforeDatasetsDraw(chart){
+          const ctx=chart.ctx,meta=chart.getDatasetMeta(0),ca=chart.chartArea;
+          if(!meta.data.length)return;ctx.save();
+          // SOY bucket (bars 0-1)
+          const b0=meta.data[0],b1=meta.data[1];
+          ctx.fillStyle='rgba(24,95,165,0.07)';ctx.strokeStyle='rgba(24,95,165,0.20)';ctx.lineWidth=1;
+          ctx.beginPath();if(ctx.roundRect)ctx.roundRect(b0.x-b0.width/2-6,ca.top-24,b1.x+b1.width/2+6-(b0.x-b0.width/2-6),ca.bottom-ca.top+28,6);else ctx.rect(b0.x-b0.width/2-6,ca.top-24,b1.x+b1.width/2+6-(b0.x-b0.width/2-6),ca.bottom-ca.top+28);ctx.fill();ctx.stroke();
+          // EOY bucket (bars 2-3)
+          const b2=meta.data[2],b3=meta.data[3];
+          ctx.fillStyle='rgba(15,110,86,0.07)';ctx.strokeStyle='rgba(15,110,86,0.20)';
+          ctx.beginPath();if(ctx.roundRect)ctx.roundRect(b2.x-b2.width/2-6,ca.top-24,b3.x+b3.width/2+6-(b2.x-b2.width/2-6),ca.bottom-ca.top+28,6);else ctx.rect(b2.x-b2.width/2-6,ca.top-24,b3.x+b3.width/2+6-(b2.x-b2.width/2-6),ca.bottom-ca.top+28);ctx.fill();ctx.stroke();
+          ctx.restore();
+        },
+        afterDatasetsDraw(chart){
+          const ctx=chart.ctx,meta=chart.getDatasetMeta(0),ca=chart.chartArea,last=chart.getDatasetMeta(chart.data.datasets.length-1);
+          if(!meta.data.length)return;ctx.save();ctx.textAlign='center';ctx.textBaseline='bottom';
+          // SOY / EOY labels
+          ctx.font='600 9px -apple-system,sans-serif';
+          ctx.fillStyle='#185FA5';ctx.fillText('SOY',(meta.data[0].x+meta.data[1].x)/2,ca.top-10);
+          ctx.fillStyle='#0F6E56';ctx.fillText('EOY',(meta.data[2].x+meta.data[3].x)/2,ca.top-10);
+          // L1 drop
+          ctx.font='bold 9px -apple-system,sans-serif';ctx.fillStyle=deltaC;
+          drops.forEach((d,i)=>{if(d===null)return;const x=meta.data[i].x,topY=last.data[i].y;ctx.fillText(d>0?'\u25BC'+d:d<0?'\u25B2'+Math.abs(d):'-',x,topY-3);});
+          ctx.restore();
+        }
+      };
+
+      const cv = document.getElementById('soyAllCanvas'+ci);
+      if(!cv){ci++;return;}
+      const c = new Chart(cv,{type:'bar',data:{labels,datasets:[
+        {label:'L1',data:l1D,backgroundColor:segC[0],borderWidth:0,stack:'a'},
+        {label:'L2',data:l2D,backgroundColor:segC[1],borderWidth:0,stack:'a'},
+        {label:'L3',data:l3D,backgroundColor:segC[2],borderWidth:0,stack:'a'},
+        {label:'L4',data:l4D,backgroundColor:segC[3],borderWidth:0,stack:'a'}
+      ]},plugins:[plugin],options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:32}},
+        plugins:{legend:{display:false},
+          tooltip:{callbacks:{title:ctx=>{const p=ctx[0].dataIndex<2?'SOY':'EOY';return v+' · '+p+' '+labels[ctx[0].dataIndex];},label:ctx=>ctx.dataset.label+': '+ctx.raw+'%'}},
+          datalabels:{display:ctx=>ctx.dataset.data[ctx.dataIndex]>=14,color:ctx=>ctx.datasetIndex===1?'#5a3e00':'#fff',font:{size:9,weight:'700'},formatter:v=>v+'%'}},
+        scales:{
+          x:{stacked:true,ticks:{color:'#555',font:{size:9,weight:'600'},autoSkip:false,maxRotation:0},grid:{display:false}},
+          y:{stacked:true,max:110,ticks:{color:'#999',callback:v=>v<=100?v+'%':'',font:{size:9},stepSize:50},grid:{color:'rgba(0,0,0,0.05)'}}
+        }}});
+      charts.push(c);
+      ci++;
     });
-
-    const pid='allGrPlugin'+gi;
-    const plugin={id:pid,
-      beforeDatasetsDraw(chart){
-        const ctx=chart.ctx,meta=chart.getDatasetMeta(0),ca=chart.chartArea;
-        if(!meta.data.length)return;ctx.save();
-        for(let i=0;i<meta.data.length;i+=4){
-          if(i+3>=meta.data.length)break;
-          const b0=meta.data[i],b3=meta.data[i+3],pad=6;
-          const left=b0.x-b0.width/2-pad,right=b3.x+b3.width/2+pad;
-          ctx.fillStyle=(i/4)%2===0?'rgba(0,0,0,0.03)':'rgba(0,0,0,0.06)';
-          ctx.beginPath();if(ctx.roundRect)ctx.roundRect(left,ca.top-28,right-left,ca.bottom-ca.top+32,6);else ctx.rect(left,ca.top-28,right-left,ca.bottom-ca.top+32);ctx.fill();
-          ctx.strokeStyle=(i/4)%2===0?'rgba(0,0,0,0.08)':'rgba(0,0,0,0.14)';ctx.lineWidth=1;
-          ctx.beginPath();if(ctx.roundRect)ctx.roundRect(left,ca.top-28,right-left,ca.bottom-ca.top+32,6);else ctx.rect(left,ca.top-28,right-left,ca.bottom-ca.top+32);ctx.stroke();
-          const b1=meta.data[i+1],b2=meta.data[i+2];
-          ctx.fillStyle='rgba(24,95,165,0.07)';ctx.beginPath();if(ctx.roundRect)ctx.roundRect(b0.x-b0.width/2-2,ca.top-4,b1.x+b1.width/2+2-(b0.x-b0.width/2-2),ca.bottom-ca.top+8,3);else ctx.rect(b0.x-b0.width/2-2,ca.top-4,b1.x+b1.width/2+2-(b0.x-b0.width/2-2),ca.bottom-ca.top+8);ctx.fill();
-          ctx.fillStyle='rgba(15,110,86,0.07)';ctx.beginPath();if(ctx.roundRect)ctx.roundRect(b2.x-b2.width/2-2,ca.top-4,b3.x+b3.width/2+2-(b2.x-b2.width/2-2),ca.bottom-ca.top+8,3);else ctx.rect(b2.x-b2.width/2-2,ca.top-4,b3.x+b3.width/2+2-(b2.x-b2.width/2-2),ca.bottom-ca.top+8);ctx.fill();
-        }ctx.restore();
-      },
-      afterDatasetsDraw(chart){
-        const ctx=chart.ctx,meta=chart.getDatasetMeta(0),ca=chart.chartArea,last=chart.getDatasetMeta(chart.data.datasets.length-1);
-        if(!meta.data.length)return;ctx.save();ctx.textAlign='center';ctx.textBaseline='bottom';
-        ctx.font='700 9px -apple-system,sans-serif';ctx.fillStyle='#444';
-        for(let i=0;i<meta.data.length;i+=4){if(i+3>=meta.data.length)break;ctx.fillText(vShort[availV[i/4]],(meta.data[i].x+meta.data[i+3].x)/2,ca.top-16);}
-        ctx.font='600 8px -apple-system,sans-serif';
-        for(let i=0;i<meta.data.length;i+=4){if(i+3>=meta.data.length)break;const b0=meta.data[i],b1=meta.data[i+1],b2=meta.data[i+2],b3=meta.data[i+3];ctx.fillStyle='#185FA5';ctx.fillText('SOY',(b0.x+b1.x)/2,ca.top-4);ctx.fillStyle='#0F6E56';ctx.fillText('EOY',(b2.x+b3.x)/2,ca.top-4);}
-        ctx.font='bold 8px -apple-system,sans-serif';ctx.fillStyle=deltaC;
-        barMeta.forEach((m,i)=>{if(m.drop===null||m.drop===undefined)return;const x=meta.data[i].x,topY=last.data[i].y,d=m.drop;ctx.fillText(d>0?'\u25BC'+d:d<0?'\u25B2'+Math.abs(d):'-',x,topY-2);});
-        ctx.restore();
-      }
-    };
-
-    const cv=document.getElementById('soyAllCanvas'+gi);
-    const c=new Chart(cv,{type:'bar',data:{labels,datasets:[
-      {label:'L1',data:l1D,backgroundColor:segC[0],borderWidth:0,stack:'a'},
-      {label:'L2',data:l2D,backgroundColor:segC[1],borderWidth:0,stack:'a'},
-      {label:'L3',data:l3D,backgroundColor:segC[2],borderWidth:0,stack:'a'},
-      {label:'L4',data:l4D,backgroundColor:segC[3],borderWidth:0,stack:'a'}
-    ]},plugins:[plugin],options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:34}},
-      plugins:{legend:{display:false},tooltip:{callbacks:{title:ctx=>{const m=barMeta[ctx[0].dataIndex];return vShort[availV[Math.floor(ctx[0].dataIndex/4)]]+' · '+m.period+' '+m.year;},label:ctx=>ctx.dataset.label+': '+ctx.raw+'%'}},
-      datalabels:{display:ctx=>ctx.dataset.data[ctx.dataIndex]>=12,color:ctx=>ctx.datasetIndex===1?'#5a3e00':'#fff',font:{size:8,weight:'600'},formatter:v=>v+'%'}},
-      scales:{x:{stacked:true,ticks:{color:'#555',font:{size:8,weight:'600'},autoSkip:false,maxRotation:0},grid:{display:false}},
-      y:{stacked:true,max:110,ticks:{color:'#999',callback:v=>v<=100?v+'%':'',font:{size:9},stepSize:25},grid:{color:'rgba(0,0,0,0.06)'}}}}});
-    charts.push(c);
   });
+
+  // ── Standout Insights ──
+  const insights = [];
+  const subject = soySubject;
+
+  // Collect all data points for analysis
+  const allPoints = [];
+  verticals.forEach(v => {
+    commonGrades.forEach(g => {
+      const d24 = getData(v, subject, g, '2024-25');
+      const d25 = getData(v, subject, g, '2025-26');
+      if(!d24 || !d25) return;
+      const l1drop24 = d24.SOY[0] - d24.EOY[0];
+      const l1drop25 = d25.SOY[0] - d25.EOY[0];
+      const eoyL1_25 = d25.EOY[0];
+      const eoyL1_24 = d24.EOY[0];
+      const l1yoy = eoyL1_25 - eoyL1_24;
+      allPoints.push({v, g, d24, d25, l1drop24, l1drop25, l1yoy, eoyL1_25, eoyL1_24});
+    });
+  });
+
+  // 1. Biggest L1 drop in 25-26 (best performer)
+  const bestDrop = allPoints.reduce((a,b) => b.l1drop25 > a.l1drop25 ? b : a);
+  if(bestDrop.l1drop25 > 0)
+    insights.push({type:'positive', text:`🏆 <strong>Biggest L1 drop in 2025-26:</strong> ${vShort[bestDrop.v]} ${bestDrop.g} — L1 fell by ${bestDrop.l1drop25} percentage points (${bestDrop.d25.SOY[0]}% SOY → ${bestDrop.d25.EOY[0]}% EOY), the strongest movement out of L1 this year.`});
+
+  // 2. L1 increased (students regressed)
+  const regressions = allPoints.filter(p => p.l1drop25 < 0).sort((a,b) => a.l1drop25 - b.l1drop25);
+  if(regressions.length > 0)
+    insights.push({type:'negative', text:`⚠️ <strong>L1 increased at EOY in 2025-26:</strong> ${regressions.map(p => `${vShort[p.v]} ${p.g} (+${Math.abs(p.l1drop25)}pp)`).join(', ')} — more students ended the year at L1 than started, which needs attention.`});
+
+  // 3. Biggest YoY improvement in EOY L1
+  const bestYoy = allPoints.reduce((a,b) => b.l1yoy < a.l1yoy ? b : a);
+  if(bestYoy.l1yoy < -3)
+    insights.push({type:'positive', text:`📈 <strong>Most improved year-over-year:</strong> ${vShort[bestYoy.v]} ${bestYoy.g} — EOY L1 dropped from ${bestYoy.eoyL1_24}% (24-25) to ${bestYoy.eoyL1_25}% (25-26), a ${Math.abs(bestYoy.l1yoy)}pp improvement.`});
+
+  // 4. Biggest YoY decline in EOY L1
+  const worstYoy = allPoints.reduce((a,b) => b.l1yoy > a.l1yoy ? b : a);
+  if(worstYoy.l1yoy > 3)
+    insights.push({type:'negative', text:`📉 <strong>Biggest year-over-year decline:</strong> ${vShort[worstYoy.v]} ${worstYoy.g} — EOY L1 rose from ${worstYoy.eoyL1_24}% (24-25) to ${worstYoy.eoyL1_25}% (25-26), a ${worstYoy.l1yoy}pp increase.`});
+
+  // 5. Highest EOY L1 in 25-26 (most students stuck)
+  const highestL1 = allPoints.reduce((a,b) => b.eoyL1_25 > a.eoyL1_25 ? b : a);
+  if(highestL1.eoyL1_25 > 50)
+    insights.push({type:'negative', text:`🔴 <strong>Highest EOY L1 in 2025-26:</strong> ${vShort[highestL1.v]} ${highestL1.g} at ${highestL1.eoyL1_25}% — over half the students ended the year at Level 1.`});
+
+  // 6. Lowest EOY L1 in 25-26 (fewest stuck)
+  const lowestL1 = allPoints.reduce((a,b) => b.eoyL1_25 < a.eoyL1_25 ? b : a);
+  if(lowestL1.eoyL1_25 < 15)
+    insights.push({type:'positive', text:`🌟 <strong>Lowest EOY L1 in 2025-26:</strong> ${vShort[lowestL1.v]} ${lowestL1.g} at only ${lowestL1.eoyL1_25}% — exceptional outcome with very few students remaining at Level 1.`});
+
+  if(insights.length > 0) {
+    let insH = `<div class="insights" style="margin-top:28px"><div class="insights-title">Standout observations — ${subject}</div>`;
+    insights.forEach(ins => {
+      insH += `<div class="insight-item ${ins.type}" style="line-height:1.6">${ins.text}</div>`;
+    });
+    insH += '</div>';
+    body.insertAdjacentHTML('beforeend', insH);
+  }
 }
+
+/* ── SOY → EOY (BOTH YEARS) ───────────────────────────────────────────── */
 
 /* ── SOY → EOY (BOTH YEARS) ───────────────────────────────────────────── */
 let soyAllGrades = true;
@@ -532,7 +564,7 @@ function renderYoyChange(){
 
   // L1 Drop heatmap (purple = improved, red = declined — existing logic)
   const buildL1Heatmap=()=>{
-    let h='<div class="heatmap-wrap" style="margin-bottom:20px"><div class="heatmap-title">L1 Drop — Year over Year Change ('+yoySubject+') &nbsp;·&nbsp; darker purple = bigger improvement &nbsp; red = declined</div>';
+    let h='<div class="heatmap-wrap" style="margin-bottom:20px"><div class="heatmap-title">L1 Drop — Year over Year Change ('+yoySubject+') &nbsp;·&nbsp; green = improved &nbsp; red = declined</div>';
     h+='<table class="heatmap-table"><thead><tr><th>Vertical</th>';
     allGrades.forEach(g=>{h+='<th>'+g.replace('Grade ','G')+'</th>';});
     h+='</tr></thead><tbody>';
