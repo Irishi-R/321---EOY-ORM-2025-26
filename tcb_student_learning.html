@@ -115,7 +115,7 @@ let charts=[];
 function getData(v,s,g,y){const d=ALL_DATA[v][s];if(!d||!d[g]||!d[g][y])return null;return d[g][y];}
 function getL1Drop(v,s,g,y){const d=getData(v,s,g,y);return d?d.SOY[0]-d.EOY[0]:null;}
 function destroyCharts(){charts.forEach(c=>c.destroy());charts=[];}
-function updateNav(){document.querySelectorAll('#mainNav button').forEach(btn=>btn.classList.toggle('active',btn.dataset.view===currentView));}
+function updateNav(){buildNav();}
 
 function heatRedScale(val,max){if(val===null||val===undefined)return{bg:'#f5f5f5',text:'#bbb'};const t=Math.max(0,Math.min(1,val/max));const r=Math.round(252+(226-252)*t),g=Math.round(235+(75-235)*t),b=Math.round(235+(74-235)*t);return{bg:'rgb('+r+','+g+','+b+')',text:t>0.55?'#fff':'#7a1b1b'};}
 function heatPurpleScale(val,max){if(val===null||val===undefined)return{bg:'#f5f5f5',text:'#bbb'};if(val<=0){const t=Math.min(1,Math.abs(val)/20);const r=Math.round(252+(226-252)*t),g=Math.round(235+(75-235)*t),b=Math.round(235+(74-235)*t);return{bg:'rgb('+r+','+g+','+b+')',text:t>0.55?'#fff':'#7a1b1b'};}const t=Math.max(0,Math.min(1,val/max));const r=Math.round(238+(107-238)*t),g=Math.round(237+(77-237)*t),b=Math.round(254+(170-254)*t);return{bg:'rgb('+r+','+g+','+b+')',text:t>0.5?'#fff':'#3c2870'};}
@@ -526,6 +526,74 @@ function renderScorecard(){
   body.innerHTML=html;
 }
 
+function renderLCPSAllGrades(body) {
+  const grades = LCPS_DATA[lcpsSubject].grades;
+  const labels=[], gD=[], yD=[], rD=[], barMeta=[], availG=[];
+
+  grades.forEach(g=>{
+    const d24=LCPS_DATA[lcpsSubject]['2024-25'][g];
+    const d25=LCPS_DATA[lcpsSubject]['2025-26'][g];
+    availG.push(g);
+    labels.push('24-25'); gD.push(d24.SOY[0]); yD.push(d24.SOY[1]); rD.push(d24.SOY[2]); barMeta.push({g,period:'SOY',year:'2024-25'});
+    labels.push('25-26'); gD.push(d25.SOY[0]); yD.push(d25.SOY[1]); rD.push(d25.SOY[2]); barMeta.push({g,period:'SOY',year:'2025-26'});
+    labels.push('24-25'); gD.push(d24.EOY[0]); yD.push(d24.EOY[1]); rD.push(d24.EOY[2]); barMeta.push({g,period:'EOY',year:'2024-25',gc:d24.EOY[0]-d24.SOY[0]});
+    labels.push('25-26'); gD.push(d25.EOY[0]); yD.push(d25.EOY[1]); rD.push(d25.EOY[2]); barMeta.push({g,period:'EOY',year:'2025-26',gc:d25.EOY[0]-d25.SOY[0]});
+  });
+
+  const plugin={id:'lcpsAllPlugin',
+    beforeDatasetsDraw(chart){
+      const ctx=chart.ctx,meta=chart.getDatasetMeta(0),ca=chart.chartArea;
+      if(!meta.data.length)return;ctx.save();
+      for(let i=0;i<meta.data.length;i+=4){
+        if(i+3>=meta.data.length)break;
+        const b0=meta.data[i],b3=meta.data[i+3],pad=10;
+        const left=b0.x-b0.width/2-pad,right=b3.x+b3.width/2+pad;
+        ctx.fillStyle=(i/4)%2===0?'rgba(0,0,0,0.03)':'rgba(0,0,0,0.06)';
+        ctx.beginPath();if(ctx.roundRect)ctx.roundRect(left,ca.top-38,right-left,ca.bottom-ca.top+42,8);else ctx.rect(left,ca.top-38,right-left,ca.bottom-ca.top+42);ctx.fill();
+        ctx.strokeStyle=(i/4)%2===0?'rgba(0,0,0,0.10)':'rgba(0,0,0,0.16)';ctx.lineWidth=1.5;
+        ctx.beginPath();if(ctx.roundRect)ctx.roundRect(left,ca.top-38,right-left,ca.bottom-ca.top+42,8);else ctx.rect(left,ca.top-38,right-left,ca.bottom-ca.top+42);ctx.stroke();
+        const b1=meta.data[i+1],b2=meta.data[i+2];
+        ctx.fillStyle='rgba(107,77,170,0.07)';ctx.beginPath();if(ctx.roundRect)ctx.roundRect(b0.x-b0.width/2-3,ca.top-6,b1.x+b1.width/2+3-(b0.x-b0.width/2-3),ca.bottom-ca.top+10,4);else ctx.rect(b0.x-b0.width/2-3,ca.top-6,b1.x+b1.width/2+3-(b0.x-b0.width/2-3),ca.bottom-ca.top+10);ctx.fill();
+        ctx.fillStyle='rgba(45,158,111,0.08)';ctx.beginPath();if(ctx.roundRect)ctx.roundRect(b2.x-b2.width/2-3,ca.top-6,b3.x+b3.width/2+3-(b2.x-b2.width/2-3),ca.bottom-ca.top+10,4);else ctx.rect(b2.x-b2.width/2-3,ca.top-6,b3.x+b3.width/2+3-(b2.x-b2.width/2-3),ca.bottom-ca.top+10);ctx.fill();
+      }ctx.restore();
+    },
+    afterDatasetsDraw(chart){
+      const ctx=chart.ctx,meta=chart.getDatasetMeta(0),ca=chart.chartArea,last=chart.getDatasetMeta(chart.data.datasets.length-1);
+      if(!meta.data.length)return;ctx.save();ctx.textAlign='center';ctx.textBaseline='bottom';
+      ctx.font='700 11px -apple-system,sans-serif';ctx.fillStyle='#444';
+      for(let i=0;i<meta.data.length;i+=4){if(i+3>=meta.data.length)break;ctx.fillText(availG[i/4].replace('Grade ','G'),(meta.data[i].x+meta.data[i+3].x)/2,ca.top-22);}
+      ctx.font='600 9px -apple-system,sans-serif';
+      for(let i=0;i<meta.data.length;i+=4){if(i+3>=meta.data.length)break;const b0=meta.data[i],b1=meta.data[i+1],b2=meta.data[i+2],b3=meta.data[i+3];ctx.fillStyle='#6B4DAA';ctx.fillText('SOY',(b0.x+b1.x)/2,ca.top-8);ctx.fillStyle='#2D9E6F';ctx.fillText('EOY',(b2.x+b3.x)/2,ca.top-8);}
+      ctx.font='bold 9px -apple-system,sans-serif';
+      barMeta.forEach((m,i)=>{if(m.gc===undefined)return;const x=meta.data[i].x,topY=last.data[i].y,d=m.gc;ctx.fillStyle=d>0?'#0D6B50':d<0?'#C0392B':'#999';ctx.fillText(d>0?'\u25B2+'+d+'%':d<0?'\u25BC'+Math.abs(d)+'%':'-',x,topY-3);});
+      ctx.restore();
+    }
+  };
+
+  let legendH='<div style="display:flex;justify-content:center;gap:20px;margin-bottom:16px;font-size:12px;color:#888;flex-wrap:wrap">';
+  LCPS_LABELS.forEach((l,i)=>{legendH+=`<span style="display:flex;align-items:center;gap:5px"><span style="width:11px;height:11px;border-radius:2px;background:${LCPS_COLORS[i]};display:inline-block"></span>${l}</span>`;});
+  legendH+='<span style="display:flex;align-items:center;gap:6px"><span style="width:20px;height:3px;background:#6B4DAA;display:inline-block;border-radius:2px"></span>SOY</span>';
+  legendH+='<span style="display:flex;align-items:center;gap:6px"><span style="width:20px;height:3px;background:#2D9E6F;display:inline-block;border-radius:2px"></span>EOY</span></div>';
+
+  body.innerHTML=legendH+
+    '<div style="background:#f8f8f8;border:1px solid #e0e0e0;border-radius:14px;padding:24px 16px 16px">'+
+      '<div style="font-size:13px;font-weight:600;color:#777;text-align:center;margin-bottom:14px">All Grades · LCPS · '+lcpsSubject+'</div>'+
+      '<div style="position:relative;width:100%;height:460px"><canvas id="lcpsAllCanvas"></canvas></div>'+
+    '</div>';
+
+  const cv=document.getElementById('lcpsAllCanvas');
+  const c=new Chart(cv,{type:'bar',data:{labels,datasets:[
+    {label:'Green',data:gD,backgroundColor:LCPS_COLORS[0],borderWidth:0,stack:'a'},
+    {label:'Yellow',data:yD,backgroundColor:LCPS_COLORS[1],borderWidth:0,stack:'a'},
+    {label:'Red',data:rD,backgroundColor:LCPS_COLORS[2],borderWidth:0,stack:'a'}
+  ]},plugins:[plugin],options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:44}},
+    plugins:{legend:{display:false},tooltip:{callbacks:{title:ctx=>{const m=barMeta[ctx[0].dataIndex];return m.g+' · '+m.period+' '+m.year;},label:ctx=>ctx.dataset.label+': '+ctx.raw+'%'}},
+    datalabels:{display:ctx=>ctx.dataset.data[ctx.dataIndex]>=10,color:'#fff',font:{size:9,weight:'700'},formatter:v=>v+'%'}},
+    scales:{x:{stacked:true,ticks:{color:'#555',font:{size:9,weight:'600'},autoSkip:false,maxRotation:0},grid:{display:false}},
+    y:{stacked:true,max:110,ticks:{color:'#999',callback:v=>v<=100?v+'%':'',font:{size:11},stepSize:25},grid:{color:'rgba(0,0,0,0.06)'}}}}});
+  charts.push(c);
+}
+
 /* ── PER-VERTICAL DETAIL ──────────────────────────────────────────────── */
 const deltaPlugin={id:'deltaAbove',afterDraw(chart){const ctx=chart.ctx,m0=chart.getDatasetMeta(0),m1=chart.getDatasetMeta(1),s=chart.data.datasets[0].data,e=chart.data.datasets[1].data;ctx.save();ctx.textAlign='center';ctx.textBaseline='bottom';ctx.font='bold 12px -apple-system,sans-serif';ctx.fillStyle=deltaC;for(let i=0;i<s.length;i++){const d=e[i]-s[i];if(d===0&&s[i]===0)continue;const cx=(m0.data[i].x+m1.data[i].x)/2,ty=Math.min(m0.data[i].y,m1.data[i].y);ctx.fillText(d>0?'\u25B2 +'+d:d<0?'\u25BC '+d:'-',cx,ty-10);}ctx.restore();}};
 
@@ -535,9 +603,25 @@ function renderVertical(vName){
   const vData=ALL_DATA[vName],gr=vData.grades,th=themes[detailSubject];
   const availSubjects=['English','Maths'].filter(s=>vData[s]&&Object.keys(vData[s]).length>0);
   if(!availSubjects.includes(detailSubject))detailSubject=availSubjects[0];
-  availSubjects.forEach(s=>{const btn=document.createElement('button');btn.textContent=s;if(detailSubject===s)btn.style.cssText='background:#6B4DAA;color:#fff;font-weight:600;border-color:#6B4DAA';btn.addEventListener('click',()=>{detailSubject=s;renderVertical(vName);});document.getElementById('detSubj').appendChild(btn);});
-  gr.forEach(g=>{const btn=document.createElement('button');btn.textContent=g;if(detailGrade===g)btn.style.cssText='background:'+th.tabActive+';color:#fff;font-weight:600;border-color:'+th.tabActive;btn.addEventListener('click',()=>{detailGrade=g;renderVertical(vName);});document.getElementById('detGr').appendChild(btn);});
-  if(!vData[detailSubject][detailGrade]){detailGrade=gr[0];renderVertical(vName);return;}
+  availSubjects.forEach(s=>{const btn=document.createElement('button');btn.textContent=s;if(detailSubject===s)btn.style.cssText='background:#6B4DAA;color:#fff;font-weight:600;border-color:#6B4DAA';btn.addEventListener('click',()=>{detailSubject=s;hydAllGrades=false;renderVertical(vName);});document.getElementById('detSubj').appendChild(btn);});
+
+  // All Grades tab first
+  const grEl=document.getElementById('detGr');
+  const allBtn=document.createElement('button');allBtn.textContent='All Grades ▾';
+  allBtn.style.cssText=hydAllGrades?'background:'+th.tabActive+';color:#fff;font-weight:700;border-color:'+th.tabActive+';border-radius:8px 0 0 8px':'background:#f0f0f0;color:'+th.tabActive+';font-weight:700;border-radius:8px 0 0 8px';
+  allBtn.addEventListener('click',()=>{hydAllGrades=true;renderVertical(vName);});
+  grEl.appendChild(allBtn);
+
+  gr.forEach((g,i)=>{const btn=document.createElement('button');btn.textContent=g;
+    const active=detailGrade===g&&!hydAllGrades;
+    const isLast=i===gr.length-1;
+    btn.style.cssText=(active?'background:'+th.tabActive+';color:#fff;font-weight:600;border-color:'+th.tabActive:'background:#f0f0f0;color:#666')+';border-left:none;'+(isLast?'border-radius:0 8px 8px 0':'border-radius:0');
+    btn.addEventListener('click',()=>{detailGrade=g;hydAllGrades=false;renderVertical(vName);});grEl.appendChild(btn);});
+
+  if(!vData[detailSubject][detailGrade]){detailGrade=gr[0];}
+
+  if(hydAllGrades){renderHydAllGrades(vName,vData,gr,th);return;}
+
   document.getElementById('detLegend').innerHTML='<div class="legend"><span><span class="dot" style="background:'+th.soy+'"></span> SOY</span><span><span class="dot" style="background:'+th.eoy+'"></span> EOY</span><span style="font-weight:700;color:'+deltaC+'">\u25B2\u25BC Change</span></div>';
   const years=vData[detailSubject][detailGrade];const card=document.createElement('div');card.className='card';
   const row=document.createElement('div');row.className='year-row';
@@ -548,6 +632,108 @@ function renderVertical(vName){
   const tWrap=document.createElement('div');tWrap.className='table-row';
   ['2024-25','2025-26'].forEach(year=>{const d=years[year],col=document.createElement('div');const yl=document.createElement('div');yl.className='table-year';yl.textContent=year;col.appendChild(yl);const tbl=document.createElement('table');const thead=document.createElement('thead'),hr=document.createElement('tr');['','SOY','EOY','Change'].forEach(h=>{const t=document.createElement('th');t.textContent=h;hr.appendChild(t);});thead.appendChild(hr);tbl.appendChild(thead);const tbody=document.createElement('tbody');levels.forEach((lv,i)=>{const tr=document.createElement('tr'),delta=d.EOY[i]-d.SOY[i];[{text:lv},{text:d.SOY[i]+'%'},{text:d.EOY[i]+'%'},{text:(delta===0&&d.SOY[i]===0)?'-':(delta>0?'\u25B2 +'+delta:(delta<0?'\u25BC '+delta:'-')),cls:'delta'}].forEach(c=>{const td=document.createElement('td');td.textContent=c.text;if(c.cls)td.className=c.cls;tr.appendChild(td);});tbody.appendChild(tr);});tbl.appendChild(tbody);col.appendChild(tbl);tWrap.appendChild(col);});
   card.appendChild(tWrap);document.getElementById('detBody').appendChild(card);
+}
+
+function renderHydAllGrades(vName, vData, grades, th) {
+  const labels=[], l1D=[], l2D=[], l3D=[], l4D=[], barMeta=[], availG=[];
+
+  grades.forEach(g=>{
+    const d24=getData(vName,detailSubject,g,'2024-25');
+    const d25=getData(vName,detailSubject,g,'2025-26');
+    if(!d24&&!d25)return;
+    availG.push(g);
+    labels.push('24-25'); l1D.push(d24?d24.SOY[0]:0); l2D.push(d24?d24.SOY[1]:0); l3D.push(d24?d24.SOY[2]:0); l4D.push(d24?d24.SOY[3]:0); barMeta.push({g,period:'SOY',year:'2024-25'});
+    labels.push('25-26'); l1D.push(d25?d25.SOY[0]:0); l2D.push(d25?d25.SOY[1]:0); l3D.push(d25?d25.SOY[2]:0); l4D.push(d25?d25.SOY[3]:0); barMeta.push({g,period:'SOY',year:'2025-26'});
+    labels.push('24-25'); l1D.push(d24?d24.EOY[0]:0); l2D.push(d24?d24.EOY[1]:0); l3D.push(d24?d24.EOY[2]:0); l4D.push(d24?d24.EOY[3]:0); barMeta.push({g,period:'EOY',year:'2024-25',drop:d24?d24.SOY[0]-d24.EOY[0]:null});
+    labels.push('25-26'); l1D.push(d25?d25.EOY[0]:0); l2D.push(d25?d25.EOY[1]:0); l3D.push(d25?d25.EOY[2]:0); l4D.push(d25?d25.EOY[3]:0); barMeta.push({g,period:'EOY',year:'2025-26',drop:d25?d25.SOY[0]-d25.EOY[0]:null});
+  });
+
+  const plugin={id:'hydAllPlugin',
+    beforeDatasetsDraw(chart){
+      const ctx=chart.ctx,meta=chart.getDatasetMeta(0),ca=chart.chartArea;
+      if(!meta.data.length)return;ctx.save();
+      for(let i=0;i<meta.data.length;i+=4){
+        if(i+3>=meta.data.length)break;
+        const b0=meta.data[i],b3=meta.data[i+3],pad=10;
+        const left=b0.x-b0.width/2-pad,right=b3.x+b3.width/2+pad;
+        ctx.fillStyle=(i/4)%2===0?'rgba(0,0,0,0.03)':'rgba(0,0,0,0.06)';
+        ctx.beginPath();if(ctx.roundRect)ctx.roundRect(left,ca.top-38,right-left,ca.bottom-ca.top+42,8);else ctx.rect(left,ca.top-38,right-left,ca.bottom-ca.top+42);ctx.fill();
+        ctx.strokeStyle=(i/4)%2===0?'rgba(0,0,0,0.10)':'rgba(0,0,0,0.16)';ctx.lineWidth=1.5;
+        ctx.beginPath();if(ctx.roundRect)ctx.roundRect(left,ca.top-38,right-left,ca.bottom-ca.top+42,8);else ctx.rect(left,ca.top-38,right-left,ca.bottom-ca.top+42);ctx.stroke();
+        const b1=meta.data[i+1],b2=meta.data[i+2];
+        const soyCol=detailSubject==='English'?'rgba(24,95,165,0.08)':'rgba(15,110,86,0.08)';
+        const eoyCol=detailSubject==='English'?'rgba(24,95,165,0.14)':'rgba(15,110,86,0.14)';
+        ctx.fillStyle=soyCol;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(b0.x-b0.width/2-3,ca.top-6,b1.x+b1.width/2+3-(b0.x-b0.width/2-3),ca.bottom-ca.top+10,4);else ctx.rect(b0.x-b0.width/2-3,ca.top-6,b1.x+b1.width/2+3-(b0.x-b0.width/2-3),ca.bottom-ca.top+10);ctx.fill();
+        ctx.fillStyle=eoyCol;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(b2.x-b2.width/2-3,ca.top-6,b3.x+b3.width/2+3-(b2.x-b2.width/2-3),ca.bottom-ca.top+10,4);else ctx.rect(b2.x-b2.width/2-3,ca.top-6,b3.x+b3.width/2+3-(b2.x-b2.width/2-3),ca.bottom-ca.top+10);ctx.fill();
+      }ctx.restore();
+    },
+    afterDatasetsDraw(chart){
+      const ctx=chart.ctx,meta=chart.getDatasetMeta(0),ca=chart.chartArea,last=chart.getDatasetMeta(chart.data.datasets.length-1);
+      if(!meta.data.length)return;ctx.save();ctx.textAlign='center';ctx.textBaseline='bottom';
+      ctx.font='700 11px -apple-system,sans-serif';ctx.fillStyle='#444';
+      for(let i=0;i<meta.data.length;i+=4){if(i+3>=meta.data.length)break;ctx.fillText(availG[i/4].replace('Grade ','G'),(meta.data[i].x+meta.data[i+3].x)/2,ca.top-22);}
+      ctx.font='600 9px -apple-system,sans-serif';
+      for(let i=0;i<meta.data.length;i+=4){if(i+3>=meta.data.length)break;const b0=meta.data[i],b1=meta.data[i+1],b2=meta.data[i+2],b3=meta.data[i+3];ctx.fillStyle=th.tabActive;ctx.fillText('SOY',(b0.x+b1.x)/2,ca.top-8);ctx.fillStyle=th.eoy;ctx.fillText('EOY',(b2.x+b3.x)/2,ca.top-8);}
+      ctx.font='bold 9px -apple-system,sans-serif';ctx.fillStyle=deltaC;
+      barMeta.forEach((m,i)=>{if(m.drop===null||m.drop===undefined)return;const x=meta.data[i].x,topY=last.data[i].y,d=m.drop;ctx.fillText(d>0?'\u25BC'+d:d<0?'\u25B2'+Math.abs(d):'-',x,topY-3);});
+      ctx.restore();
+    }
+  };
+
+  let legendH='<div style="display:flex;justify-content:center;gap:14px;margin-bottom:16px;font-size:12px;color:#888;flex-wrap:wrap">';
+  ['L1','L2','L3','L4'].forEach((l,i)=>{legendH+=`<span style="display:flex;align-items:center;gap:4px"><span style="width:11px;height:11px;border-radius:2px;background:${segC[i]};display:inline-block"></span>${l}</span>`;});
+  legendH+=`<span style="display:flex;align-items:center;gap:6px"><span style="width:20px;height:3px;background:${th.tabActive};display:inline-block;border-radius:2px"></span>SOY</span>`;
+  legendH+=`<span style="display:flex;align-items:center;gap:6px"><span style="width:20px;height:3px;background:${th.eoy};display:inline-block;border-radius:2px"></span>EOY</span>`;
+  legendH+='<span style="font-weight:700;color:'+deltaC+'">&#9660; L1 drop</span></div>';
+
+  document.getElementById('detLegend').innerHTML=legendH;
+  const detBody=document.getElementById('detBody');
+  detBody.innerHTML='<div style="background:#f8f8f8;border:1px solid #e0e0e0;border-radius:14px;padding:24px 16px 16px"><div style="font-size:13px;font-weight:600;color:#777;text-align:center;margin-bottom:14px">All Grades · '+vName+' · '+detailSubject+'</div><div style="position:relative;width:100%;height:460px"><canvas id="hydAllCanvas"></canvas></div></div>';
+
+  const cv=document.getElementById('hydAllCanvas');
+  const c=new Chart(cv,{type:'bar',data:{labels,datasets:[
+    {label:'L1',data:l1D,backgroundColor:segC[0],borderWidth:0,stack:'a'},
+    {label:'L2',data:l2D,backgroundColor:segC[1],borderWidth:0,stack:'a'},
+    {label:'L3',data:l3D,backgroundColor:segC[2],borderWidth:0,stack:'a'},
+    {label:'L4',data:l4D,backgroundColor:segC[3],borderWidth:0,stack:'a'}
+  ]},plugins:[plugin],options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:44}},
+    plugins:{legend:{display:false},tooltip:{callbacks:{title:ctx=>{const m=barMeta[ctx[0].dataIndex];return m.g+' · '+m.period+' '+m.year;},label:ctx=>ctx.dataset.label+': '+ctx.raw+'%'}},
+    datalabels:{display:ctx=>ctx.dataset.data[ctx.dataIndex]>=8,color:ctx=>ctx.datasetIndex===1?'#5a3e00':'#fff',font:{size:9,weight:'600'},formatter:v=>v+'%'}},
+    scales:{x:{stacked:true,ticks:{color:'#555',font:{size:9,weight:'600'},autoSkip:false,maxRotation:0},grid:{display:false}},
+    y:{stacked:true,max:110,ticks:{color:'#999',callback:v=>v<=100?v+'%':'',font:{size:11},stepSize:25},grid:{color:'rgba(0,0,0,0.06)'}}}}});
+  charts.push(c);
+
+  // YoY Change heatmaps below chart
+  const yoyGrades = grades;
+  const buildHydHeat=(metric,title,scale)=>{
+    let h=`<div class="heatmap-wrap" style="margin-top:20px"><div class="heatmap-title">${title}</div>`;
+    h+=`<table class="heatmap-table"><thead><tr><th>Subject</th>`;
+    yoyGrades.forEach(g=>{h+=`<th>${g.replace('Grade ','G')}</th>`;});
+    h+=`</tr></thead><tbody>`;
+    ['English','Maths'].forEach(subj=>{
+      h+=`<tr><td>${subj}</td>`;
+      yoyGrades.forEach(g=>{
+        const d24=getData(vName,subj,g,'2024-25'),d25=getData(vName,subj,g,'2025-26');
+        if(!d24||!d25){h+='<td class="none">—</td>';return;}
+        let val24,val25;
+        if(metric==='l1drop'){val24=d24.SOY[0]-d24.EOY[0];val25=d25.SOY[0]-d25.EOY[0];}
+        else{val24=(d24.EOY[2]+d24.EOY[3])-(d24.SOY[2]+d24.SOY[3]);val25=(d25.EOY[2]+d25.EOY[3])-(d25.SOY[2]+d25.SOY[3]);}
+        const chg=val25-val24;
+        const c=chg>0?heatGreenScale(chg,30):chg<0?heatRedScale(-chg,30):{bg:'#f5f5f5',text:'#999'};
+        const arrow=chg>0?'\u25B2 +'+chg:chg<0?'\u25BC '+chg:'\u2014';
+        h+=`<td style="background:${c.bg};color:${c.text};line-height:1.5;cursor:default" title="24-25: ${val24} | 25-26: ${val25}">`;
+        h+=`<div style="font-size:12px;font-weight:700">${arrow}</div>`;
+        h+=`<div style="font-size:9px;opacity:0.75">${val24} \u2192 ${val25}</div></td>`;
+      });
+      h+=`</tr>`;
+    });
+    h+=`</tbody></table></div>`;return h;
+  };
+
+  detBody.insertAdjacentHTML('beforeend',
+    buildHydHeat('l1drop',`L1 Drop — YoY Change (2024-25 → 2025-26) · green = improved · red = declined`,'green')+
+    buildHydHeat('l34gain',`L3+L4 Growth — YoY Change (2024-25 → 2025-26) · green = grew · red = declined`,'green')
+  );
 }
 
 /* ── LCPS DATA ────────────────────────────────────────────────────────── */
@@ -590,7 +776,8 @@ const LCPS_DATA = {
 
 const LCPS_COLORS = ['#2D9E6F','#F0A843','#E05A5A']; // Green, Yellow, Red
 const LCPS_LABELS = ['Green','Yellow','Red'];
-let lcpsSubject = 'English', lcpsGrade = 'Grade 1';
+let lcpsSubject = 'English', lcpsGrade = 'Grade 1', lcpsAllGrades = false;
+let hydAllGrades = false;
 
 function renderLCPS() {
   destroyCharts();
@@ -601,20 +788,28 @@ function renderLCPS() {
   ['English','Maths'].forEach(s=>{
     const btn=document.createElement('button');btn.textContent=s;
     if(lcpsSubject===s)btn.style.cssText='background:#6B4DAA;color:#fff;font-weight:600;border-color:#6B4DAA';
-    btn.addEventListener('click',()=>{lcpsSubject=s;renderLCPS();});
+    btn.addEventListener('click',()=>{lcpsSubject=s;lcpsAllGrades=false;renderLCPS();});
     document.getElementById('lcpsSubj').appendChild(btn);
   });
 
-  // Grade toggle
-  LCPS_DATA[lcpsSubject].grades.forEach(g=>{
+  // Grade toggle — All Grades first, then individual grades
+  const grEl = document.getElementById('lcpsGr');
+  const allBtn=document.createElement('button');allBtn.textContent='All Grades ▾';
+  allBtn.style.cssText=lcpsAllGrades?'background:#6B4DAA;color:#fff;font-weight:700;border-color:#6B4DAA;border-radius:8px 0 0 8px':'background:#EEF0FF;color:#6B4DAA;font-weight:700;border-radius:8px 0 0 8px';
+  allBtn.addEventListener('click',()=>{lcpsAllGrades=true;renderLCPS();});
+  grEl.appendChild(allBtn);
+
+  LCPS_DATA[lcpsSubject].grades.forEach((g,i)=>{
     const btn=document.createElement('button');btn.textContent=g;
-    const active=lcpsGrade===g;
-    if(active)btn.style.cssText='background:#6B4DAA;color:#fff;font-weight:600;border-color:#6B4DAA';
-    btn.addEventListener('click',()=>{lcpsGrade=g;renderLCPS();});
-    document.getElementById('lcpsGr').appendChild(btn);
+    const active=lcpsGrade===g&&!lcpsAllGrades;
+    const isLast=i===LCPS_DATA[lcpsSubject].grades.length-1;
+    btn.style.cssText=`${active?'background:#6B4DAA;color:#fff;font-weight:600;border-color:#6B4DAA':'background:#f0f0f0;color:#666'};border-left:none;${isLast?'border-radius:0 8px 8px 0':'border-radius:0'}`;
+    btn.addEventListener('click',()=>{lcpsGrade=g;lcpsAllGrades=false;renderLCPS();});
+    grEl.appendChild(btn);
   });
 
   const body = document.getElementById('lcpsBody');
+  if(lcpsAllGrades){renderLCPSAllGrades(body);return;}
 
   // Legend
   let legendH = '<div style="display:flex;justify-content:center;gap:20px;margin-bottom:16px;font-size:12px;color:#888;flex-wrap:wrap">';
@@ -760,35 +955,60 @@ function renderLCPS() {
 }
 
 /* ── RENDER & NAV ─────────────────────────────────────────────────────── */
+let topTab = 'HYD'; // 'HYD' or 'LCPS'
+
 function render(){
   updateNav();
-  if(currentView==='SoyEoy')renderSoyEoy();
-  else if(currentView==='YoYChange')renderYoyChange();
-  else if(currentView==='LCPS')renderLCPS();
-  else renderVertical(currentView);
+  if(topTab==='LCPS'){renderLCPS();return;}
+  renderVertical('HYD Govt - GP');
 }
 
 function buildNav(){
-  const navEl=document.getElementById('mainNav');navEl.innerHTML='';
-  const items=[
-    {key:'SoyEoy',label:'SOY \u2192 EOY'},
-    {key:'YoYChange',label:'YoY Change'},
-    {key:'HYD Govt - GP',label:'HYD Govt - GP'},
-    {key:'LCPS',label:'LCPS'}
-  ];
-  items.forEach(({key,label})=>{
+  const navEl=document.getElementById('mainNav');
+  navEl.innerHTML='';
+
+  // Top-level tabs
+  const topBar=document.createElement('div');
+  topBar.style.cssText='display:flex;justify-content:center;margin-bottom:20px;gap:0';
+
+  [['HYD','HYD Govt - GP'],['LCPS','LCPS']].forEach(([key,label],i)=>{
     const btn=document.createElement('button');
-    btn.textContent=label;btn.dataset.view=key;
+    btn.textContent=label;
+    const active=topTab===key;
+    btn.style.cssText=`padding:12px 32px;font-size:14px;font-weight:700;border:2px solid #333;cursor:pointer;font-family:inherit;transition:all .15s;${i===0?'border-radius:10px 0 0 10px':'border-radius:0 10px 10px 0;border-left:none'};${active?'background:#333;color:#fff':'background:#fff;color:#555'}`;
     btn.addEventListener('click',()=>{
-      currentView=key;
-      if(!['SoyEoy','YoYChange','LCPS'].includes(key))detailGrade=ALL_DATA[key].grades[0];
-      render();
+      topTab=key;
+      if(key==='HYD'){currentView='SoyEoy';}
+      buildNav();render();
     });
-    navEl.appendChild(btn);
+    topBar.appendChild(btn);
   });
+  navEl.appendChild(topBar);
+
+  // HYD sub-tabs
+  if(topTab==='HYD'){
+    const subBar=document.createElement('div');
+    subBar.style.cssText='display:flex;justify-content:center;margin-bottom:20px;gap:0';
+    const subItems=[
+      {key:'HYD Govt - GP',label:'HYD Govt - GP Detail'}
+    ];
+    subItems.forEach(({key,label},i)=>{
+      const btn=document.createElement('button');
+      btn.textContent=label;btn.dataset.view=key;
+      const active=currentView===key;
+      btn.style.cssText=`padding:9px 20px;font-size:12px;font-weight:600;border:1px solid #ccc;border-radius:8px;cursor:pointer;font-family:inherit;${active?'background:#333;color:#fff;border-color:#333':'background:#f0f0f0;color:#666'}`;
+      btn.addEventListener('click',()=>{
+        currentView=key;
+        if(key==='HYD Govt - GP')detailGrade=ALL_DATA[key].grades[0];
+        render();
+      });
+      subBar.appendChild(btn);
+    });
+    navEl.appendChild(subBar);
+  }
 }
 
-buildNav();currentView='SoyEoy';render();
+buildNav();currentView='HYD Govt - GP';hydAllGrades=true;render();
 </script>
 </body>
 </html>
