@@ -550,13 +550,221 @@ function renderVertical(vName){
   card.appendChild(tWrap);document.getElementById('detBody').appendChild(card);
 }
 
+/* ── LCPS DATA ────────────────────────────────────────────────────────── */
+const LCPS_DATA = {
+  English: {
+    grades: ['Grade 1','Grade 2','Grade 3','Grade 4','Grade 5'],
+    '2024-25': {
+      'Grade 1': {SOY:[52,31,17], EOY:[83,16,1]},
+      'Grade 2': {SOY:[71,27,2],  EOY:[71,26,3]},
+      'Grade 3': {SOY:[55,35,10], EOY:[60,35,5]},
+      'Grade 4': {SOY:[41,45,13], EOY:[79,19,2]},
+      'Grade 5': {SOY:[57,33,10], EOY:[41,34,25]}
+    },
+    '2025-26': {
+      'Grade 1': {SOY:[75,22,3],  EOY:[90,10,0]},
+      'Grade 2': {SOY:[70,23,7],  EOY:[81,15,4]},
+      'Grade 3': {SOY:[69,25,6],  EOY:[77,22,1]},
+      'Grade 4': {SOY:[41,43,16], EOY:[76,16,8]},
+      'Grade 5': {SOY:[70,24,6],  EOY:[56,34,10]}
+    }
+  },
+  Maths: {
+    grades: ['Grade 1','Grade 2','Grade 3','Grade 4','Grade 5'],
+    '2024-25': {
+      'Grade 1': {SOY:[67,30,3],  EOY:[76,22,2]},
+      'Grade 2': {SOY:[56,39,5],  EOY:[79,20,1]},
+      'Grade 3': {SOY:[55,37,8],  EOY:[53,35,12]},
+      'Grade 4': {SOY:[20,45,35], EOY:[58,33,9]},
+      'Grade 5': {SOY:[30,50,20], EOY:[58,33,9]}
+    },
+    '2025-26': {
+      'Grade 1': {SOY:[82,15,3],  EOY:[83,16,1]},
+      'Grade 2': {SOY:[56,39,5],  EOY:[61,34,5]},
+      'Grade 3': {SOY:[57,34,9],  EOY:[57,36,7]},
+      'Grade 4': {SOY:[44,36,20], EOY:[63,29,8]},
+      'Grade 5': {SOY:[55,35,10], EOY:[57,37,6]}
+    }
+  }
+};
+
+const LCPS_COLORS = ['#2D9E6F','#F0A843','#E05A5A']; // Green, Yellow, Red
+const LCPS_LABELS = ['Green','Yellow','Red'];
+let lcpsSubject = 'English', lcpsGrade = 'Grade 1';
+
+function renderLCPS() {
+  destroyCharts();
+  const el = document.getElementById('content');
+  el.innerHTML = '<div class="toggle-row" id="lcpsSubj"></div><div class="toggle-row" id="lcpsGr" style="margin-bottom:20px"></div><div id="lcpsBody"></div>';
+
+  // Subject toggle
+  ['English','Maths'].forEach(s=>{
+    const btn=document.createElement('button');btn.textContent=s;
+    if(lcpsSubject===s)btn.style.cssText='background:#6B4DAA;color:#fff;font-weight:600;border-color:#6B4DAA';
+    btn.addEventListener('click',()=>{lcpsSubject=s;renderLCPS();});
+    document.getElementById('lcpsSubj').appendChild(btn);
+  });
+
+  // Grade toggle
+  LCPS_DATA[lcpsSubject].grades.forEach(g=>{
+    const btn=document.createElement('button');btn.textContent=g;
+    const active=lcpsGrade===g;
+    if(active)btn.style.cssText='background:#6B4DAA;color:#fff;font-weight:600;border-color:#6B4DAA';
+    btn.addEventListener('click',()=>{lcpsGrade=g;renderLCPS();});
+    document.getElementById('lcpsGr').appendChild(btn);
+  });
+
+  const body = document.getElementById('lcpsBody');
+
+  // Legend
+  let legendH = '<div style="display:flex;justify-content:center;gap:20px;margin-bottom:16px;font-size:12px;color:#888;flex-wrap:wrap">';
+  LCPS_LABELS.forEach((l,i)=>{legendH+=`<span style="display:flex;align-items:center;gap:5px"><span style="width:11px;height:11px;border-radius:2px;background:${LCPS_COLORS[i]};display:inline-block"></span>${l}</span>`;});
+  legendH += '</div>';
+
+  // Build 4-bar grouped chart: SOY 24-25 | SOY 25-26 | EOY 24-25 | EOY 25-26
+  const labels=[], gD=[], yD=[], rD=[], barMeta=[];
+  const d24 = LCPS_DATA[lcpsSubject]['2024-25'][lcpsGrade];
+  const d25 = LCPS_DATA[lcpsSubject]['2025-26'][lcpsGrade];
+
+  labels.push('24-25'); gD.push(d24.SOY[0]); yD.push(d24.SOY[1]); rD.push(d24.SOY[2]); barMeta.push({period:'SOY',year:'2024-25'});
+  labels.push('25-26'); gD.push(d25.SOY[0]); yD.push(d25.SOY[1]); rD.push(d25.SOY[2]); barMeta.push({period:'SOY',year:'2025-26'});
+  labels.push('24-25'); gD.push(d24.EOY[0]); yD.push(d24.EOY[1]); rD.push(d24.EOY[2]); barMeta.push({period:'EOY',year:'2024-25',greenChange:d24.EOY[0]-d24.SOY[0]});
+  labels.push('25-26'); gD.push(d25.EOY[0]); yD.push(d25.EOY[1]); rD.push(d25.EOY[2]); barMeta.push({period:'EOY',year:'2025-26',greenChange:d25.EOY[0]-d25.SOY[0]});
+
+  const lcpsPlugin = {
+    id:'lcpsPlugin',
+    beforeDatasetsDraw(chart){
+      const ctx=chart.ctx,meta=chart.getDatasetMeta(0),ca=chart.chartArea;
+      if(!meta.data.length)return;
+      ctx.save();
+      // Outer bucket (all 4 bars)
+      const b0=meta.data[0],b3=meta.data[3],pad=10;
+      const left=b0.x-b0.width/2-pad,right=b3.x+b3.width/2+pad;
+      ctx.fillStyle='rgba(0,0,0,0.03)';
+      ctx.beginPath();
+      if(ctx.roundRect)ctx.roundRect(left,ca.top-38,right-left,ca.bottom-ca.top+42,8);
+      else ctx.rect(left,ca.top-38,right-left,ca.bottom-ca.top+42);
+      ctx.fill();
+      ctx.strokeStyle='rgba(0,0,0,0.10)';ctx.lineWidth=1.5;
+      ctx.beginPath();
+      if(ctx.roundRect)ctx.roundRect(left,ca.top-38,right-left,ca.bottom-ca.top+42,8);
+      else ctx.rect(left,ca.top-38,right-left,ca.bottom-ca.top+42);
+      ctx.stroke();
+      // SOY sub-shade
+      const b1=meta.data[1];
+      const sL=b0.x-b0.width/2-3,sR=b1.x+b1.width/2+3;
+      ctx.fillStyle='rgba(107,77,170,0.07)';
+      ctx.beginPath();
+      if(ctx.roundRect)ctx.roundRect(sL,ca.top-6,sR-sL,ca.bottom-ca.top+10,4);
+      else ctx.rect(sL,ca.top-6,sR-sL,ca.bottom-ca.top+10);
+      ctx.fill();
+      // EOY sub-shade
+      const b2=meta.data[2];
+      const eL=b2.x-b2.width/2-3,eR=b3.x+b3.width/2+3;
+      ctx.fillStyle='rgba(45,158,111,0.08)';
+      ctx.beginPath();
+      if(ctx.roundRect)ctx.roundRect(eL,ca.top-6,eR-eL,ca.bottom-ca.top+10,4);
+      else ctx.rect(eL,ca.top-6,eR-eL,ca.bottom-ca.top+10);
+      ctx.fill();
+      ctx.restore();
+    },
+    afterDatasetsDraw(chart){
+      const ctx=chart.ctx,meta=chart.getDatasetMeta(0),ca=chart.chartArea;
+      const lastMeta=chart.getDatasetMeta(chart.data.datasets.length-1);
+      if(!meta.data.length)return;
+      ctx.save();
+      ctx.textAlign='center';ctx.textBaseline='bottom';
+      // SOY / EOY labels
+      ctx.font='600 10px -apple-system,sans-serif';
+      const b0=meta.data[0],b1=meta.data[1],b2=meta.data[2],b3=meta.data[3];
+      ctx.fillStyle='#6B4DAA';ctx.fillText('SOY',(b0.x+b1.x)/2,ca.top-8);
+      ctx.fillStyle='#2D9E6F';ctx.fillText('EOY',(b2.x+b3.x)/2,ca.top-8);
+      // Green change arrows on EOY bars
+      ctx.font='bold 10px -apple-system,sans-serif';ctx.fillStyle='#333';
+      barMeta.forEach((m,i)=>{
+        if(m.greenChange===undefined)return;
+        const x=meta.data[i].x,topY=lastMeta.data[i].y;
+        const d=m.greenChange;
+        ctx.fillStyle=d>0?'#0D6B50':d<0?'#C0392B':'#999';
+        ctx.fillText(d>0?'\u25B2+'+d+'%':d<0?'\u25BC'+Math.abs(d)+'%':'-',x,topY-3);
+      });
+      ctx.restore();
+    }
+  };
+
+  body.innerHTML = legendH +
+    '<div style="background:#f8f8f8;border:1px solid #e0e0e0;border-radius:14px;padding:24px 16px 16px;margin-bottom:20px">' +
+      '<div style="font-size:13px;font-weight:600;color:#777;text-align:center;margin-bottom:14px">SOY \u2192 EOY · '+lcpsSubject+' · '+lcpsGrade+'</div>' +
+      '<div style="position:relative;width:100%;height:380px"><canvas id="lcpsCanvas"></canvas></div>' +
+    '</div>' +
+    '<div id="lcpsTable"></div>';
+
+  const cv = document.getElementById('lcpsCanvas');
+  const c = new Chart(cv, {
+    type:'bar',
+    data:{labels,datasets:[
+      {label:'Green',data:gD,backgroundColor:LCPS_COLORS[0],borderWidth:0,stack:'a'},
+      {label:'Yellow',data:yD,backgroundColor:LCPS_COLORS[1],borderWidth:0,stack:'a'},
+      {label:'Red',data:rD,backgroundColor:LCPS_COLORS[2],borderWidth:0,stack:'a'}
+    ]},
+    plugins:[lcpsPlugin],
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      layout:{padding:{top:44}},
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{
+          title:ctx=>{const m=barMeta[ctx[0].dataIndex];return 'LCPS · '+m.period+' '+m.year;},
+          label:ctx=>ctx.dataset.label+': '+ctx.raw+'%'
+        }},
+        datalabels:{display:ctx=>ctx.dataset.data[ctx.dataIndex]>=8,color:'#fff',font:{size:10,weight:'700'},formatter:v=>v+'%'}
+      },
+      scales:{
+        x:{stacked:true,ticks:{color:'#555',font:{size:11,weight:'600'},autoSkip:false,maxRotation:0},grid:{display:false}},
+        y:{stacked:true,max:110,ticks:{color:'#999',callback:v=>v<=100?v+'%':'',font:{size:11},stepSize:25},grid:{color:'rgba(0,0,0,0.06)'}}
+      }
+    }
+  });
+  charts.push(c);
+
+  // Summary table
+  let tH = '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px">';
+  ['2024-25','2025-26'].forEach(year=>{
+    const d = LCPS_DATA[lcpsSubject][year][lcpsGrade];
+    tH += `<div style="background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:18px 20px;box-shadow:0 1px 4px rgba(0,0,0,.04)">
+      <div style="font-size:13px;font-weight:600;color:#777;margin-bottom:12px;text-align:center">${year}</div>
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead><tr>
+          <th style="padding:6px 8px;background:#eee;font-size:11px;color:#888;border-bottom:1px solid #ddd;text-align:left"></th>
+          <th style="padding:6px 8px;background:#eee;font-size:11px;color:#888;border-bottom:1px solid #ddd;text-align:center">SOY</th>
+          <th style="padding:6px 8px;background:#eee;font-size:11px;color:#888;border-bottom:1px solid #ddd;text-align:center">EOY</th>
+          <th style="padding:6px 8px;background:#eee;font-size:11px;color:#888;border-bottom:1px solid #ddd;text-align:center">Change</th>
+        </tr></thead><tbody>`;
+    LCPS_LABELS.forEach((lbl,i)=>{
+      const delta=d.EOY[i]-d.SOY[i];
+      const dTxt=delta===0?'-':delta>0?'\u25B2 +'+delta:'\u25BC '+delta;
+      const dCol=delta>0&&i===0?'#0D6B50':delta<0&&i===0?'#C0392B':delta>0&&i===2?'#C0392B':delta<0&&i===2?'#0D6B50':'#6B4DAA';
+      tH+=`<tr>
+        <td style="padding:6px 8px;border-bottom:1px solid #eee;font-weight:600;display:flex;align-items:center;gap:6px">
+          <span style="width:8px;height:8px;border-radius:50%;background:${LCPS_COLORS[i]};display:inline-block"></span>${lbl}
+        </td>
+        <td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:center">${d.SOY[i]}%</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:center">${d.EOY[i]}%</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:center;font-weight:700;color:${dCol}">${dTxt}</td>
+      </tr>`;
+    });
+    tH += '</tbody></table></div>';
+  });
+  tH += '</div>';
+  document.getElementById('lcpsTable').innerHTML = tH;
+}
+
 /* ── RENDER & NAV ─────────────────────────────────────────────────────── */
 function render(){
   updateNav();
-  if(currentView==='OneView')renderOneView();
-  else if(currentView==='SoyEoy')renderSoyEoy();
+  if(currentView==='SoyEoy')renderSoyEoy();
   else if(currentView==='YoYChange')renderYoyChange();
-  else if(currentView==='Scorecard')renderScorecard();
+  else if(currentView==='LCPS')renderLCPS();
   else renderVertical(currentView);
 }
 
@@ -565,14 +773,15 @@ function buildNav(){
   const items=[
     {key:'SoyEoy',label:'SOY \u2192 EOY'},
     {key:'YoYChange',label:'YoY Change'},
-    {key:'HYD Govt - GP',label:'HYD Govt - GP'}
+    {key:'HYD Govt - GP',label:'HYD Govt - GP'},
+    {key:'LCPS',label:'LCPS'}
   ];
   items.forEach(({key,label})=>{
     const btn=document.createElement('button');
     btn.textContent=label;btn.dataset.view=key;
     btn.addEventListener('click',()=>{
       currentView=key;
-      if(!['OneView','SoyEoy','YoYChange','Scorecard'].includes(key))detailGrade=ALL_DATA[key].grades[0];
+      if(!['SoyEoy','YoYChange','LCPS'].includes(key))detailGrade=ALL_DATA[key].grades[0];
       render();
     });
     navEl.appendChild(btn);
