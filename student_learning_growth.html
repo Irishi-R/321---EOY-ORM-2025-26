@@ -203,7 +203,7 @@ function renderSoyAllGrades(body) {
       const d25 = getData(v, soySubject, grade, '2025-26');
       html += `<div style="background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:12px 10px 10px;box-shadow:0 1px 4px rgba(0,0,0,.05)">
         <div style="font-size:12px;font-weight:700;color:#555;text-align:center;margin-bottom:10px">${grade}</div>
-        <div style="position:relative;width:100%;height:220px"><canvas id="soyAllCanvas${chartIdx}"></canvas></div>
+        <div style="position:relative;width:100%;height:280px"><canvas id="soyAllCanvas${chartIdx}"></canvas></div>
       </div>`;
       chartIdx++;
     });
@@ -259,11 +259,11 @@ function renderSoyAllGrades(body) {
       const cv = document.getElementById('soyAllCanvas'+ci);
       if(!cv){ci++;return;}
       const c = new Chart(cv,{type:'bar',data:{labels,datasets:[
-        {label:'L1',data:l1D,backgroundColor:segC[0],borderWidth:0,stack:'a'},
-        {label:'L2',data:l2D,backgroundColor:segC[1],borderWidth:0,stack:'a'},
-        {label:'L3',data:l3D,backgroundColor:segC[2],borderWidth:0,stack:'a'},
-        {label:'L4',data:l4D,backgroundColor:segC[3],borderWidth:0,stack:'a'}
-      ]},plugins:[plugin],options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:32}},
+        {label:'L1',data:l1D,backgroundColor:segC[0],borderWidth:0,stack:'a',barPercentage:0.85,categoryPercentage:0.75},
+        {label:'L2',data:l2D,backgroundColor:segC[1],borderWidth:0,stack:'a',barPercentage:0.85,categoryPercentage:0.75},
+        {label:'L3',data:l3D,backgroundColor:segC[2],borderWidth:0,stack:'a',barPercentage:0.85,categoryPercentage:0.75},
+        {label:'L4',data:l4D,backgroundColor:segC[3],borderWidth:0,stack:'a',barPercentage:0.85,categoryPercentage:0.75}
+      ]},plugins:[plugin],options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:36,left:4,right:4,bottom:4}},
         plugins:{legend:{display:false},
           tooltip:{callbacks:{title:ctx=>{const p=ctx[0].dataIndex<2?'SOY':'EOY';return v+' · '+p+' '+labels[ctx[0].dataIndex];},label:ctx=>ctx.dataset.label+': '+ctx.raw+'%'}},
           datalabels:{display:ctx=>ctx.dataset.data[ctx.dataIndex]>=14,color:ctx=>ctx.datasetIndex===1?'#5a3e00':'#fff',font:{size:9,weight:'700'},formatter:v=>v+'%'}},
