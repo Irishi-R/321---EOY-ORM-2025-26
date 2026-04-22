@@ -580,30 +580,70 @@ function renderSoyEoyAllGrades(body) {
   let ci=0;
 
   commonGrades.forEach(grade=>{
-    // Compute grade-level summary across all verticals
-    let totalDrop=0, totalGain=0, count=0;
-    verticals.forEach(v=>{
-      const d=getData(v,soySubject,grade,'2025-26');
-      if(!d)return;
-      totalDrop+=d.SOY[0]-d.EOY[0];
-      totalGain+=(d.EOY[2]+d.EOY[3])-(d.SOY[2]+d.SOY[3]);
-      count++;
-    });
-    const avgDrop=count>0?Math.round(totalDrop/count):0;
-    const avgGain=count>0?Math.round(totalGain/count):0;
-    const dropCol=avgDrop>0?'#0D6B50':avgDrop<0?'#C0392B':'#888';
-    const gainCol=avgGain>0?'#0D6B50':avgGain<0?'#C0392B':'#888';
+    // Grade insights — max 2, concise
+    const gradeInsights = [];
+    const vData = verticals.map(v => {
+      const d = getData(v, soySubject, grade, '2025-26');
+      if(!d) return null;
+      return {
+        v, vName: vShort[v],
+        l1drop: d.SOY[0] - d.EOY[0],
+        l2chg: d.EOY[1] - d.SOY[1],
+        l34gain: (d.EOY[2]+d.EOY[3]) - (d.SOY[2]+d.SOY[3]),
+        l1soy: d.SOY[0], l1eoy: d.EOY[0],
+        l2eoy: d.EOY[1]
+      };
+    }).filter(Boolean);
 
-    html+=`<div style="margin-bottom:24px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div style="font-size:14px;font-weight:800;color:#1a1a1a;border-left:4px solid #6B4DAA;padding-left:10px">${grade}</div>
-        <div style="font-size:11px;color:#777;background:#f5f5f5;border-radius:8px;padding:6px 12px;display:flex;gap:16px">
-          <span>Avg L1 drop: <strong style="color:${dropCol}">${avgDrop>0?'▼'+avgDrop:avgDrop<0?'▲'+Math.abs(avgDrop):'-'}pp</strong></span>
-          <span style="color:#ccc">·</span>
-          <span>Avg L2→ gain: <strong style="color:${gainCol}">${avgGain>0?'▲'+avgGain:avgGain<0?'▼'+Math.abs(avgGain):'-'}pp</strong></span>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">`;
+    // Pick the most important observation first
+    // 1. Any L1 increase (most critical)
+    const regressed = vData.filter(x => x.l1drop < 0);
+    if(regressed.length > 0)
+      gradeInsights.push({type:'negative', text:`L1 increased at EOY in ${regressed.map(x=>`${x.vName} (+${Math.abs(x.l1drop)}pp)`).join(', ')} — needs attention.`});
+
+    // 2. L2 bloat
+    const bloated = vData.filter(x => x.l2eoy > 40 && x.l2chg >= 8);
+    if(bloated.length > 0 && gradeInsights.length < 2)
+      gradeInsights.push({type:'neutral', text:`L2 is growing in ${bloated.map(x=>x.vName).join(', ')} — students are moving up from L1 but may be stalling at L2.`});
+
+    // 3. Shallow movement (L1 dropped but L3+L4 didn't grow)
+    const shallow = vData.filter(x => x.l1drop >= 5 && x.l34gain <= 2);
+    if(shallow.length > 0 && gradeInsights.length < 2)
+      gradeInsights.push({type:'neutral', text:`In ${shallow.map(x=>x.vName).join(', ')}, L1 movement is not translating to L3+L4 growth — movement is happening but staying shallow.`});
+
+    // 4. High EOY L1 despite drop
+    const highL1 = vData.filter(x => x.l1drop > 0 && x.l1eoy > 55);
+    if(highL1.length > 0 && gradeInsights.length < 2)
+      gradeInsights.push({type:'negative', text:`${highL1.map(x=>`${x.vName} (${x.l1eoy}% at EOY)`).join(', ')} — L1 dropped but the proportion remaining at L1 is still significant.`});
+
+    // 5. Clean movement — positive
+    const clean = vData.filter(x => x.l1drop >= 10 && x.l34gain >= 8);
+    if(clean.length > 0 && gradeInsights.length < 2)
+      gradeInsights.push({type:'positive', text:`${clean.map(x=>x.vName).join(', ')} showed strong movement — L1 drop accompanied by meaningful L3+L4 gains.`});
+
+    // 6. All improved — collective positive
+    if(gradeInsights.length === 0 && vData.every(x => x.l1drop > 0))
+      gradeInsights.push({type:'positive', text:`All verticals saw a reduction in L1 by EOY. Check depth of movement across levels.`});
+
+    let insightsH = '';
+    if(gradeInsights.length > 0) {
+      insightsH = `<div style="margin-top:10px;display:flex;flex-direction:column;gap:6px">`;
+      gradeInsights.slice(0,2).forEach(ins => {
+        const bg = ins.type==='positive'?'#E8F5EF':ins.type==='negative'?'#FCEAEA':'#F5F3FF';
+        const col = ins.type==='positive'?'#0D6B50':ins.type==='negative'?'#C0392B':'#6B4DAA';
+        const border = ins.type==='positive'?'#0D6B50':ins.type==='negative'?'#C0392B':'#6B4DAA';
+        const icon = ins.type==='positive'?'↑':ins.type==='negative'?'↓':'→';
+        insightsH += `<div style="background:${bg};border-left:3px solid ${border};border-radius:0 8px 8px 0;padding:9px 14px;font-size:12px;color:#333;line-height:1.5;display:flex;gap:10px;align-items:flex-start">
+          <span style="font-weight:800;color:${col};flex-shrink:0">${icon}</span>
+          <span>${ins.text}</span>
+        </div>`;
+      });
+      insightsH += `</div>`;
+    }
+
+    html+=`<div style="margin-bottom:28px">
+      <div style="font-size:15px;font-weight:800;color:#1a1a1a;border-left:4px solid #6B4DAA;padding-left:10px;margin-bottom:12px">${grade}</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">`;
 
     verticals.forEach(v=>{
       const d=getData(v,soySubject,grade,'2025-26');
@@ -615,22 +655,22 @@ function renderSoyEoyAllGrades(body) {
         const l34gain=(d.EOY[2]+d.EOY[3])-(d.SOY[2]+d.SOY[3]);
         const l1c=l1drop>0?'#0D6B50':l1drop<0?'#C0392B':'#888';
         const l34c=l34gain>0?'#0D6B50':l34gain<0?'#C0392B':'#888';
-        tileSum=`<div style="display:flex;justify-content:space-around;padding:8px 6px;background:#f8f8f8;border-top:1px solid #eee;border-radius:0 0 10px 10px;font-size:10px">
-          <span>L1: <strong style="color:${l1c}">${l1drop>0?'▼'+l1drop:l1drop<0?'▲'+Math.abs(l1drop):'-'}pp</strong></span>
-          <span style="color:#ccc">·</span>
-          <span>L2: <strong style="color:${l2chg>=0?'#6B4DAA':'#C0392B'}">${l2chg>=0?'+':''}${l2chg}pp</strong></span>
-          <span style="color:#ccc">·</span>
-          <span>L3+L4: <strong style="color:${l34c}">${l34gain>0?'▲'+l34gain:l34gain<0?'▼'+Math.abs(l34gain):'-'}pp</strong></span>
+        tileSum=`<div style="display:flex;justify-content:space-around;padding:9px 6px;background:#f8f8f8;border-top:1px solid #e8e8e8;border-radius:0 0 10px 10px;font-size:11px;font-weight:700;color:#444;gap:4px">
+          <span style="color:${l1c}">L1 ${l1drop>0?'▼'+l1drop:l1drop<0?'▲'+Math.abs(l1drop):'-'}pp</span>
+          <span style="color:#ddd">|</span>
+          <span style="color:${l2chg>=0?'#6B4DAA':'#C0392B'}">L2 ${l2chg>=0?'+':''}${l2chg}pp</span>
+          <span style="color:#ddd">|</span>
+          <span style="color:${l34c}">L3+4 ${l34gain>0?'▲'+l34gain:l34gain<0?'▼'+Math.abs(l34gain):'-'}pp</span>
         </div>`;
       }
       html+=`<div style="background:#fff;border:1px solid #e0e0e0;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05)">
-        <div style="font-size:11px;font-weight:700;color:#555;text-align:center;padding:10px 10px 6px">${vShort[v]}</div>
-        <div style="padding:0 10px;position:relative;width:calc(100% - 20px);height:220px"><canvas id="sdaAllCanvas${ci}"></canvas></div>
+        <div style="font-size:12px;font-weight:800;color:#333;text-align:center;padding:10px 8px 6px;letter-spacing:-.2px">${vShort[v]}</div>
+        <div style="padding:0 8px;position:relative;width:calc(100% - 16px);height:200px"><canvas id="sdaAllCanvas${ci}"></canvas></div>
         ${tileSum}
       </div>`;
       ci++;
     });
-    html+=`</div></div>`;
+    html+=`</div>${insightsH}</div>`;
   });
 
   // Heatmaps at the bottom
@@ -703,21 +743,92 @@ function renderSoyEoyAllGrades(body) {
       const cv=document.getElementById('sdaAllCanvas'+idx);
       if(!cv){idx++;return;}
       const c=new Chart(cv,{type:'bar',data:{labels:['SOY','EOY'],datasets:[
-        {label:'L1',data:l1D,backgroundColor:segC[0],borderWidth:0,stack:'a',barPercentage:0.8,categoryPercentage:0.7},
-        {label:'L2',data:l2D,backgroundColor:segC[1],borderWidth:0,stack:'a',barPercentage:0.8,categoryPercentage:0.7},
-        {label:'L3',data:l3D,backgroundColor:segC[2],borderWidth:0,stack:'a',barPercentage:0.8,categoryPercentage:0.7},
-        {label:'L4',data:l4D,backgroundColor:segC[3],borderWidth:0,stack:'a',barPercentage:0.8,categoryPercentage:0.7}
-      ]},plugins:[plugin],options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:30,left:4,right:4,bottom:4}},
+        {label:'L1',data:l1D,backgroundColor:segC[0],borderWidth:0,stack:'a',barPercentage:0.85,categoryPercentage:0.65},
+        {label:'L2',data:l2D,backgroundColor:segC[1],borderWidth:0,stack:'a',barPercentage:0.85,categoryPercentage:0.65},
+        {label:'L3',data:l3D,backgroundColor:segC[2],borderWidth:0,stack:'a',barPercentage:0.85,categoryPercentage:0.65},
+        {label:'L4',data:l4D,backgroundColor:segC[3],borderWidth:0,stack:'a',barPercentage:0.85,categoryPercentage:0.65}
+      ]},plugins:[plugin],options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:28,left:2,right:2,bottom:2}},
         plugins:{legend:{display:false},
           tooltip:{callbacks:{title:ctx=>v+' · '+ctx[0].label+' 2025-26',label:ctx=>ctx.dataset.label+': '+ctx.raw+'%'}},
-          datalabels:{display:ctx=>ctx.dataset.data[ctx.dataIndex]>=14,color:ctx=>ctx.datasetIndex===1?'#5a3e00':'#fff',font:{size:9,weight:'700'},formatter:v=>v+'%'}},
+          datalabels:{display:ctx=>ctx.dataset.data[ctx.dataIndex]>=16,color:ctx=>ctx.datasetIndex===1?'#5a3e00':'#fff',font:{size:10,weight:'700'},formatter:v=>v+'%'}},
         scales:{
-          x:{stacked:true,ticks:{color:'#555',font:{size:10,weight:'600'}},grid:{display:false}},
-          y:{stacked:true,max:110,ticks:{color:'#999',callback:v=>v<=100?v+'%':'',font:{size:9},stepSize:50},grid:{color:'rgba(0,0,0,0.05)'}}
+          x:{stacked:true,ticks:{color:'#333',font:{size:11,weight:'700'}},grid:{display:false}},
+          y:{stacked:true,max:110,ticks:{color:'#999',callback:v=>v<=100?v+'%':'',font:{size:10},stepSize:50},grid:{color:'rgba(0,0,0,0.05)'}}
         }}});
       charts.push(c);
       idx++;
     });
+  });
+}
+
+function renderSoyG6G8(body) {
+  const g6grades = ['Grade 6','Grade 7','Grade 8'];
+  let legendH='<div style="display:flex;justify-content:center;gap:16px;margin-bottom:20px;font-size:12px;color:#888;flex-wrap:wrap">';
+  ['L1','L2','L3','L4'].forEach((l,i)=>{legendH+=`<span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;border-radius:3px;background:${segC[i]};display:inline-block"></span>${l}</span>`;});
+  legendH+='<span style="font-size:11px;color:#aaa">Foundations only · 2025-26</span></div>';
+
+  let html=legendH+`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">`;
+  let ci=0;
+  g6grades.forEach(g=>{
+    html+=`<div style="background:#fff;border:1px solid #e0e0e0;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05)">
+      <div style="font-size:13px;font-weight:800;color:#333;text-align:center;padding:12px 8px 6px">${g}</div>
+      <div style="padding:0 10px;position:relative;width:calc(100%-20px);height:280px"><canvas id="g6Canvas${ci}"></canvas></div>`;
+    const d=getData('Foundations',soySubject,g,'2025-26');
+    if(d){
+      const l1drop=d.SOY[0]-d.EOY[0];
+      const l2chg=d.EOY[1]-d.SOY[1];
+      const l34gain=(d.EOY[2]+d.EOY[3])-(d.SOY[2]+d.SOY[3]);
+      const l1c=l1drop>0?'#0D6B50':l1drop<0?'#C0392B':'#888';
+      const l34c=l34gain>0?'#0D6B50':l34gain<0?'#C0392B':'#888';
+      html+=`<div style="display:flex;justify-content:space-around;padding:9px 6px;background:#f8f8f8;border-top:1px solid #e8e8e8;font-size:11px;font-weight:700;gap:4px">
+        <span style="color:${l1c}">L1 ${l1drop>0?'▼'+l1drop:l1drop<0?'▲'+Math.abs(l1drop):'-'}pp</span>
+        <span style="color:#ddd">|</span>
+        <span style="color:${l2chg>=0?'#6B4DAA':'#C0392B'}">L2 ${l2chg>=0?'+':''}${l2chg}pp</span>
+        <span style="color:#ddd">|</span>
+        <span style="color:${l34c}">L3+4 ${l34gain>0?'▲'+l34gain:l34gain<0?'▼'+Math.abs(l34gain):'-'}pp</span>
+      </div>`;
+    }
+    html+=`</div>`;
+    ci++;
+  });
+  html+=`</div>`;
+  body.innerHTML=html;
+
+  g6grades.forEach((g,i)=>{
+    const d=getData('Foundations',soySubject,g,'2025-26');
+    const cv=document.getElementById('g6Canvas'+i);
+    if(!cv||!d)return;
+    const drop=d.SOY[0]-d.EOY[0];
+    const plugin={id:'g6p'+i,
+      afterDatasetsDraw(chart){
+        const ctx=chart.ctx,meta=chart.getDatasetMeta(0),last=chart.getDatasetMeta(chart.data.datasets.length-1),ca=chart.chartArea;
+        ctx.save();
+        const b0=meta.data[0],b1=meta.data[1];
+        ctx.fillStyle='rgba(24,95,165,0.08)';ctx.strokeStyle='rgba(24,95,165,0.20)';ctx.lineWidth=1;
+        ctx.beginPath();if(ctx.roundRect)ctx.roundRect(b0.x-b0.width/2-5,ca.top-22,b0.width+10,ca.bottom-ca.top+26,5);else ctx.rect(b0.x-b0.width/2-5,ca.top-22,b0.width+10,ca.bottom-ca.top+26);ctx.fill();ctx.stroke();
+        ctx.fillStyle='rgba(15,110,86,0.08)';ctx.strokeStyle='rgba(15,110,86,0.20)';
+        ctx.beginPath();if(ctx.roundRect)ctx.roundRect(b1.x-b1.width/2-5,ca.top-22,b1.width+10,ca.bottom-ca.top+26,5);else ctx.rect(b1.x-b1.width/2-5,ca.top-22,b1.width+10,ca.bottom-ca.top+26);ctx.fill();ctx.stroke();
+        ctx.textAlign='center';ctx.textBaseline='bottom';ctx.font='600 10px -apple-system,sans-serif';
+        ctx.fillStyle='#185FA5';ctx.fillText('SOY',b0.x,ca.top-8);
+        ctx.fillStyle='#0F6E56';ctx.fillText('EOY',b1.x,ca.top-8);
+        if(drop!==null){ctx.font='bold 10px -apple-system,sans-serif';ctx.fillStyle=deltaC;const topY=last.data[1].y;ctx.fillText(drop>0?'\u25BC'+drop:drop<0?'\u25B2'+Math.abs(drop):'-',b1.x,topY-3);}
+        ctx.restore();
+      }
+    };
+    const c=new Chart(cv,{type:'bar',data:{labels:['SOY','EOY'],datasets:[
+      {label:'L1',data:[d.SOY[0],d.EOY[0]],backgroundColor:segC[0],borderWidth:0,stack:'a',barPercentage:0.8,categoryPercentage:0.65},
+      {label:'L2',data:[d.SOY[1],d.EOY[1]],backgroundColor:segC[1],borderWidth:0,stack:'a',barPercentage:0.8,categoryPercentage:0.65},
+      {label:'L3',data:[d.SOY[2],d.EOY[2]],backgroundColor:segC[2],borderWidth:0,stack:'a',barPercentage:0.8,categoryPercentage:0.65},
+      {label:'L4',data:[d.SOY[3],d.EOY[3]],backgroundColor:segC[3],borderWidth:0,stack:'a',barPercentage:0.8,categoryPercentage:0.65}
+    ]},plugins:[plugin],options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:30,left:4,right:4,bottom:4}},
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{title:ctx=>'Foundations · '+ctx[0].label+' 2025-26',label:ctx=>ctx.dataset.label+': '+ctx.raw+'%'}},
+        datalabels:{display:ctx=>ctx.dataset.data[ctx.dataIndex]>=14,color:ctx=>ctx.datasetIndex===1?'#5a3e00':'#fff',font:{size:10,weight:'700'},formatter:v=>v+'%'}},
+      scales:{
+        x:{stacked:true,ticks:{color:'#333',font:{size:11,weight:'700'}},grid:{display:false}},
+        y:{stacked:true,max:110,ticks:{color:'#999',callback:v=>v<=100?v+'%':'',font:{size:10},stepSize:50},grid:{color:'rgba(0,0,0,0.05)'}}
+      }}});
+    charts.push(c);
   });
 }
 
@@ -733,18 +844,25 @@ function renderSoyEoy() {
   const grEl=document.getElementById('soyGr');
   const allBtn=document.createElement('button');allBtn.textContent='All Grades ▾';
   allBtn.style.cssText=soyAllGrades?'background:#6B4DAA;color:#fff;font-weight:700;border-color:#6B4DAA;border-radius:8px 0 0 8px':'background:#EEF0FF;color:#6B4DAA;font-weight:700;border-radius:8px 0 0 8px';
-  allBtn.addEventListener('click',()=>{soyAllGrades=true;renderSoyEoy();});
+  allBtn.addEventListener('click',()=>{soyAllGrades=true;soyGrade='Grade 2';renderSoyEoy();});
   grEl.appendChild(allBtn);
   commonGrades.forEach((g,i)=>{
     const btn=document.createElement('button');btn.textContent=g;
-    const active=soyGrade===g&&!soyAllGrades,isLast=i===commonGrades.length-1;
-    btn.style.cssText=(active?'background:'+th.tabActive+';color:#fff;font-weight:600;border-color:'+th.tabActive:'background:#f0f0f0;color:#666')+';border-left:none;'+(isLast?'border-radius:0 8px 8px 0':'border-radius:0');
+    const active=soyGrade===g&&!soyAllGrades&&soyGrade!=='G6-G8';
+    btn.style.cssText=(active?'background:'+th.tabActive+';color:#fff;font-weight:600;border-color:'+th.tabActive:'background:#f0f0f0;color:#666')+';border-left:none;border-radius:0';
     btn.addEventListener('click',()=>{soyGrade=g;soyAllGrades=false;renderSoyEoy();});
     grEl.appendChild(btn);
   });
+  // G6-G8 tab
+  const g6btn=document.createElement('button');g6btn.textContent='G6–G8';
+  const g6active=soyGrade==='G6-G8'&&!soyAllGrades;
+  g6btn.style.cssText=(g6active?'background:'+th.tabActive+';color:#fff;font-weight:600;border-color:'+th.tabActive:'background:#f0f0f0;color:#666')+';border-left:none;border-radius:0 8px 8px 0';
+  g6btn.addEventListener('click',()=>{soyGrade='G6-G8';soyAllGrades=false;renderSoyEoy();});
+  grEl.appendChild(g6btn);
 
   const body=document.getElementById('soyBody');
   if(soyAllGrades){renderSoyEoyAllGrades(body);return;}
+  if(soyGrade==='G6-G8'){renderSoyG6G8(body);return;}
 
   // Legend
   let legendH = '<div style="display:flex;justify-content:center;gap:14px;margin-bottom:14px;font-size:12px;color:#888">';
