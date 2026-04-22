@@ -579,30 +579,107 @@ function renderSoyEoyAllGrades(body) {
   let html=legendH;
   let ci=0;
 
-  verticals.forEach(v=>{
+  commonGrades.forEach(grade=>{
+    // Compute grade-level summary across all verticals
+    let totalDrop=0, totalGain=0, count=0;
+    verticals.forEach(v=>{
+      const d=getData(v,soySubject,grade,'2025-26');
+      if(!d)return;
+      totalDrop+=d.SOY[0]-d.EOY[0];
+      totalGain+=(d.EOY[2]+d.EOY[3])-(d.SOY[2]+d.SOY[3]);
+      count++;
+    });
+    const avgDrop=count>0?Math.round(totalDrop/count):0;
+    const avgGain=count>0?Math.round(totalGain/count):0;
+    const dropCol=avgDrop>0?'#0D6B50':avgDrop<0?'#C0392B':'#888';
+    const gainCol=avgGain>0?'#0D6B50':avgGain<0?'#C0392B':'#888';
+
     html+=`<div style="margin-bottom:24px">
-      <div style="font-size:14px;font-weight:800;color:#1a1a1a;margin-bottom:10px;padding-left:10px;border-left:4px solid #6B4DAA">${v}</div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">`;
-    commonGrades.forEach((g)=>{
-      html+=`<div style="background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:12px 10px 10px;box-shadow:0 1px 4px rgba(0,0,0,.05)">
-        <div style="font-size:12px;font-weight:700;color:#555;text-align:center;margin-bottom:10px">${g}</div>
-        <div style="position:relative;width:100%;height:260px"><canvas id="sdaAllCanvas${ci}"></canvas></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:14px;font-weight:800;color:#1a1a1a;border-left:4px solid #6B4DAA;padding-left:10px">${grade}</div>
+        <div style="font-size:11px;color:#777;background:#f5f5f5;border-radius:8px;padding:6px 12px;display:flex;gap:16px">
+          <span>Avg L1 drop: <strong style="color:${dropCol}">${avgDrop>0?'▼'+avgDrop:avgDrop<0?'▲'+Math.abs(avgDrop):'-'}pp</strong></span>
+          <span style="color:#ccc">·</span>
+          <span>Avg L2→ gain: <strong style="color:${gainCol}">${avgGain>0?'▲'+avgGain:avgGain<0?'▼'+Math.abs(avgGain):'-'}pp</strong></span>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">`;
+
+    verticals.forEach(v=>{
+      const d=getData(v,soySubject,grade,'2025-26');
+      // Tile summary
+      let tileSum='';
+      if(d){
+        const l1drop=d.SOY[0]-d.EOY[0];
+        const l2chg=d.EOY[1]-d.SOY[1];
+        const l34gain=(d.EOY[2]+d.EOY[3])-(d.SOY[2]+d.SOY[3]);
+        const l1c=l1drop>0?'#0D6B50':l1drop<0?'#C0392B':'#888';
+        const l34c=l34gain>0?'#0D6B50':l34gain<0?'#C0392B':'#888';
+        tileSum=`<div style="display:flex;justify-content:space-around;padding:8px 6px;background:#f8f8f8;border-top:1px solid #eee;border-radius:0 0 10px 10px;font-size:10px">
+          <span>L1: <strong style="color:${l1c}">${l1drop>0?'▼'+l1drop:l1drop<0?'▲'+Math.abs(l1drop):'-'}pp</strong></span>
+          <span style="color:#ccc">·</span>
+          <span>L2: <strong style="color:${l2chg>=0?'#6B4DAA':'#C0392B'}">${l2chg>=0?'+':''}${l2chg}pp</strong></span>
+          <span style="color:#ccc">·</span>
+          <span>L3+L4: <strong style="color:${l34c}">${l34gain>0?'▲'+l34gain:l34gain<0?'▼'+Math.abs(l34gain):'-'}pp</strong></span>
+        </div>`;
+      }
+      html+=`<div style="background:#fff;border:1px solid #e0e0e0;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05)">
+        <div style="font-size:11px;font-weight:700;color:#555;text-align:center;padding:10px 10px 6px">${vShort[v]}</div>
+        <div style="padding:0 10px;position:relative;width:calc(100% - 20px);height:220px"><canvas id="sdaAllCanvas${ci}"></canvas></div>
+        ${tileSum}
       </div>`;
       ci++;
     });
     html+=`</div></div>`;
   });
 
+  // Heatmaps at the bottom
+  function heatColor(val, max, isGood){
+    const t=Math.max(0,Math.min(1,Math.abs(val)/max));
+    if(val===0)return{bg:'#f5f5f5',text:'#aaa'};
+    if(isGood&&val>0||!isGood&&val<0){
+      const r=Math.round(232+(29-232)*t),g=Math.round(245+(158-245)*t),b=Math.round(232+(117-232)*t);
+      return{bg:`rgb(${r},${g},${b})`,text:t>0.5?'#fff':'#0a3d2d'};
+    } else {
+      const r=Math.round(255+(200-255)*t),g=Math.round(245+(60-245)*t),b=Math.round(245+(60-245)*t);
+      return{bg:`rgb(${r},${g},${b})`,text:t>0.5?'#fff':'#7a1b1b'};
+    }
+  }
+
+  ['L1 Drop','L3+L4 Gain'].forEach((metric,mi)=>{
+    const isGood = true; // L1 drop positive = good, L3+L4 gain positive = good
+    html+=`<div class="heatmap-wrap" style="margin-top:${mi===0?'28px':'16px'}">
+      <div class="heatmap-title">${metric} — SOY→EOY 2025-26 · ${soySubject} · <span style="font-weight:400;color:#aaa">green = better · red = worse</span></div>
+      <table class="heatmap-table"><thead><tr><th>Vertical</th>`;
+    commonGrades.forEach(g=>{html+=`<th>${g.replace('Grade ','G')}</th>`;});
+    html+=`</tr></thead><tbody>`;
+    verticals.forEach(v=>{
+      html+=`<tr><td>${vShort[v]}</td>`;
+      commonGrades.forEach(g=>{
+        const d=getData(v,soySubject,g,'2025-26');
+        if(!d){html+=`<td class="none">—</td>`;return;}
+        const val=mi===0?d.SOY[0]-d.EOY[0]:(d.EOY[2]+d.EOY[3])-(d.SOY[2]+d.SOY[3]);
+        const c=heatColor(val,40,true);
+        const arrow=val>0?'▲':val<0?'▼':'';
+        html+=`<td style="background:${c.bg};color:${c.text};font-weight:700;cursor:default" title="${v} ${g}: ${metric} = ${val}pp">
+          ${arrow}${Math.abs(val)}pp
+        </td>`;
+      });
+      html+=`</tr>`;
+    });
+    html+=`</tbody></table></div>`;
+  });
+
   body.innerHTML=html;
 
   let idx=0;
-  verticals.forEach(v=>{
-    commonGrades.forEach(g=>{
-      const d=getData(v,soySubject,g,'2025-26');
-      const l1D=[d?d.SOY[0]:0, d?d.EOY[0]:0];
-      const l2D=[d?d.SOY[1]:0, d?d.EOY[1]:0];
-      const l3D=[d?d.SOY[2]:0, d?d.EOY[2]:0];
-      const l4D=[d?d.SOY[3]:0, d?d.EOY[3]:0];
+  commonGrades.forEach(grade=>{
+    verticals.forEach(v=>{
+      const d=getData(v,soySubject,grade,'2025-26');
+      const l1D=[d?d.SOY[0]:0,d?d.EOY[0]:0];
+      const l2D=[d?d.SOY[1]:0,d?d.EOY[1]:0];
+      const l3D=[d?d.SOY[2]:0,d?d.EOY[2]:0];
+      const l4D=[d?d.SOY[3]:0,d?d.EOY[3]:0];
       const drop=d?d.SOY[0]-d.EOY[0]:null;
 
       const plugin={id:'sdaAll'+idx,
@@ -610,17 +687,14 @@ function renderSoyEoyAllGrades(body) {
           if(!d)return;
           const ctx=chart.ctx,meta=chart.getDatasetMeta(0),last=chart.getDatasetMeta(chart.data.datasets.length-1),ca=chart.chartArea;
           ctx.save();
-          // SOY/EOY sub-shades
           const b0=meta.data[0],b1=meta.data[1];
           ctx.fillStyle='rgba(24,95,165,0.08)';ctx.strokeStyle='rgba(24,95,165,0.20)';ctx.lineWidth=1;
           ctx.beginPath();if(ctx.roundRect)ctx.roundRect(b0.x-b0.width/2-5,ca.top-22,b0.width+10,ca.bottom-ca.top+26,5);else ctx.rect(b0.x-b0.width/2-5,ca.top-22,b0.width+10,ca.bottom-ca.top+26);ctx.fill();ctx.stroke();
           ctx.fillStyle='rgba(15,110,86,0.08)';ctx.strokeStyle='rgba(15,110,86,0.20)';
           ctx.beginPath();if(ctx.roundRect)ctx.roundRect(b1.x-b1.width/2-5,ca.top-22,b1.width+10,ca.bottom-ca.top+26,5);else ctx.rect(b1.x-b1.width/2-5,ca.top-22,b1.width+10,ca.bottom-ca.top+26);ctx.fill();ctx.stroke();
-          // SOY/EOY labels
           ctx.textAlign='center';ctx.textBaseline='bottom';ctx.font='600 9px -apple-system,sans-serif';
           ctx.fillStyle='#185FA5';ctx.fillText('SOY',b0.x,ca.top-8);
           ctx.fillStyle='#0F6E56';ctx.fillText('EOY',b1.x,ca.top-8);
-          // L1 drop
           if(drop!==null){ctx.font='bold 9px -apple-system,sans-serif';ctx.fillStyle=deltaC;const topY=last.data[1].y;ctx.fillText(drop>0?'\u25BC'+drop:drop<0?'\u25B2'+Math.abs(drop):'-',b1.x,topY-3);}
           ctx.restore();
         }
