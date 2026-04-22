@@ -572,9 +572,39 @@ function generateSoyEoyInsights(subject, grade) {
 }
 
 function renderSoyEoyAllGrades(body) {
-  let legendH='<div style="display:flex;justify-content:center;gap:16px;margin-bottom:20px;font-size:12px;color:#888;flex-wrap:wrap">';
-  ['L1','L2','L3','L4'].forEach((l,i)=>{legendH+=`<span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;border-radius:3px;background:${segC[i]};display:inline-block"></span>${l}</span>`;});
-  legendH+='<span style="font-weight:700;color:'+deltaC+'">&#9660; L1 drop</span></div>';
+  // Compute overall averages across all verticals and grades
+  let totalDrop=0, totalGain=0, count=0;
+  commonGrades.forEach(g=>{
+    verticals.forEach(v=>{
+      const d=getData(v,soySubject,g,'2025-26');
+      if(!d)return;
+      totalDrop+=d.SOY[0]-d.EOY[0];
+      totalGain+=(d.EOY[2]+d.EOY[3])-(d.SOY[2]+d.SOY[3]);
+      count++;
+    });
+  });
+  const avgDrop=count>0?+(totalDrop/count).toFixed(1):0;
+  const avgGain=count>0?+(totalGain/count).toFixed(1):0;
+  const dropCol=avgDrop>0?'#0D6B50':avgDrop<0?'#C0392B':'#888';
+  const gainCol=avgGain>0?'#0D6B50':avgGain<0?'#C0392B':'#888';
+
+  let legendH=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      ${['L1','L2','L3','L4'].map((l,i)=>`<span style="display:flex;align-items:center;gap:5px;font-size:12px;color:#888"><span style="width:12px;height:12px;border-radius:3px;background:${segC[i]};display:inline-block"></span>${l}</span>`).join('')}
+    </div>
+    <div style="display:flex;gap:0;background:#fff;border:1px solid #e0e0e0;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05)">
+      <div style="padding:10px 20px;text-align:center;border-right:1px solid #e8e8e8">
+        <div style="font-size:10px;font-weight:600;color:#aaa;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px">Avg L1 Drop</div>
+        <div style="font-size:22px;font-weight:800;color:${dropCol};line-height:1">${avgDrop>0?'▼'+avgDrop:avgDrop<0?'▲'+Math.abs(avgDrop):'-'}pp</div>
+        <div style="font-size:9px;color:#bbb;margin-top:2px">across all grades & verticals</div>
+      </div>
+      <div style="padding:10px 20px;text-align:center">
+        <div style="font-size:10px;font-weight:600;color:#aaa;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px">Avg L3+L4 Gain</div>
+        <div style="font-size:22px;font-weight:800;color:${gainCol};line-height:1">${avgGain>0?'▲'+avgGain:avgGain<0?'▼'+Math.abs(avgGain):'-'}pp</div>
+        <div style="font-size:9px;color:#bbb;margin-top:2px">across all grades & verticals</div>
+      </div>
+    </div>
+  </div>`;
 
   let html=legendH;
   let ci=0;
@@ -604,12 +634,12 @@ function renderSoyEoyAllGrades(body) {
     // 2. L2 bloat
     const bloated = vData.filter(x => x.l2eoy > 40 && x.l2chg >= 8);
     if(bloated.length > 0 && gradeInsights.length < 2)
-      gradeInsights.push({type:'neutral', text:`L2 is growing in ${bloated.map(x=>x.vName).join(', ')} — students are moving up from L1 but may be stalling at L2.`});
+      gradeInsights.push({type:'neutral', text:`L2 grew significantly in ${bloated.map(x=>x.vName).join(', ')} by EOY (${bloated.map(x=>`${x.vName}: +${x.l2chg}pp`).join(', ')}).`});
 
     // 3. Shallow movement (L1 dropped but L3+L4 didn't grow)
     const shallow = vData.filter(x => x.l1drop >= 5 && x.l34gain <= 2);
     if(shallow.length > 0 && gradeInsights.length < 2)
-      gradeInsights.push({type:'neutral', text:`In ${shallow.map(x=>x.vName).join(', ')}, L1 movement is not translating to L3+L4 growth — movement is happening but staying shallow.`});
+      gradeInsights.push({type:'neutral', text:`In ${shallow.map(x=>x.vName).join(', ')}, L1 dropped but L3+L4 grew by 2pp or less — movement at the higher levels was limited.`});
 
     // 4. High EOY L1 despite drop
     const highL1 = vData.filter(x => x.l1drop > 0 && x.l1eoy > 55);
@@ -623,7 +653,7 @@ function renderSoyEoyAllGrades(body) {
 
     // 6. All improved — collective positive
     if(gradeInsights.length === 0 && vData.every(x => x.l1drop > 0))
-      gradeInsights.push({type:'positive', text:`All verticals saw a reduction in L1 by EOY. Check depth of movement across levels.`});
+      gradeInsights.push({type:'positive', text:`All verticals saw a reduction in L1 by EOY.`});
 
     let insightsH = '';
     if(gradeInsights.length > 0) {
