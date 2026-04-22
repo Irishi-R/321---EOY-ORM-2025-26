@@ -515,7 +515,7 @@ function renderOneView() {
 
 function render(){updateNav();if(currentView==='SoyEoy')renderSoyEoy();else if(ALL_DATA[currentView])renderVertical(currentView);else{currentView='SoyEoy';renderSoyEoy();}}
 
-let soySubject = 'English', soyGrade = 'Grade 2';
+let soySubject = 'English', soyGrade = 'Grade 2', soyAllGrades = true;
 
 function generateSoyEoyInsights(subject, grade) {
   const insights = [];
@@ -571,14 +571,106 @@ function generateSoyEoyInsights(subject, grade) {
   return insights;
 }
 
+function renderSoyEoyAllGrades(body) {
+  let legendH='<div style="display:flex;justify-content:center;gap:16px;margin-bottom:20px;font-size:12px;color:#888;flex-wrap:wrap">';
+  ['L1','L2','L3','L4'].forEach((l,i)=>{legendH+=`<span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;border-radius:3px;background:${segC[i]};display:inline-block"></span>${l}</span>`;});
+  legendH+='<span style="font-weight:700;color:'+deltaC+'">&#9660; L1 drop</span></div>';
+
+  let html=legendH;
+  let ci=0;
+
+  verticals.forEach(v=>{
+    html+=`<div style="margin-bottom:24px">
+      <div style="font-size:14px;font-weight:800;color:#1a1a1a;margin-bottom:10px;padding-left:10px;border-left:4px solid #6B4DAA">${v}</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">`;
+    commonGrades.forEach((g)=>{
+      html+=`<div style="background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:12px 10px 10px;box-shadow:0 1px 4px rgba(0,0,0,.05)">
+        <div style="font-size:12px;font-weight:700;color:#555;text-align:center;margin-bottom:10px">${g}</div>
+        <div style="position:relative;width:100%;height:260px"><canvas id="sdaAllCanvas${ci}"></canvas></div>
+      </div>`;
+      ci++;
+    });
+    html+=`</div></div>`;
+  });
+
+  body.innerHTML=html;
+
+  let idx=0;
+  verticals.forEach(v=>{
+    commonGrades.forEach(g=>{
+      const d=getData(v,soySubject,g,'2025-26');
+      const l1D=[d?d.SOY[0]:0, d?d.EOY[0]:0];
+      const l2D=[d?d.SOY[1]:0, d?d.EOY[1]:0];
+      const l3D=[d?d.SOY[2]:0, d?d.EOY[2]:0];
+      const l4D=[d?d.SOY[3]:0, d?d.EOY[3]:0];
+      const drop=d?d.SOY[0]-d.EOY[0]:null;
+
+      const plugin={id:'sdaAll'+idx,
+        afterDatasetsDraw(chart){
+          if(!d)return;
+          const ctx=chart.ctx,meta=chart.getDatasetMeta(0),last=chart.getDatasetMeta(chart.data.datasets.length-1),ca=chart.chartArea;
+          ctx.save();
+          // SOY/EOY sub-shades
+          const b0=meta.data[0],b1=meta.data[1];
+          ctx.fillStyle='rgba(24,95,165,0.08)';ctx.strokeStyle='rgba(24,95,165,0.20)';ctx.lineWidth=1;
+          ctx.beginPath();if(ctx.roundRect)ctx.roundRect(b0.x-b0.width/2-5,ca.top-22,b0.width+10,ca.bottom-ca.top+26,5);else ctx.rect(b0.x-b0.width/2-5,ca.top-22,b0.width+10,ca.bottom-ca.top+26);ctx.fill();ctx.stroke();
+          ctx.fillStyle='rgba(15,110,86,0.08)';ctx.strokeStyle='rgba(15,110,86,0.20)';
+          ctx.beginPath();if(ctx.roundRect)ctx.roundRect(b1.x-b1.width/2-5,ca.top-22,b1.width+10,ca.bottom-ca.top+26,5);else ctx.rect(b1.x-b1.width/2-5,ca.top-22,b1.width+10,ca.bottom-ca.top+26);ctx.fill();ctx.stroke();
+          // SOY/EOY labels
+          ctx.textAlign='center';ctx.textBaseline='bottom';ctx.font='600 9px -apple-system,sans-serif';
+          ctx.fillStyle='#185FA5';ctx.fillText('SOY',b0.x,ca.top-8);
+          ctx.fillStyle='#0F6E56';ctx.fillText('EOY',b1.x,ca.top-8);
+          // L1 drop
+          if(drop!==null){ctx.font='bold 9px -apple-system,sans-serif';ctx.fillStyle=deltaC;const topY=last.data[1].y;ctx.fillText(drop>0?'\u25BC'+drop:drop<0?'\u25B2'+Math.abs(drop):'-',b1.x,topY-3);}
+          ctx.restore();
+        }
+      };
+
+      const cv=document.getElementById('sdaAllCanvas'+idx);
+      if(!cv){idx++;return;}
+      const c=new Chart(cv,{type:'bar',data:{labels:['SOY','EOY'],datasets:[
+        {label:'L1',data:l1D,backgroundColor:segC[0],borderWidth:0,stack:'a',barPercentage:0.8,categoryPercentage:0.7},
+        {label:'L2',data:l2D,backgroundColor:segC[1],borderWidth:0,stack:'a',barPercentage:0.8,categoryPercentage:0.7},
+        {label:'L3',data:l3D,backgroundColor:segC[2],borderWidth:0,stack:'a',barPercentage:0.8,categoryPercentage:0.7},
+        {label:'L4',data:l4D,backgroundColor:segC[3],borderWidth:0,stack:'a',barPercentage:0.8,categoryPercentage:0.7}
+      ]},plugins:[plugin],options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:30,left:4,right:4,bottom:4}},
+        plugins:{legend:{display:false},
+          tooltip:{callbacks:{title:ctx=>v+' · '+ctx[0].label+' 2025-26',label:ctx=>ctx.dataset.label+': '+ctx.raw+'%'}},
+          datalabels:{display:ctx=>ctx.dataset.data[ctx.dataIndex]>=14,color:ctx=>ctx.datasetIndex===1?'#5a3e00':'#fff',font:{size:9,weight:'700'},formatter:v=>v+'%'}},
+        scales:{
+          x:{stacked:true,ticks:{color:'#555',font:{size:10,weight:'600'}},grid:{display:false}},
+          y:{stacked:true,max:110,ticks:{color:'#999',callback:v=>v<=100?v+'%':'',font:{size:9},stepSize:50},grid:{color:'rgba(0,0,0,0.05)'}}
+        }}});
+      charts.push(c);
+      idx++;
+    });
+  });
+}
+
 function renderSoyEoy() {
   destroyCharts();
   const el = document.getElementById('content');
   el.innerHTML = '<div class="toggle-row" id="soySubj"></div><div class="toggle-row" id="soyGr" style="margin-bottom:20px"></div><div id="soyBody"></div>';
 
   const th = themes[soySubject];
-  ['English','Maths'].forEach(s=>{const btn=document.createElement('button');btn.textContent=s;if(soySubject===s)btn.style.cssText='background:#6B4DAA;color:#fff;font-weight:600;border-color:#6B4DAA';btn.addEventListener('click',()=>{soySubject=s;renderSoyEoy();});document.getElementById('soySubj').appendChild(btn);});
-  commonGrades.forEach(g=>{const btn=document.createElement('button');btn.textContent=g;if(soyGrade===g)btn.style.cssText='background:'+th.tabActive+';color:#fff;font-weight:600;border-color:'+th.tabActive;btn.addEventListener('click',()=>{soyGrade=g;renderSoyEoy();});document.getElementById('soyGr').appendChild(btn);});
+  ['English','Maths'].forEach(s=>{const btn=document.createElement('button');btn.textContent=s;if(soySubject===s)btn.style.cssText='background:#6B4DAA;color:#fff;font-weight:600;border-color:#6B4DAA';btn.addEventListener('click',()=>{soySubject=s;soyAllGrades=true;renderSoyEoy();});document.getElementById('soySubj').appendChild(btn);});
+
+  // Grade toggle — All Grades first
+  const grEl=document.getElementById('soyGr');
+  const allBtn=document.createElement('button');allBtn.textContent='All Grades ▾';
+  allBtn.style.cssText=soyAllGrades?'background:#6B4DAA;color:#fff;font-weight:700;border-color:#6B4DAA;border-radius:8px 0 0 8px':'background:#EEF0FF;color:#6B4DAA;font-weight:700;border-radius:8px 0 0 8px';
+  allBtn.addEventListener('click',()=>{soyAllGrades=true;renderSoyEoy();});
+  grEl.appendChild(allBtn);
+  commonGrades.forEach((g,i)=>{
+    const btn=document.createElement('button');btn.textContent=g;
+    const active=soyGrade===g&&!soyAllGrades,isLast=i===commonGrades.length-1;
+    btn.style.cssText=(active?'background:'+th.tabActive+';color:#fff;font-weight:600;border-color:'+th.tabActive:'background:#f0f0f0;color:#666')+';border-left:none;'+(isLast?'border-radius:0 8px 8px 0':'border-radius:0');
+    btn.addEventListener('click',()=>{soyGrade=g;soyAllGrades=false;renderSoyEoy();});
+    grEl.appendChild(btn);
+  });
+
+  const body=document.getElementById('soyBody');
+  if(soyAllGrades){renderSoyEoyAllGrades(body);return;}
 
   // Legend
   let legendH = '<div style="display:flex;justify-content:center;gap:14px;margin-bottom:14px;font-size:12px;color:#888">';
@@ -601,7 +693,6 @@ function renderSoyEoy() {
   });
   summaryH += '</div>';
 
-  const body = document.getElementById('soyBody');
   body.innerHTML = summaryH + legendH + '<div style="background:#f8f8f8;border:1px solid #e0e0e0;border-radius:14px;padding:24px 16px 16px"><div style="font-size:14px;font-weight:600;color:#777;text-align:center;margin-bottom:14px">SOY to EOY movement (2025-26): '+soySubject+', '+soyGrade+'</div><div style="position:relative;width:100%;height:420px"><canvas id="soyEoyCanvas"></canvas></div></div>';
 
   // Prepare data: SOY bar + EOY bar for each vertical (8 bars)
