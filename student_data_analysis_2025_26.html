@@ -610,6 +610,14 @@ function renderSoyEoyAllGrades(body) {
   let ci=0;
 
   commonGrades.forEach(grade=>{
+    // Per-grade averages
+    let gdrop=0,ggain=0,gc=0;
+    verticals.forEach(v=>{const d=getData(v,soySubject,grade,'2025-26');if(!d)return;gdrop+=d.SOY[0]-d.EOY[0];ggain+=(d.EOY[2]+d.EOY[3])-(d.SOY[2]+d.SOY[3]);gc++;});
+    const gradeAvgDrop=gc>0?+(gdrop/gc).toFixed(1):0;
+    const gradeAvgGain=gc>0?+(ggain/gc).toFixed(1):0;
+    const gradeAvgDropCol=gradeAvgDrop>0?'#0D6B50':gradeAvgDrop<0?'#C0392B':'#888';
+    const gradeAvgGainCol=gradeAvgGain>0?'#0D6B50':gradeAvgGain<0?'#C0392B':'#888';
+
     // Grade insights — max 2, concise
     const gradeInsights = [];
     const vData = verticals.map(v => {
@@ -672,7 +680,19 @@ function renderSoyEoyAllGrades(body) {
     }
 
     html+=`<div style="margin-bottom:28px">
-      <div style="font-size:15px;font-weight:800;color:#1a1a1a;border-left:4px solid #6B4DAA;padding-left:10px;margin-bottom:12px">${grade}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div style="font-size:15px;font-weight:800;color:#1a1a1a;border-left:4px solid #6B4DAA;padding-left:10px">${grade}</div>
+        <div style="display:flex;gap:0;background:#fff;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden">
+          <div style="padding:7px 16px;text-align:center;border-right:1px solid #e8e8e8">
+            <div style="font-size:9px;font-weight:600;color:#aaa;letter-spacing:.4px;text-transform:uppercase">Avg L1 Drop</div>
+            <div style="font-size:16px;font-weight:800;color:${gradeAvgDropCol};line-height:1.2">${gradeAvgDrop>0?'▼'+gradeAvgDrop:gradeAvgDrop<0?'▲'+Math.abs(gradeAvgDrop):'-'}pp</div>
+          </div>
+          <div style="padding:7px 16px;text-align:center">
+            <div style="font-size:9px;font-weight:600;color:#aaa;letter-spacing:.4px;text-transform:uppercase">Avg L3+L4 Gain</div>
+            <div style="font-size:16px;font-weight:800;color:${gradeAvgGainCol};line-height:1.2">${gradeAvgGain>0?'▲'+gradeAvgGain:gradeAvgGain<0?'▼'+Math.abs(gradeAvgGain):'-'}pp</div>
+          </div>
+        </div>
+      </div>
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">`;
 
     verticals.forEach(v=>{
