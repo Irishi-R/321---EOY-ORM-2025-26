@@ -270,7 +270,7 @@ const allGrades = ['Grade 1','Grade 2','Grade 3','Grade 4','Grade 5','Grade 6','
 const segC = ['#E24B4A','#EF9F27','#3266ad','#1D9E75'];
 const deltaC = '#6B4DAA';
 
-let curSubject = 'English', curYear = '2025-26', curGrade = 'Grade 2', curTab = 'yoy';
+let curSubject = 'English', curYear = '2025-26', curGrade = 'Grade 2', curTab = 'yoy', showGradeView = false;
 let charts = [];
 
 function destroyCharts(){charts.forEach(c=>{try{c.destroy()}catch(e){}});charts=[];}
@@ -293,10 +293,13 @@ function render() {
   const ctrl = document.getElementById('controls');
   const content = document.getElementById('content');
 
-  // Top-level tabs
-  let h = `<div style="display:flex;justify-content:center;gap:0;margin-bottom:20px">
-    <button onclick="curTab='yoy';render()" style="padding:11px 28px;font-size:13px;font-weight:700;border:2px solid #333;border-radius:10px 0 0 10px;cursor:pointer;font-family:inherit;${curTab==='yoy'?'background:#333;color:#fff':'background:#fff;color:#555'}">YoY Comparison</button>
-    <button onclick="curTab='grade';render()" style="padding:11px 28px;font-size:13px;font-weight:700;border:2px solid #333;border-left:none;border-radius:0 10px 10px 0;cursor:pointer;font-family:inherit;${curTab==='grade'?'background:#333;color:#fff':'background:#fff;color:#555'}">Grade View</button>
+  // Top-level tabs + grade view toggle
+  let h = `<div style="display:flex;justify-content:center;align-items:center;gap:12px;margin-bottom:20px">
+    <div style="display:flex;gap:0">
+      <button onclick="curTab='yoy';render()" style="padding:11px 28px;font-size:13px;font-weight:700;border:2px solid #333;border-radius:10px 0 0 10px;cursor:pointer;font-family:inherit;${curTab==='yoy'?'background:#333;color:#fff':'background:#fff;color:#555'}">YoY Comparison</button>
+      <button onclick="curTab='grade';showGradeView=true;render()" style="padding:11px 28px;font-size:13px;font-weight:700;border:2px solid #333;border-left:none;border-radius:0 10px 10px 0;cursor:pointer;font-family:inherit;${curTab==='grade'?'background:#333;color:#fff':'background:#fff;color:#555'}">Grade View</button>
+    </div>
+    ${curTab==='grade'?`<button onclick="showGradeView=!showGradeView;render()" style="padding:8px 14px;font-size:11px;font-weight:600;border:1px dashed #aaa;border-radius:8px;background:#fafafa;color:#888;cursor:pointer;font-family:inherit">${showGradeView?'Hide Grade View ▲':'Show Grade View ▾'}</button>`:''}
   </div>`;
 
   // Subject toggle (both tabs)
@@ -326,7 +329,10 @@ function render() {
   ctrl.innerHTML = h;
 
   if(curTab === 'yoy') { renderYoY(content); return; }
-  renderGradeView(content);
+  if(curTab === 'grade' && showGradeView) { renderGradeView(content); return; }
+  if(curTab === 'grade' && !showGradeView) {
+    content.innerHTML = `<div style="text-align:center;padding:60px;color:#aaa;font-size:14px">Click <strong style="color:#555">"Show Grade View ▾"</strong> to enable this view</div>`;
+  }
 }
 
 function renderYoY(content) {
@@ -511,8 +517,8 @@ function renderGradeView(content) {
   });
   cH += '</div>';
 
-  // Heatmap — L1 drop across all partners × grades
-  ['L1 Drop','L3+L4 Gain'].forEach((metric, mi) => {
+  // Heatmap — L1 change across all partners × grades
+  ['L1 Change','L3+L4 Gain'].forEach((metric, mi) => {
     cH += `<div class="heatmap-wrap" style="margin-bottom:16px">
       <div class="heatmap-title">${metric} — SOY→EOY · ${curSubject} · ${curYear} &nbsp;·&nbsp; <span style="font-weight:400;color:#aaa">green = better · red = worse</span></div>
       <table class="heatmap-table"><thead><tr><th>Partner</th>`;

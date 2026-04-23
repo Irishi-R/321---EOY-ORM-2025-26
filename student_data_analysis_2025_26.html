@@ -277,7 +277,7 @@ function renderComparison(){
   let h = '';
   h+='<div style="display:flex;justify-content:center;gap:14px;margin-bottom:6px;font-size:11px;color:#888">';
   ['L1','L2','L3','L4'].forEach((l,i)=>{h+='<span style="display:flex;align-items:center;gap:3px"><span style="width:9px;height:9px;border-radius:2px;background:'+segC[i]+';display:inline-block"></span>'+l+'</span>';});
-  h+='<span style="font-weight:700;color:'+deltaC+'">\u25BC L1 drop</span></div>';
+  h+='<span style="font-weight:700;color:'+deltaC+'">\u25BC L1 change</span></div>';
   h+='<div class="section-title" style="margin-top:8px">EOY distribution: '+cmpSubject+', '+cmpGrade+'</div>';
   h+='<div class="side-by-side"><div><div class="side-panel-title">2024-25</div>'+buildHorizBars('2024-25')+'</div><div><div class="side-panel-title">2025-26</div>'+buildHorizBars('2025-26')+'</div></div>';
 
@@ -368,7 +368,7 @@ function renderOneView() {
     });
   });
 
-  // Combined plugin: bucket backgrounds + vertical group labels + L1 drop arrows
+  // Combined plugin: bucket backgrounds + vertical group labels + L1 change arrows
   const dropPlugin = {
     id: 'bucketsAndDrops',
     beforeDatasetsDraw(chart) {
@@ -416,7 +416,7 @@ function renderOneView() {
         ctx.fillText(vName, centerX, chartArea.top - 8);
       }
 
-      // Draw L1 drop arrows above each bar
+      // Draw L1 change arrows above each bar
       ctx.font = 'bold 11px -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif';
       ctx.fillStyle = deltaC;
       l1Drops.forEach((drop, i) => {
@@ -536,7 +536,7 @@ function generateSoyEoyInsights(subject, grade) {
   const available = Object.keys(data);
   if (available.length === 0) return [];
 
-  // Biggest L1 drop
+  // Biggest L1 change
   let bestL1V = null, bestL1 = -999;
   available.forEach(v => { if (data[v].l1drop > bestL1) { bestL1 = data[v].l1drop; bestL1V = v; }});
   if (bestL1V && bestL1 > 0) {
@@ -561,7 +561,7 @@ function generateSoyEoyInsights(subject, grade) {
     }
   }
 
-  // Balanced mover - biggest combined L1 drop + L3+L4 gain
+  // Balanced mover - biggest combined L1 change + L3+L4 gain
   let balancedV = null, balancedScore = -999;
   available.forEach(v => { const score = data[v].l1drop + data[v].l34gain; if (score > balancedScore) { balancedScore = score; balancedV = v; }});
   if (balancedV && balancedScore > 0 && balancedV !== bestL1V && balancedV !== bestL34V) {
@@ -594,7 +594,7 @@ function renderSoyEoyAllGrades(body) {
     </div>
     <div style="display:flex;gap:0;background:#fff;border:1px solid #e0e0e0;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05)">
       <div style="padding:10px 20px;text-align:center;border-right:1px solid #e8e8e8">
-        <div style="font-size:10px;font-weight:600;color:#aaa;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px">Avg L1 Drop</div>
+        <div style="font-size:10px;font-weight:600;color:#aaa;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px">Avg L1 Change</div>
         <div style="font-size:22px;font-weight:800;color:${dropCol};line-height:1">${avgDrop>0?'▼'+avgDrop:avgDrop<0?'▲'+Math.abs(avgDrop):'-'}pp</div>
         <div style="font-size:9px;color:#bbb;margin-top:2px">across all grades & verticals</div>
       </div>
@@ -644,20 +644,20 @@ function renderSoyEoyAllGrades(body) {
     if(bloated.length > 0 && gradeInsights.length < 2)
       gradeInsights.push({type:'neutral', text:`L2 grew significantly in ${bloated.map(x=>x.vName).join(', ')} by EOY (${bloated.map(x=>`${x.vName}: +${x.l2chg}pp`).join(', ')}).`});
 
-    // 3. Shallow movement (L1 dropped but L3+L4 didn't grow)
+    // 3. Shallow movement (L1 changeped but L3+L4 didn't grow)
     const shallow = vData.filter(x => x.l1drop >= 5 && x.l34gain <= 2);
     if(shallow.length > 0 && gradeInsights.length < 2)
-      gradeInsights.push({type:'neutral', text:`In ${shallow.map(x=>x.vName).join(', ')}, L1 dropped but L3+L4 grew by 2pp or less — movement at the higher levels was limited.`});
+      gradeInsights.push({type:'neutral', text:`In ${shallow.map(x=>x.vName).join(', ')}, L1 changeped but L3+L4 grew by 2pp or less — movement at the higher levels was limited.`});
 
     // 4. High EOY L1 despite drop
     const highL1 = vData.filter(x => x.l1drop > 0 && x.l1eoy > 55);
     if(highL1.length > 0 && gradeInsights.length < 2)
-      gradeInsights.push({type:'negative', text:`${highL1.map(x=>`${x.vName} (${x.l1eoy}% at EOY)`).join(', ')} — L1 dropped but the proportion remaining at L1 is still significant.`});
+      gradeInsights.push({type:'negative', text:`${highL1.map(x=>`${x.vName} (${x.l1eoy}% at EOY)`).join(', ')} — L1 changeped but the proportion remaining at L1 is still significant.`});
 
     // 5. Clean movement — positive
     const clean = vData.filter(x => x.l1drop >= 10 && x.l34gain >= 8);
     if(clean.length > 0 && gradeInsights.length < 2)
-      gradeInsights.push({type:'positive', text:`${clean.map(x=>x.vName).join(', ')} showed strong movement — L1 drop accompanied by meaningful L3+L4 gains.`});
+      gradeInsights.push({type:'positive', text:`${clean.map(x=>x.vName).join(', ')} showed strong movement — L1 change accompanied by meaningful L3+L4 gains.`});
 
     // 6. All improved — collective positive
     if(gradeInsights.length === 0 && vData.every(x => x.l1drop > 0))
@@ -684,7 +684,7 @@ function renderSoyEoyAllGrades(body) {
         <div style="font-size:15px;font-weight:800;color:#1a1a1a;border-left:4px solid #6B4DAA;padding-left:10px">${grade}</div>
         <div style="display:flex;gap:0;background:#fff;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden">
           <div style="padding:7px 16px;text-align:center;border-right:1px solid #e8e8e8">
-            <div style="font-size:9px;font-weight:600;color:#aaa;letter-spacing:.4px;text-transform:uppercase">Avg L1 Drop</div>
+            <div style="font-size:9px;font-weight:600;color:#aaa;letter-spacing:.4px;text-transform:uppercase">Avg L1 Change</div>
             <div style="font-size:16px;font-weight:800;color:${gradeAvgDropCol};line-height:1.2">${gradeAvgDrop>0?'▼'+gradeAvgDrop:gradeAvgDrop<0?'▲'+Math.abs(gradeAvgDrop):'-'}pp</div>
           </div>
           <div style="padding:7px 16px;text-align:center">
@@ -736,8 +736,8 @@ function renderSoyEoyAllGrades(body) {
     }
   }
 
-  ['L1 Drop','L3+L4 Gain'].forEach((metric,mi)=>{
-    const isGood = true; // L1 drop positive = good, L3+L4 gain positive = good
+  ['L1 Change','L3+L4 Gain'].forEach((metric,mi)=>{
+    const isGood = true; // L1 change positive = good, L3+L4 gain positive = good
     html+=`<div class="heatmap-wrap" style="margin-top:${mi===0?'28px':'16px'}">
       <div class="heatmap-title">${metric} — SOY→EOY 2025-26 · ${soySubject} · <span style="font-weight:400;color:#aaa">green = better · red = worse</span></div>
       <table class="heatmap-table"><thead><tr><th>Vertical</th>`;
@@ -929,7 +929,7 @@ function renderSoyEoy() {
     const l1Col = l1drop > 0 ? '#0D6B50' : l1drop < 0 ? '#C0392B' : '#888';
     summaryH += `<div style="background:#f8f8f8;border:1px solid #e0e0e0;border-radius:10px;padding:14px 10px;text-align:center">
       <div style="font-size:11px;font-weight:600;color:#888;margin-bottom:10px;text-transform:uppercase;letter-spacing:.4px">${vShort[v]}</div>
-      <div style="font-size:10px;color:#999;margin-bottom:4px">L1 drop</div>
+      <div style="font-size:10px;color:#999;margin-bottom:4px">L1 change</div>
       <div style="font-size:22px;font-weight:700;color:${l1Col}">${l1Text}</div>
     </div>`;
   });
@@ -1068,9 +1068,9 @@ function renderSoyEoy() {
     body.insertAdjacentHTML('beforeend', ih);
   }
 
-  // Heatmap: SOY to EOY movement (L1 drop + L3+L4 gain) for 2025-26
+  // Heatmap: SOY to EOY movement (L1 change + L3+L4 gain) for 2025-26
   let heatH = '<div class="heatmap-wrap"><div class="heatmap-title">SOY to EOY movement heatmap (2025-26, darker = more movement): '+soySubject+', '+soyGrade+'</div>';
-  heatH += '<table class="heatmap-table"><thead><tr><th>Vertical</th><th>L1 drop</th><th>L3+L4 gain</th><th>L1 (SOY\u2192EOY)</th><th>L4 (SOY\u2192EOY)</th></tr></thead><tbody>';
+  heatH += '<table class="heatmap-table"><thead><tr><th>Vertical</th><th>L1 change</th><th>L3+L4 gain</th><th>L1 (SOY\u2192EOY)</th><th>L4 (SOY\u2192EOY)</th></tr></thead><tbody>';
   verticals.forEach(v => {
     const d = getData(v, soySubject, soyGrade, '2025-26');
     if (!d) { heatH += '<tr><td>'+vShort[v]+'</td><td class="none">-</td><td class="none">-</td><td class="none">-</td><td class="none">-</td></tr>'; return; }

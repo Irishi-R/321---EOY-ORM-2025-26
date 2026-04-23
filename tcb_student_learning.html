@@ -150,8 +150,8 @@ function generateSoyEoyInsights(subject,grade){
   let bestV=null,bestVal=-999;available.forEach(v=>{if(data[v].l1drop25>bestVal){bestVal=data[v].l1drop25;bestV=v;}});
   if(bestV&&bestVal>0){const d=data[bestV];let text='<strong>'+vShort[bestV]+'</strong> moved the most students out of L1 in 2025-26: <strong>'+bestVal+'%</strong> reduction ('+d.l1soy25+'% \u2192 '+d.l1eoy25+'%)';if(d.l1drop24!==null){const diff=bestVal-d.l1drop24;if(diff>0)text+=', <strong>\u25B2 '+diff+' pts</strong> better than last year';else if(diff<0)text+=', <strong>\u25BC '+Math.abs(diff)+' pts</strong> below last year';else text+=', same as last year';}text+='.';insights.push({type:'positive',text});}
   let impV=null,impDiff=-999;available.forEach(v=>{if(data[v].l1drop24===null)return;const diff=data[v].l1drop25-data[v].l1drop24;if(diff>impDiff){impDiff=diff;impV=v;}});
-  if(impV&&impDiff>=5&&impV!==bestV)insights.push({type:'positive',text:'<strong>'+vShort[impV]+'</strong> showed the biggest year-over-year improvement: L1 drop up by <strong>'+impDiff+' points</strong> vs 2024-25.'});
-  available.forEach(v=>{if(data[v].l1drop24!==null&&data[v].l1drop25-data[v].l1drop24<=-8)insights.push({type:'negative',text:'<strong>'+vShort[v]+'</strong> regressed this year: L1 drop fell by <strong>'+Math.abs(data[v].l1drop25-data[v].l1drop24)+' points</strong> vs 2024-25.'});if(data[v].l1drop25<0)insights.push({type:'negative',text:'<strong>'+vShort[v]+'</strong> saw L1 <strong>increase by '+Math.abs(data[v].l1drop25)+'%</strong> this year — more students moved into L1 than out.'});});
+  if(impV&&impDiff>=5&&impV!==bestV)insights.push({type:'positive',text:'<strong>'+vShort[impV]+'</strong> showed the biggest year-over-year improvement: L1 change up by <strong>'+impDiff+' points</strong> vs 2024-25.'});
+  available.forEach(v=>{if(data[v].l1drop24!==null&&data[v].l1drop25-data[v].l1drop24<=-8)insights.push({type:'negative',text:'<strong>'+vShort[v]+'</strong> regressed this year: L1 change fell by <strong>'+Math.abs(data[v].l1drop25-data[v].l1drop24)+' points</strong> vs 2024-25.'});if(data[v].l1drop25<0)insights.push({type:'negative',text:'<strong>'+vShort[v]+'</strong> saw L1 <strong>increase by '+Math.abs(data[v].l1drop25)+'%</strong> this year — more students moved into L1 than out.'});});
   let bestL34V=null,bestL34=-999;available.forEach(v=>{if(data[v].l34gain25>bestL34){bestL34=data[v].l34gain25;bestL34V=v;}});
   if(bestL34V&&bestL34>0&&bestL34V!==bestV){const d=data[bestL34V];let text='<strong>'+vShort[bestL34V]+'</strong> had the strongest L3+L4 gain in 2025-26: <strong>+'+bestL34+' points</strong>';if(d.l34gain24!==null){const diff=bestL34-d.l34gain24;if(diff>0)text+=' (\u25B2 '+diff+' pts YoY)';else if(diff<0)text+=' (\u25BC '+Math.abs(diff)+' pts YoY)';else text+=' (same as last year)';}text+='.';insights.push({type:'positive',text});}
   return insights;
@@ -235,7 +235,7 @@ function renderSoyEoy(){
     barMeta.push({v,period:'EOY',year:'2025-26',drop:d25?d25.SOY[0]-d25.EOY[0]:null});
   });
 
-  // Plugin: vertical name labels + SOY/EOY sub-group labels + bucket backgrounds + L1 drop
+  // Plugin: vertical name labels + SOY/EOY sub-group labels + bucket backgrounds + L1 change
   const mainPlugin={
     id:'soyMainPlugin',
     beforeDatasetsDraw(chart){
@@ -301,7 +301,7 @@ function renderSoyEoy(){
         ctx.fillStyle='#185FA5';ctx.fillText('SOY',soyX,ca.top-8);
         ctx.fillStyle='#0F6E56';ctx.fillText('EOY',eoyX,ca.top-8);
       }
-      // L1 drop on EOY bars
+      // L1 change on EOY bars
       ctx.font='bold 10px -apple-system,sans-serif';ctx.fillStyle=deltaC;
       barMeta.forEach((m,i)=>{
         if(m.drop===null)return;
@@ -349,7 +349,7 @@ function renderSoyEoy(){
 
   // Movement comparison heatmap
   let heatH='<div class="heatmap-wrap"><div class="heatmap-title">SOY \u2192 EOY movement — both years: '+soySubject+', '+soyGrade+'</div>';
-  heatH+='<table class="heatmap-table"><thead><tr><th>Vertical</th><th>L1 Drop 24-25</th><th>L1 Drop 25-26</th><th>YoY \u0394</th><th>L3+L4 Gain 24-25</th><th>L3+L4 Gain 25-26</th><th>YoY \u0394</th></tr></thead><tbody>';
+  heatH+='<table class="heatmap-table"><thead><tr><th>Vertical</th><th>L1 Change 24-25</th><th>L1 Change 25-26</th><th>YoY \u0394</th><th>L3+L4 Gain 24-25</th><th>L3+L4 Gain 25-26</th><th>YoY \u0394</th></tr></thead><tbody>';
   verticals.forEach(v=>{
     const d24=getData(v,soySubject,soyGrade,'2024-25'),d25=getData(v,soySubject,soyGrade,'2025-26');
     const l1d24=d24?d24.SOY[0]-d24.EOY[0]:null,l1d25=d25?d25.SOY[0]-d25.EOY[0]:null;
@@ -390,9 +390,9 @@ function renderYoyChange(){
 
   const body=document.getElementById('yoyBody');
 
-  // L1 Drop heatmap (purple = improved, red = declined — existing logic)
+  // L1 Change heatmap (purple = improved, red = declined — existing logic)
   const buildL1Heatmap=()=>{
-    let h='<div class="heatmap-wrap" style="margin-bottom:20px"><div class="heatmap-title">L1 Drop — Year over Year Change ('+yoySubject+') &nbsp;·&nbsp; darker purple = bigger improvement &nbsp; red = declined</div>';
+    let h='<div class="heatmap-wrap" style="margin-bottom:20px"><div class="heatmap-title">L1 Change — Year over Year Change ('+yoySubject+') &nbsp;·&nbsp; darker purple = bigger improvement &nbsp; red = declined</div>';
     h+='<table class="heatmap-table"><thead><tr><th>Vertical</th>';
     allGrades.forEach(g=>{h+='<th>'+g.replace('Grade ','G')+'</th>';});
     h+='</tr></thead><tbody>';
@@ -438,7 +438,7 @@ function renderYoyChange(){
     h+='</tbody></table></div>';return h;
   };
 
-  // L3+L4 growth heatmap — same green/red theme as L1 drop
+  // L3+L4 growth heatmap — same green/red theme as L1 change
   const buildL34Heatmap=()=>{
     let h='<div class="heatmap-wrap" style="margin-bottom:20px"><div class="heatmap-title">L3+L4 Growth — Year over Year Change ('+yoySubject+') &nbsp;·&nbsp; green = grew &nbsp; red = declined</div>';
     h+='<table class="heatmap-table"><thead><tr><th>Vertical</th>';
@@ -486,8 +486,8 @@ function renderScorecard(){
 
   let html='<div class="summary-banner">';
   html+='<div><div class="summary-stat-val">'+totalCombos+'</div><div class="summary-stat-label">Grade × Vertical combos</div></div>';
-  html+='<div><div class="summary-stat-val">'+impPct+'%</div><div class="summary-stat-label">Improved L1 drop YoY</div></div>';
-  html+='<div><div class="summary-stat-val">'+(avgChg>0?'+':'')+avgChg+'</div><div class="summary-stat-label">Avg L1 drop change (pts)</div></div>';
+  html+='<div><div class="summary-stat-val">'+impPct+'%</div><div class="summary-stat-label">Improved L1 change YoY</div></div>';
+  html+='<div><div class="summary-stat-val">'+(avgChg>0?'+':'')+avgChg+'</div><div class="summary-stat-label">Avg L1 change change (pts)</div></div>';
   html+='<div><div class="summary-stat-val">4</div><div class="summary-stat-label">Verticals tracked</div></div>';
   html+='</div>';
 
@@ -514,7 +514,7 @@ function renderScorecard(){
       const l1t=aL1d25-aL1d24,l34t=aL34g25-aL34g24;
       html+='<div class="scorecard-card">';
       html+='<div class="scorecard-card-title">'+vShort[v]+'<span style="font-size:11px;font-weight:400;color:#aaa;margin-left:8px">'+n+' grade'+(n>1?'s':'')+'</span></div>';
-      html+=metRow('Avg L1 Drop',aL1d24,aL1d25,l1t);
+      html+=metRow('Avg L1 Change',aL1d24,aL1d25,l1t);
       html+=metRow('Avg L3+L4 Gain',aL34g24,aL34g25,l34t);
       html+='<div style="font-size:11px;color:#aaa;margin-top:10px;padding-top:8px;border-top:1px solid #f0f0f0;display:flex;justify-content:space-between">';
       if(bestG)html+='<span>Most improved: <strong style="color:#6B4DAA">'+bestG+'</strong> <span style="color:#0F6E56">(\u25B2+'+(bestGVal>0?bestGVal:0)+' pts)</span></span>';
@@ -731,7 +731,7 @@ function renderHydAllGrades(vName, vData, grades, th) {
   };
 
   detBody.insertAdjacentHTML('beforeend',
-    buildHydHeat('l1drop',`L1 Drop — YoY Change (2024-25 → 2025-26) · green = improved · red = declined`,'green')+
+    buildHydHeat('l1drop',`L1 Change — YoY Change (2024-25 → 2025-26) · green = improved · red = declined`,'green')+
     buildHydHeat('l34gain',`L3+L4 Growth — YoY Change (2024-25 → 2025-26) · green = grew · red = declined`,'green')
   );
 }
@@ -989,21 +989,6 @@ function buildNav(){
   if(topTab==='HYD'){
     const subBar=document.createElement('div');
     subBar.style.cssText='display:flex;justify-content:center;margin-bottom:20px;gap:0';
-    const subItems=[
-      {key:'HYD Govt - GP',label:'HYD Govt - GP Detail'}
-    ];
-    subItems.forEach(({key,label},i)=>{
-      const btn=document.createElement('button');
-      btn.textContent=label;btn.dataset.view=key;
-      const active=currentView===key;
-      btn.style.cssText=`padding:9px 20px;font-size:12px;font-weight:600;border:1px solid #ccc;border-radius:8px;cursor:pointer;font-family:inherit;${active?'background:#333;color:#fff;border-color:#333':'background:#f0f0f0;color:#666'}`;
-      btn.addEventListener('click',()=>{
-        currentView=key;
-        if(key==='HYD Govt - GP')detailGrade=ALL_DATA[key].grades[0];
-        render();
-      });
-      subBar.appendChild(btn);
-    });
     navEl.appendChild(subBar);
   }
 }

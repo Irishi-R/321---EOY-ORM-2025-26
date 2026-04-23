@@ -150,8 +150,8 @@ function generateSoyEoyInsights(subject,grade){
   let bestV=null,bestVal=-999;available.forEach(v=>{if(data[v].l1drop25>bestVal){bestVal=data[v].l1drop25;bestV=v;}});
   if(bestV&&bestVal>0){const d=data[bestV];let text='<strong>'+vShort[bestV]+'</strong> moved the most students out of L1 in 2025-26: <strong>'+bestVal+'%</strong> reduction ('+d.l1soy25+'% \u2192 '+d.l1eoy25+'%)';if(d.l1drop24!==null){const diff=bestVal-d.l1drop24;if(diff>0)text+=', <strong>\u25B2 '+diff+' pts</strong> better than last year';else if(diff<0)text+=', <strong>\u25BC '+Math.abs(diff)+' pts</strong> below last year';else text+=', same as last year';}text+='.';insights.push({type:'positive',text});}
   let impV=null,impDiff=-999;available.forEach(v=>{if(data[v].l1drop24===null)return;const diff=data[v].l1drop25-data[v].l1drop24;if(diff>impDiff){impDiff=diff;impV=v;}});
-  if(impV&&impDiff>=5&&impV!==bestV)insights.push({type:'positive',text:'<strong>'+vShort[impV]+'</strong> showed the biggest year-over-year improvement: L1 drop up by <strong>'+impDiff+' points</strong> vs 2024-25.'});
-  available.forEach(v=>{if(data[v].l1drop24!==null&&data[v].l1drop25-data[v].l1drop24<=-8)insights.push({type:'negative',text:'<strong>'+vShort[v]+'</strong> regressed this year: L1 drop fell by <strong>'+Math.abs(data[v].l1drop25-data[v].l1drop24)+' points</strong> vs 2024-25.'});if(data[v].l1drop25<0)insights.push({type:'negative',text:'<strong>'+vShort[v]+'</strong> saw L1 <strong>increase by '+Math.abs(data[v].l1drop25)+'%</strong> this year — more students moved into L1 than out.'});});
+  if(impV&&impDiff>=5&&impV!==bestV)insights.push({type:'positive',text:'<strong>'+vShort[impV]+'</strong> showed the biggest year-over-year improvement: L1 change up by <strong>'+impDiff+' points</strong> vs 2024-25.'});
+  available.forEach(v=>{if(data[v].l1drop24!==null&&data[v].l1drop25-data[v].l1drop24<=-8)insights.push({type:'negative',text:'<strong>'+vShort[v]+'</strong> regressed this year: L1 change fell by <strong>'+Math.abs(data[v].l1drop25-data[v].l1drop24)+' points</strong> vs 2024-25.'});if(data[v].l1drop25<0)insights.push({type:'negative',text:'<strong>'+vShort[v]+'</strong> saw L1 <strong>increase by '+Math.abs(data[v].l1drop25)+'%</strong> this year — more students moved into L1 than out.'});});
   let bestL34V=null,bestL34=-999;available.forEach(v=>{if(data[v].l34gain25>bestL34){bestL34=data[v].l34gain25;bestL34V=v;}});
   if(bestL34V&&bestL34>0&&bestL34V!==bestV){const d=data[bestL34V];let text='<strong>'+vShort[bestL34V]+'</strong> had the strongest L3+L4 gain in 2025-26: <strong>+'+bestL34+' points</strong>';if(d.l34gain24!==null){const diff=bestL34-d.l34gain24;if(diff>0)text+=' (\u25B2 '+diff+' pts YoY)';else if(diff<0)text+=' (\u25BC '+Math.abs(diff)+' pts YoY)';else text+=' (same as last year)';}text+='.';insights.push({type:'positive',text});}
   return insights;
@@ -249,7 +249,7 @@ function renderSoyAllGrades(body) {
           ctx.font='600 9px -apple-system,sans-serif';
           ctx.fillStyle='#185FA5';ctx.fillText('SOY',(meta.data[0].x+meta.data[1].x)/2,ca.top-10);
           ctx.fillStyle='#0F6E56';ctx.fillText('EOY',(meta.data[2].x+meta.data[3].x)/2,ca.top-10);
-          // L1 drop
+          // L1 change
           ctx.font='bold 9px -apple-system,sans-serif';ctx.fillStyle=deltaC;
           drops.forEach((d,i)=>{if(d===null)return;const x=meta.data[i].x,topY=last.data[i].y;ctx.fillText(d>0?'\u25BC'+d:d<0?'\u25B2'+Math.abs(d):'-',x,topY-3);});
           ctx.restore();
@@ -296,10 +296,10 @@ function renderSoyAllGrades(body) {
     });
   });
 
-  // 1. Biggest L1 drop in 25-26 (best performer)
+  // 1. Biggest L1 change in 25-26 (best performer)
   const bestDrop = allPoints.reduce((a,b) => b.l1drop25 > a.l1drop25 ? b : a);
   if(bestDrop.l1drop25 > 0)
-    insights.push({type:'positive', text:`🏆 <strong>Biggest L1 drop in 2025-26:</strong> ${vShort[bestDrop.v]} ${bestDrop.g} — L1 fell by ${bestDrop.l1drop25} percentage points (${bestDrop.d25.SOY[0]}% SOY → ${bestDrop.d25.EOY[0]}% EOY), the strongest movement out of L1 this year.`});
+    insights.push({type:'positive', text:`🏆 <strong>Biggest L1 change in 2025-26:</strong> ${vShort[bestDrop.v]} ${bestDrop.g} — L1 fell by ${bestDrop.l1drop25} percentage points (${bestDrop.d25.SOY[0]}% SOY → ${bestDrop.d25.EOY[0]}% EOY), the strongest movement out of L1 this year.`});
 
   // 2. L1 increased (students regressed)
   const regressions = allPoints.filter(p => p.l1drop25 < 0).sort((a,b) => a.l1drop25 - b.l1drop25);
@@ -309,7 +309,7 @@ function renderSoyAllGrades(body) {
   // 3. Biggest YoY improvement in EOY L1
   const bestYoy = allPoints.reduce((a,b) => b.l1yoy < a.l1yoy ? b : a);
   if(bestYoy.l1yoy < -3)
-    insights.push({type:'positive', text:`📈 <strong>Most improved year-over-year:</strong> ${vShort[bestYoy.v]} ${bestYoy.g} — EOY L1 dropped from ${bestYoy.eoyL1_24}% (24-25) to ${bestYoy.eoyL1_25}% (25-26), a ${Math.abs(bestYoy.l1yoy)}pp improvement.`});
+    insights.push({type:'positive', text:`📈 <strong>Most improved year-over-year:</strong> ${vShort[bestYoy.v]} ${bestYoy.g} — EOY L1 changeped from ${bestYoy.eoyL1_24}% (24-25) to ${bestYoy.eoyL1_25}% (25-26), a ${Math.abs(bestYoy.l1yoy)}pp improvement.`});
 
   // 4. Biggest YoY decline in EOY L1
   const worstYoy = allPoints.reduce((a,b) => b.l1yoy > a.l1yoy ? b : a);
@@ -407,7 +407,7 @@ function renderSoyEoy(){
     barMeta.push({v,period:'EOY',year:'2025-26',drop:d25?d25.SOY[0]-d25.EOY[0]:null});
   });
 
-  // Plugin: vertical name labels + SOY/EOY sub-group labels + bucket backgrounds + L1 drop
+  // Plugin: vertical name labels + SOY/EOY sub-group labels + bucket backgrounds + L1 change
   const mainPlugin={
     id:'soyMainPlugin',
     beforeDatasetsDraw(chart){
@@ -473,7 +473,7 @@ function renderSoyEoy(){
         ctx.fillStyle='#185FA5';ctx.fillText('SOY',soyX,ca.top-8);
         ctx.fillStyle='#0F6E56';ctx.fillText('EOY',eoyX,ca.top-8);
       }
-      // L1 drop on EOY bars
+      // L1 change on EOY bars
       ctx.font='bold 10px -apple-system,sans-serif';ctx.fillStyle=deltaC;
       barMeta.forEach((m,i)=>{
         if(m.drop===null)return;
@@ -521,7 +521,7 @@ function renderSoyEoy(){
 
   // Movement comparison heatmap
   let heatH='<div class="heatmap-wrap"><div class="heatmap-title">SOY \u2192 EOY movement — both years: '+soySubject+', '+soyGrade+'</div>';
-  heatH+='<table class="heatmap-table"><thead><tr><th>Vertical</th><th>L1 Drop 24-25</th><th>L1 Drop 25-26</th><th>YoY \u0394</th><th>L3+L4 Gain 24-25</th><th>L3+L4 Gain 25-26</th><th>YoY \u0394</th></tr></thead><tbody>';
+  heatH+='<table class="heatmap-table"><thead><tr><th>Vertical</th><th>L1 Change 24-25</th><th>L1 Change 25-26</th><th>YoY \u0394</th><th>L3+L4 Gain 24-25</th><th>L3+L4 Gain 25-26</th><th>YoY \u0394</th></tr></thead><tbody>';
   verticals.forEach(v=>{
     const d24=getData(v,soySubject,soyGrade,'2024-25'),d25=getData(v,soySubject,soyGrade,'2025-26');
     const l1d24=d24?d24.SOY[0]-d24.EOY[0]:null,l1d25=d25?d25.SOY[0]-d25.EOY[0]:null;
@@ -562,9 +562,9 @@ function renderYoyChange(){
 
   const body=document.getElementById('yoyBody');
 
-  // L1 Drop heatmap (purple = improved, red = declined — existing logic)
+  // L1 Change heatmap (purple = improved, red = declined — existing logic)
   const buildL1Heatmap=()=>{
-    let h='<div class="heatmap-wrap" style="margin-bottom:20px"><div class="heatmap-title">L1 Drop — Year over Year Change ('+yoySubject+') &nbsp;·&nbsp; green = improved &nbsp; red = declined</div>';
+    let h='<div class="heatmap-wrap" style="margin-bottom:20px"><div class="heatmap-title">L1 Change — Year over Year Change ('+yoySubject+') &nbsp;·&nbsp; green = improved &nbsp; red = declined</div>';
     h+='<table class="heatmap-table"><thead><tr><th>Vertical</th>';
     allGrades.forEach(g=>{h+='<th>'+g.replace('Grade ','G')+'</th>';});
     h+='</tr></thead><tbody>';
@@ -610,7 +610,7 @@ function renderYoyChange(){
     h+='</tbody></table></div>';return h;
   };
 
-  // L3+L4 growth heatmap — same green/red theme as L1 drop
+  // L3+L4 growth heatmap — same green/red theme as L1 change
   const buildL34Heatmap=()=>{
     let h='<div class="heatmap-wrap" style="margin-bottom:20px"><div class="heatmap-title">L3+L4 Growth — Year over Year Change ('+yoySubject+') &nbsp;·&nbsp; green = grew &nbsp; red = declined</div>';
     h+='<table class="heatmap-table"><thead><tr><th>Vertical</th>';
@@ -658,8 +658,8 @@ function renderScorecard(){
 
   let html='<div class="summary-banner">';
   html+='<div><div class="summary-stat-val">'+totalCombos+'</div><div class="summary-stat-label">Grade × Vertical combos</div></div>';
-  html+='<div><div class="summary-stat-val">'+impPct+'%</div><div class="summary-stat-label">Improved L1 drop YoY</div></div>';
-  html+='<div><div class="summary-stat-val">'+(avgChg>0?'+':'')+avgChg+'</div><div class="summary-stat-label">Avg L1 drop change (pts)</div></div>';
+  html+='<div><div class="summary-stat-val">'+impPct+'%</div><div class="summary-stat-label">Improved L1 change YoY</div></div>';
+  html+='<div><div class="summary-stat-val">'+(avgChg>0?'+':'')+avgChg+'</div><div class="summary-stat-label">Avg L1 change change (pts)</div></div>';
   html+='<div><div class="summary-stat-val">4</div><div class="summary-stat-label">Verticals tracked</div></div>';
   html+='</div>';
 
@@ -686,7 +686,7 @@ function renderScorecard(){
       const l1t=aL1d25-aL1d24,l34t=aL34g25-aL34g24;
       html+='<div class="scorecard-card">';
       html+='<div class="scorecard-card-title">'+vShort[v]+'<span style="font-size:11px;font-weight:400;color:#aaa;margin-left:8px">'+n+' grade'+(n>1?'s':'')+'</span></div>';
-      html+=metRow('Avg L1 Drop',aL1d24,aL1d25,l1t);
+      html+=metRow('Avg L1 Change',aL1d24,aL1d25,l1t);
       html+=metRow('Avg L3+L4 Gain',aL34g24,aL34g25,l34t);
       html+='<div style="font-size:11px;color:#aaa;margin-top:10px;padding-top:8px;border-top:1px solid #f0f0f0;display:flex;justify-content:space-between">';
       if(bestG)html+='<span>Most improved: <strong style="color:#6B4DAA">'+bestG+'</strong> <span style="color:#0F6E56">(\u25B2+'+(bestGVal>0?bestGVal:0)+' pts)</span></span>';
@@ -723,6 +723,8 @@ function renderVertical(vName){
 }
 
 /* ── RENDER & NAV ─────────────────────────────────────────────────────── */
+let showVerticals = false;
+
 function render(){
   updateNav();
   if(currentView==='OneView')renderOneView();
@@ -734,21 +736,45 @@ function render(){
 
 function buildNav(){
   const navEl=document.getElementById('mainNav');navEl.innerHTML='';
-  const items=[
+  const mainItems=[
     {key:'SoyEoy',label:'SOY \u2192 EOY'},
-    {key:'YoYChange',label:'YoY Change'},
-    ...verticals.filter(v=>v!=='HYD Govt - GP').map(v=>({key:v,label:v}))
+    {key:'YoYChange',label:'YoY Change'}
   ];
-  items.forEach(({key,label})=>{
+  mainItems.forEach(({key,label})=>{
     const btn=document.createElement('button');
     btn.textContent=label;btn.dataset.view=key;
-    btn.addEventListener('click',()=>{
-      currentView=key;
-      if(!['OneView','SoyEoy','YoYChange','Scorecard'].includes(key))detailGrade=ALL_DATA[key].grades[0];
-      render();
-    });
+    btn.addEventListener('click',()=>{currentView=key;render();});
     navEl.appendChild(btn);
   });
+
+  // Toggle button for vertical tabs
+  const toggleBtn=document.createElement('button');
+  toggleBtn.textContent=showVerticals?'Hide Verticals ▲':'Show Verticals ▾';
+  toggleBtn.style.cssText='margin-left:12px;padding:8px 14px;font-size:11px;font-weight:600;border:1px dashed #aaa;border-radius:8px;background:#fafafa;color:#888;cursor:pointer;font-family:inherit';
+  toggleBtn.addEventListener('click',()=>{
+    showVerticals=!showVerticals;
+    if(!showVerticals && !['SoyEoy','YoYChange'].includes(currentView)){currentView='SoyEoy';}
+    buildNav();render();
+  });
+  navEl.appendChild(toggleBtn);
+
+  // Vertical tabs — only if toggled on
+  if(showVerticals){
+    const sep=document.createElement('div');
+    sep.style.cssText='width:100%;margin:8px 0 0;display:flex;justify-content:center;gap:0';
+    verticals.filter(v=>v!=='HYD Govt - GP').forEach(v=>{
+      const btn=document.createElement('button');
+      btn.textContent=v;btn.dataset.view=v;
+      btn.style.cssText='padding:8px 14px;font-size:12px;border:1px solid #ccc;background:#f0f0f0;color:#666;cursor:pointer;font-family:inherit;border-left:none';
+      btn.style.borderLeft='none';
+      btn.addEventListener('click',()=>{currentView=v;detailGrade=ALL_DATA[v].grades[0];render();});
+      sep.appendChild(btn);
+    });
+    sep.firstChild&&(sep.firstChild.style.borderLeft='1px solid #ccc');
+    sep.firstChild&&(sep.firstChild.style.borderRadius='8px 0 0 8px');
+    sep.lastChild&&(sep.lastChild.style.borderRadius='0 8px 8px 0');
+    navEl.appendChild(sep);
+  }
 }
 
 buildNav();currentView='SoyEoy';render();
