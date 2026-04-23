@@ -724,9 +724,11 @@ function renderVertical(vName){
 
 /* ── RENDER & NAV ─────────────────────────────────────────────────────── */
 let showVerticals = false;
+let showSummary = false;
 
 function render(){
   updateNav();
+  if(showSummary){renderSummary();return;}
   if(currentView==='OneView')renderOneView();
   else if(currentView==='SoyEoy')renderSoyEoy();
   else if(currentView==='YoYChange')renderYoyChange();
@@ -736,45 +738,325 @@ function render(){
 
 function buildNav(){
   const navEl=document.getElementById('mainNav');navEl.innerHTML='';
-  const mainItems=[
-    {key:'SoyEoy',label:'SOY \u2192 EOY'},
-    {key:'YoYChange',label:'YoY Change'}
-  ];
-  mainItems.forEach(({key,label})=>{
-    const btn=document.createElement('button');
-    btn.textContent=label;btn.dataset.view=key;
-    btn.addEventListener('click',()=>{currentView=key;render();});
-    navEl.appendChild(btn);
-  });
 
-  // Toggle button for vertical tabs
-  const toggleBtn=document.createElement('button');
-  toggleBtn.textContent=showVerticals?'Hide Verticals ▲':'Show Verticals ▾';
-  toggleBtn.style.cssText='margin-left:12px;padding:8px 14px;font-size:11px;font-weight:600;border:1px dashed #aaa;border-radius:8px;background:#fafafa;color:#888;cursor:pointer;font-family:inherit';
-  toggleBtn.addEventListener('click',()=>{
-    showVerticals=!showVerticals;
-    if(!showVerticals && !['SoyEoy','YoYChange'].includes(currentView)){currentView='SoyEoy';}
-    buildNav();render();
-  });
-  navEl.appendChild(toggleBtn);
+  // Summary button
+  const sumBtn=document.createElement('button');
+  sumBtn.textContent=showSummary?'✕ Close Summary':'⚡ Summary';
+  sumBtn.style.cssText=`margin-right:16px;padding:8px 16px;font-size:12px;font-weight:700;border:1.5px solid ${showSummary?'#333':'#6B4DAA'};border-radius:8px;background:${showSummary?'#333':'#F5F3FF'};color:${showSummary?'#fff':'#6B4DAA'};cursor:pointer;font-family:inherit`;
+  sumBtn.addEventListener('click',()=>{showSummary=!showSummary;buildNav();render();});
+  navEl.appendChild(sumBtn);
 
-  // Vertical tabs — only if toggled on
-  if(showVerticals){
-    const sep=document.createElement('div');
-    sep.style.cssText='width:100%;margin:8px 0 0;display:flex;justify-content:center;gap:0';
-    verticals.filter(v=>v!=='HYD Govt - GP').forEach(v=>{
+  if(!showSummary){
+    const mainItems=[
+      {key:'SoyEoy',label:'SOY \u2192 EOY'},
+      {key:'YoYChange',label:'YoY Change'}
+    ];
+    mainItems.forEach(({key,label})=>{
       const btn=document.createElement('button');
-      btn.textContent=v;btn.dataset.view=v;
-      btn.style.cssText='padding:8px 14px;font-size:12px;border:1px solid #ccc;background:#f0f0f0;color:#666;cursor:pointer;font-family:inherit;border-left:none';
-      btn.style.borderLeft='none';
-      btn.addEventListener('click',()=>{currentView=v;detailGrade=ALL_DATA[v].grades[0];render();});
-      sep.appendChild(btn);
+      btn.textContent=label;btn.dataset.view=key;
+      btn.addEventListener('click',()=>{currentView=key;render();});
+      navEl.appendChild(btn);
     });
-    sep.firstChild&&(sep.firstChild.style.borderLeft='1px solid #ccc');
-    sep.firstChild&&(sep.firstChild.style.borderRadius='8px 0 0 8px');
-    sep.lastChild&&(sep.lastChild.style.borderRadius='0 8px 8px 0');
-    navEl.appendChild(sep);
+
+    const toggleBtn=document.createElement('button');
+    toggleBtn.textContent=showVerticals?'Hide Verticals ▲':'Show Verticals ▾';
+    toggleBtn.style.cssText='margin-left:12px;padding:8px 14px;font-size:11px;font-weight:600;border:1px dashed #aaa;border-radius:8px;background:#fafafa;color:#888;cursor:pointer;font-family:inherit';
+    toggleBtn.addEventListener('click',()=>{
+      showVerticals=!showVerticals;
+      if(!showVerticals && !['SoyEoy','YoYChange'].includes(currentView)){currentView='SoyEoy';}
+      buildNav();render();
+    });
+    navEl.appendChild(toggleBtn);
+
+    if(showVerticals){
+      const sep=document.createElement('div');
+      sep.style.cssText='width:100%;margin:8px 0 0;display:flex;justify-content:center;gap:0';
+      verticals.filter(v=>v!=='HYD Govt - GP').forEach(v=>{
+        const btn=document.createElement('button');
+        btn.textContent=v;btn.dataset.view=v;
+        btn.style.cssText='padding:8px 14px;font-size:12px;border:1px solid #ccc;background:#f0f0f0;color:#666;cursor:pointer;font-family:inherit;border-left:none';
+        btn.addEventListener('click',()=>{currentView=v;detailGrade=ALL_DATA[v].grades[0];render();});
+        sep.appendChild(btn);
+      });
+      sep.firstChild&&(sep.firstChild.style.borderLeft='1px solid #ccc');
+      sep.firstChild&&(sep.firstChild.style.borderRadius='8px 0 0 8px');
+      sep.lastChild&&(sep.lastChild.style.borderRadius='0 8px 8px 0');
+      navEl.appendChild(sep);
+    }
   }
+}
+
+/* ── SUMMARY ──────────────────────────────────────────────────────────── */
+function renderSummary(){
+  const el=document.getElementById('content');
+  try { renderSummaryInner(el); }
+  catch(e) { el.innerHTML=`<div style="padding:40px;color:red;font-family:monospace">Summary error: ${e.message}<br>${e.stack}</div>`; }
+}
+
+function renderSummaryInner(el){
+
+  // Compute all key metrics — no averages
+  const activeV=verticals;
+  const years=['2024-25','2025-26'];
+  const subjects=['English','Maths'];
+  const grades=commonGrades;
+
+  // Best and worst L1 change in 25-26
+  let bestChange={v:'',g:'',s:'',val:-99},worstChange={v:'',g:'',s:'',val:99};
+  let mtarStory=[];
+  let l1RangeMin=99,l1RangeMax=-99;
+
+  // How many vertical×grade×subject combos improved YoY (EOY L1 lower in 25-26 vs 24-25)
+  let engImproved=0,engTotal=0,mathImproved=0,mathTotal=0;
+  let l3l4GrowthCount=0,l3l4Total=0;
+
+  activeV.forEach(v=>{
+    subjects.forEach(s=>{
+      if(!ALL_DATA[v][s])return;
+      const vGrades=ALL_DATA[v][s]?Object.keys(ALL_DATA[v][s]):[];
+      vGrades.forEach(g=>{
+        const d25=ALL_DATA[v][s][g]?.['2025-26'];
+        const d24=ALL_DATA[v][s][g]?.['2024-25'];
+        if(d25?.SOY&&d25?.EOY){
+          const drop=d25.SOY[0]-d25.EOY[0];
+          if(drop>bestChange.val){bestChange={v,g,s,val:drop,soy:d25.SOY[0],eoy:d25.EOY[0]};}
+          if(drop<worstChange.val){worstChange={v,g,s,val:drop,soy:d25.SOY[0],eoy:d25.EOY[0]};}
+          if(drop>l1RangeMax)l1RangeMax=drop;
+          if(drop<l1RangeMin)l1RangeMin=drop;
+          const gain=(d25.EOY[2]+d25.EOY[3])-(d25.SOY[2]+d25.SOY[3]);
+          // Only count grades G2-G5 (commonGrades) to keep denominator consistent
+          if(commonGrades.includes(g)){
+            l3l4Total++;
+            if(gain>0)l3l4GrowthCount++;
+          }
+        }
+        if(d24?.EOY&&d25?.EOY&&commonGrades.includes(g)){
+          if(s==='English'){engTotal++;if(d25.EOY[0]<d24.EOY[0])engImproved++;}
+          else{mathTotal++;if(d25.EOY[0]<d24.EOY[0])mathImproved++;}
+        }
+      });
+    });
+    if(v==='MTAR'&&ALL_DATA[v].English){
+      Object.keys(ALL_DATA[v].English).forEach(g=>{
+        const d=ALL_DATA[v].English[g]?.['2025-26'];
+        if(d?.SOY&&d?.EOY&&d.SOY[0]-d.EOY[0]>30)mtarStory.push({g,drop:d.SOY[0]-d.EOY[0],soy:d.SOY[0],eoy:d.EOY[0]});
+      });
+    }
+  });
+
+  // Build infographic HTML
+  let h=`<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">`;
+
+  // ── HEADER BANNER ──
+  h+=`<div style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);border-radius:16px;padding:32px 36px;margin-bottom:20px;color:#fff;position:relative;overflow:hidden">
+    <div style="position:absolute;top:-40px;right:-40px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,0.03)"></div>
+    <div style="position:absolute;bottom:-60px;left:30%;width:300px;height:300px;border-radius:50%;background:rgba(255,255,255,0.02)"></div>
+    <div style="position:relative">
+      <div style="font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:8px">Student Learning Growth · Summary</div>
+      <div style="font-size:22px;font-weight:800;margin-bottom:24px">2024–25 vs 2025–26 · All Verticals</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+        <div style="background:rgba(255,255,255,0.08);border-radius:12px;padding:18px 16px;text-align:center;border:1px solid rgba(255,255,255,0.1)">
+          <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.5);margin-bottom:6px">L1 change range</div>
+          <div style="font-size:22px;font-weight:800;color:#4ade80;line-height:1.2">▼${l1RangeMin>=0?l1RangeMin:0}pp – ▼${l1RangeMax}pp</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:6px">across all combos · 2025-26</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.08);border-radius:12px;padding:18px 16px;text-align:center;border:1px solid rgba(255,255,255,0.1)">
+          <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.5);margin-bottom:6px">English YoY</div>
+          <div style="font-size:28px;font-weight:800;color:#60a5fa;line-height:1">${engImproved}<span style="font-size:16px;color:rgba(255,255,255,0.4)"> / ${engTotal}</span></div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:6px">grades with lower EOY L1 (G2–G5)</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.08);border-radius:12px;padding:18px 16px;text-align:center;border:1px solid rgba(255,255,255,0.1)">
+          <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.5);margin-bottom:6px">Maths YoY</div>
+          <div style="font-size:28px;font-weight:800;color:#60a5fa;line-height:1">${mathImproved}<span style="font-size:16px;color:rgba(255,255,255,0.4)"> / ${mathTotal}</span></div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:6px">grades with lower EOY L1 (G2–G5)</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.08);border-radius:12px;padding:18px 16px;text-align:center;border:1px solid rgba(255,255,255,0.1)">
+          <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.5);margin-bottom:6px">L3+L4 grew</div>
+          <div style="font-size:28px;font-weight:800;color:#a78bfa;line-height:1">${l3l4GrowthCount}<span style="font-size:16px;color:rgba(255,255,255,0.4)"> / ${l3l4Total}</span></div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:6px">grades (G2–G5) where L3+L4 grew · 2025-26</div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  // ── L1 CHANGE HEATMAP — BOTH YEARS ──
+  h+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">`;
+
+  subjects.forEach(subj=>{
+    const subCol=subj==='English'?'#185FA5':'#0F6E56';
+    h+=`<div style="background:#fff;border:1px solid #e0e0e0;border-radius:14px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.04)">
+      <div style="font-size:13px;font-weight:700;color:${subCol};margin-bottom:6px;display:flex;align-items:center;gap:8px">
+        <span style="width:8px;height:8px;border-radius:50%;background:${subCol};display:inline-block"></span>${subj} · L1 change SOY→EOY
+      </div>
+      <div style="font-size:10px;color:#aaa;margin-bottom:14px">Each grade shows: <strong style="color:#185FA5">2024-25</strong> &nbsp;|&nbsp; <strong style="color:#0F6E56">2025-26</strong></div>
+      <table style="width:100%;border-collapse:separate;border-spacing:2px;font-size:11px">
+        <thead><tr><th style="text-align:left;color:#aaa;font-weight:600;padding:4px 6px;font-size:10px"></th>`;
+    grades.forEach(g=>{
+      h+=`<th colspan="2" style="text-align:center;color:#aaa;font-weight:600;padding:4px 2px;font-size:10px;border-bottom:2px solid #eee">${g.replace('Grade ','G')}</th>`;
+    });
+    h+=`</tr>
+        <tr><th></th>`;
+    grades.forEach(()=>{
+      h+=`<th style="text-align:center;color:#185FA5;font-weight:600;padding:2px;font-size:9px">24-25</th>
+          <th style="text-align:center;color:#0F6E56;font-weight:600;padding:2px;font-size:9px">25-26</th>`;
+    });
+    h+=`</tr></thead><tbody>`;
+
+    activeV.forEach(v=>{
+      if(!ALL_DATA[v][subj])return;
+      h+=`<tr><td style="padding:4px 6px;font-weight:700;font-size:11px;color:#333;white-space:nowrap">${vShort[v]}</td>`;
+      grades.forEach(g=>{
+        ['2024-25','2025-26'].forEach((yr,yi)=>{
+          const d=ALL_DATA[v][subj][g]?.[yr];
+          if(!d||!d.SOY||!d.EOY){h+=`<td style="background:#f5f5f5;border-radius:4px;text-align:center;color:#ccc;padding:7px 3px;font-size:10px">—</td>`;return;}
+          const drop=d.SOY[0]-d.EOY[0];
+          const t=Math.max(0,Math.min(1,Math.abs(drop)/40));
+          let bg,tc;
+          if(drop>0){const r=Math.round(232+(29-232)*t),g2=Math.round(245+(158-245)*t),b=Math.round(232+(117-232)*t);bg=`rgb(${r},${g2},${b})`;tc=t>0.5?'#fff':'#0a3d2d';}
+          else if(drop<0){const r=Math.round(255+(200-255)*t),g2=Math.round(245+(60-245)*t),b=Math.round(245+(60-245)*t);bg=`rgb(${r},${g2},${b})`;tc=t>0.5?'#fff':'#7a1b1b';}
+          else{bg='#f0f0f0';tc='#aaa';}
+          h+=`<td style="background:${bg};border-radius:4px;text-align:center;color:${tc};font-weight:700;padding:7px 3px;font-size:10px;cursor:default" title="Students in ${vShort[v]} ${g} ${yr}: L1 ${d.SOY[0]}%→${d.EOY[0]}%">${drop>0?'▼':'▲'}${Math.abs(drop)}</td>`;
+        });
+      });
+      h+=`</tr>`;
+    });
+    h+=`</tbody></table></div>`;
+  });
+  h+=`</div>`;
+
+  // ── STANDOUT CALLOUTS ──
+  h+=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px">`;
+
+  // Best movement
+  if(bestChange.v){
+    h+=`<div style="background:linear-gradient(135deg,#E8F5EF,#d1fae5);border:1px solid #6ee7b7;border-radius:14px;padding:20px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:-20px;right:-20px;font-size:80px;opacity:0.06">▼</div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#059669;margin-bottom:10px">Biggest L1 change</div>
+      <div style="font-size:32px;font-weight:800;color:#0D6B50;line-height:1;margin-bottom:6px">▼${bestChange.val}pp</div>
+      <div style="font-size:13px;font-weight:600;color:#065f46;margin-bottom:4px">Students in ${vShort[bestChange.v]}<br>${bestChange.g} · ${bestChange.s}</div>
+      <div style="font-size:11px;color:#6ee7b7;margin-top:8px">${bestChange.soy}% → ${bestChange.eoy}% at EOY</div>
+    </div>`;
+  }
+
+  // MTAR standout
+  if(mtarStory.length>0){
+    const top=mtarStory.sort((a,b)=>b.drop-a.drop)[0];
+    h+=`<div style="background:linear-gradient(135deg,#F0F4FF,#dbeafe);border:1px solid #93c5fd;border-radius:14px;padding:20px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:-20px;right:-20px;font-size:80px;opacity:0.06">⚡</div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#2563eb;margin-bottom:10px">Standout shift</div>
+      <div style="font-size:32px;font-weight:800;color:#1d4ed8;line-height:1;margin-bottom:6px">▼${top.drop}pp</div>
+      <div style="font-size:13px;font-weight:600;color:#1e3a8a;margin-bottom:4px">Students in MTAR<br>${top.g} · English</div>
+      <div style="font-size:11px;color:#93c5fd;margin-top:8px">${top.soy}% → ${top.eoy}% at EOY</div>
+    </div>`;
+  }
+
+  // Needs attention
+  if(worstChange.v&&worstChange.val<0){
+    h+=`<div style="background:linear-gradient(135deg,#FEF2F2,#fee2e2);border:1px solid #fca5a5;border-radius:14px;padding:20px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:-20px;right:-20px;font-size:80px;opacity:0.06">▲</div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#dc2626;margin-bottom:10px">Needs attention</div>
+      <div style="font-size:32px;font-weight:800;color:#991b1b;line-height:1;margin-bottom:6px">▲${Math.abs(worstChange.val)}pp</div>
+      <div style="font-size:13px;font-weight:600;color:#7f1d1d;margin-bottom:4px">Students in ${vShort[worstChange.v]}<br>${worstChange.g} · ${worstChange.s}</div>
+      <div style="font-size:11px;color:#fca5a5;margin-top:8px">${worstChange.soy}% → ${worstChange.eoy}% at EOY</div>
+    </div>`;
+  } else {
+    h+=`<div style="background:linear-gradient(135deg,#F5F3FF,#ede9fe);border:1px solid #c4b5fd;border-radius:14px;padding:20px">
+      <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#7c3aed;margin-bottom:10px">YoY improvement</div>
+      <div style="font-size:32px;font-weight:800;color:#5b21b6;line-height:1;margin-bottom:6px">${engImproved+mathImproved}<span style="font-size:16px;color:#a78bfa"> / ${engTotal+mathTotal}</span></div>
+      <div style="font-size:13px;font-weight:600;color:#3b0764;margin-bottom:4px">Grades with lower<br>EOY L1 YoY (G2–G5)</div>
+      <div style="font-size:11px;color:#c4b5fd;margin-top:8px">English + Maths combined</div>
+    </div>`;
+  }
+  h+=`</div>`;
+
+  // ── YoY COMPARISON STRIP ──
+  h+=`<div style="background:#fff;border:1px solid #e0e0e0;border-radius:14px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.04)">
+    <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:4px">Year-over-year: did students end 2025-26 better than 2024-25?</div>
+    <div style="font-size:11px;color:#888;margin-bottom:18px">
+      <span style="display:inline-flex;align-items:center;gap:4px;margin-right:12px"><span style="background:#0D6B50;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px">G2</span> grade improved</span>
+      <span style="display:inline-flex;align-items:center;gap:4px"><span style="background:#C0392B;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px">G2</span> grade declined</span>
+    </div>
+
+    <div style="font-size:11px;font-weight:700;color:#555;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">L1 EOY</div>
+    <div style="display:grid;grid-template-columns:repeat(${activeV.length},1fr);gap:12px;margin-bottom:20px">`;
+
+  activeV.forEach(v=>{
+    h+=`<div style="background:#f8f8f8;border-radius:10px;padding:14px 10px">
+      <div style="font-size:12px;font-weight:800;color:#1a1a1a;margin-bottom:12px;text-align:center">${vShort[v]}</div>`;
+    subjects.forEach(subj=>{
+      const subCol=subj==='English'?'#185FA5':'#0F6E56';
+      let imp=[],dec=[],tot=0;
+      if(ALL_DATA[v][subj]){
+        Object.keys(ALL_DATA[v][subj]).forEach(g=>{
+          const d24=ALL_DATA[v][subj][g]?.['2024-25'];
+          const d25=ALL_DATA[v][subj][g]?.['2025-26'];
+          if(d24?.EOY&&d25?.EOY){
+            tot++;
+            if(d25.EOY[0]<d24.EOY[0]) imp.push(g.replace('Grade ','G'));
+            else if(d25.EOY[0]>d24.EOY[0]) dec.push(g.replace('Grade ','G'));
+          }
+        });
+      }
+      const allGood=tot>0&&imp.length===tot;
+      const fracCol=allGood?'#0D6B50':imp.length>=dec.length?'#0D6B50':'#C0392B';
+      const bg=allGood?'#E8F5EF':imp.length>dec.length?'#f0fdf4':dec.length>imp.length?'#fff1f1':'#f5f5f5';
+      h+=`<div style="background:${bg};border-radius:6px;padding:9px 8px;margin-bottom:6px">
+        <div style="font-size:10px;font-weight:700;color:${subCol};margin-bottom:6px">${subj}</div>
+        <div style="font-size:22px;font-weight:800;color:${fracCol};line-height:1;margin-bottom:3px">${imp.length}<span style="font-size:13px;color:#aaa">/${tot}</span></div>
+        <div style="font-size:9px;color:#888;margin-bottom:6px">grades with lower EOY L1</div>
+        <div style="display:flex;gap:3px;flex-wrap:wrap">
+          ${imp.map(g=>`<span style="background:#0D6B50;color:#fff;font-size:8px;font-weight:700;padding:2px 5px;border-radius:3px">${g}</span>`).join('')}
+          ${dec.map(g=>`<span style="background:#C0392B;color:#fff;font-size:8px;font-weight:700;padding:2px 5px;border-radius:3px">${g}</span>`).join('')}
+          ${imp.length===0&&dec.length===0?`<span style="color:#aaa;font-size:9px">no YoY data</span>`:''}
+        </div>
+      </div>`;
+    });
+    h+=`</div>`;
+  });
+
+  h+=`</div>`;
+
+  h+=`<div style="font-size:11px;font-weight:700;color:#555;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px;padding-top:16px;border-top:1px solid #f0f0f0">L3+L4 EOY</div>
+    <div style="display:grid;grid-template-columns:repeat(${activeV.length},1fr);gap:12px">`;
+
+  activeV.forEach(v=>{
+    h+=`<div style="background:#f8f8f8;border-radius:10px;padding:14px 10px">
+      <div style="font-size:12px;font-weight:800;color:#1a1a1a;margin-bottom:12px;text-align:center">${vShort[v]}</div>`;
+    subjects.forEach(subj=>{
+      const subCol=subj==='English'?'#185FA5':'#0F6E56';
+      let imp=[],dec=[],tot=0;
+      if(ALL_DATA[v][subj]){
+        Object.keys(ALL_DATA[v][subj]).forEach(g=>{
+          const d24=ALL_DATA[v][subj][g]?.['2024-25'];
+          const d25=ALL_DATA[v][subj][g]?.['2025-26'];
+          if(d24?.EOY&&d25?.EOY){
+            tot++;
+            const l34_24=d24.EOY[2]+d24.EOY[3];
+            const l34_25=d25.EOY[2]+d25.EOY[3];
+            if(l34_25>l34_24) imp.push(g.replace('Grade ','G'));
+            else if(l34_25<l34_24) dec.push(g.replace('Grade ','G'));
+          }
+        });
+      }
+      const allGood=tot>0&&imp.length===tot;
+      const fracCol=allGood?'#0D6B50':imp.length>=dec.length?'#0D6B50':'#C0392B';
+      const bg=allGood?'#E8F5EF':imp.length>dec.length?'#f0fdf4':dec.length>imp.length?'#fff1f1':'#f5f5f5';
+      h+=`<div style="background:${bg};border-radius:6px;padding:9px 8px;margin-bottom:6px">
+        <div style="font-size:10px;font-weight:700;color:${subCol};margin-bottom:6px">${subj}</div>
+        <div style="font-size:22px;font-weight:800;color:${fracCol};line-height:1;margin-bottom:3px">${imp.length}<span style="font-size:13px;color:#aaa">/${tot}</span></div>
+        <div style="font-size:9px;color:#888;margin-bottom:6px">grades with higher L3+L4</div>
+        <div style="display:flex;gap:3px;flex-wrap:wrap">
+          ${imp.map(g=>`<span style="background:#0D6B50;color:#fff;font-size:8px;font-weight:700;padding:2px 5px;border-radius:3px">${g}</span>`).join('')}
+          ${dec.map(g=>`<span style="background:#C0392B;color:#fff;font-size:8px;font-weight:700;padding:2px 5px;border-radius:3px">${g}</span>`).join('')}
+          ${imp.length===0&&dec.length===0?`<span style="color:#aaa;font-size:9px">no YoY data</span>`:''}
+        </div>
+      </div>`;
+    });
+    h+=`</div>`;
+  });
+
+  h+=`</div></div></div>`;
+  el.innerHTML=h;
 }
 
 buildNav();currentView='SoyEoy';render();
