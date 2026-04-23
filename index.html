@@ -189,8 +189,8 @@ h1 em {
 /* ── CARDS ─────────────────────────────── */
 .cards {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
   margin-bottom: 64px;
 }
 
@@ -217,8 +217,8 @@ h1 em {
   position: relative;
   background: var(--white);
   border: 1px solid var(--rule);
-  border-radius: 20px;
-  padding: 36px 32px 28px;
+  border-radius: 16px;
+  padding: 24px 24px 20px;
   text-decoration: none;
   color: inherit;
   display: flex;
@@ -244,7 +244,7 @@ h1 em {
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 3px;
-  border-radius: 20px 20px 0 0;
+  border-radius: 16px 16px 0 0;
   transition: opacity 0.3s ease;
 }
 
@@ -256,89 +256,81 @@ h1 em {
   position: absolute;
   bottom: -20px;
   right: -20px;
-  width: 140px;
-  height: 140px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
-  opacity: 0.035;
+  opacity: 0.04;
   transition: opacity 0.35s ease, transform 0.35s ease;
 }
 
 .card.slg .card-bg { background: #1A5FA8; }
 .card.sda .card-bg { background: #0D6B50; }
-.card:hover .card-bg { opacity: 0.06; transform: scale(1.1); }
+.card:hover .card-bg { opacity: 0.07; transform: scale(1.1); }
 
 /* Card internals */
 .card-eyebrow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 14px;
 }
-
-.card-badge {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 1.2px;
-  text-transform: uppercase;
-  padding: 5px 12px;
-  border-radius: 100px;
-}
-
-.card.slg .card-badge { background: var(--accent-blue-pale); color: var(--accent-blue); }
-.card.sda .card-badge { background: var(--accent-green-pale); color: var(--accent-green); }
 
 .card-index {
   font-family: 'Outfit', sans-serif;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--ink-muted);
   font-weight: 500;
 }
 
-.card-title {
+.card-type {
   font-family: 'Outfit', sans-serif;
-  font-size: 26px;
-  font-weight: 700;
-  line-height: 1.15;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.1;
   letter-spacing: -0.02em;
-  color: var(--ink);
   margin-bottom: 6px;
 }
 
-.card-subtitle {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--ink-muted);
-  margin-bottom: 16px;
-  letter-spacing: 0.2px;
+.card.slg .card-type { color: var(--accent-blue); }
+.card.sda .card-type { color: var(--accent-green); }
+.card.cls .card-type { color: #7B4FAA; }
+.card.tcb .card-type { color: #0D6B50; }
+.card.partner .card-type { color: #185FA5; }
+
+.card-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 4px;
 }
 
-.card-desc {
-  font-size: 13.5px;
-  color: var(--ink-light);
-  line-height: 1.75;
-  flex: 1;
-  font-weight: 400;
+.card-subtitle {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-muted);
+  letter-spacing: 0.2px;
 }
 
 .card-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 24px;
-  padding-top: 20px;
+  margin-top: 18px;
+  padding-top: 14px;
   border-top: 1px solid var(--rule);
 }
 
 .card-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 5px;
 }
 
 .card-tag {
   font-size: 10px;
   font-weight: 500;
-  padding: 4px 10px;
+  padding: 3px 8px;
   border-radius: 100px;
   background: var(--cream);
   color: var(--ink-muted);
@@ -350,7 +342,7 @@ h1 em {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.3px;
   transition: gap 0.2s ease;
@@ -362,13 +354,13 @@ h1 em {
 .card:hover .card-cta { gap: 10px; }
 
 .card-cta-arrow {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
+  font-size: 12px;
   transition: background 0.2s ease, transform 0.2s ease;
 }
 
@@ -477,120 +469,92 @@ footer {
     <a class="card slg" href="student_learning_growth.html">
       <div class="card-bg"></div>
       <div class="card-eyebrow">
-        <span class="card-badge">2-Year View</span>
+        <span style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#aaa">Learning</span>
         <span class="card-index">01</span>
       </div>
+      <div class="card-type">2-Year Comparison</div>
       <div class="card-title">Student Learning Growth</div>
       <div class="card-subtitle">2024–25 &nbsp;vs&nbsp; 2025–26</div>
-      <p class="card-desc">
-        Compare EOY distributions across verticals, track SOY to EOY movement for both years side by side, and explore year-over-year changes with full grade and vertical breakdowns.
-      </p>
       <div class="card-footer">
         <div class="card-tags">
-          <span class="card-tag">EOY Comparison</span>
+          <span class="card-tag">SOY → EOY</span>
           <span class="card-tag">YoY Change</span>
-          <span class="card-tag">Scorecard</span>
+          <span class="card-tag">4 Verticals</span>
         </div>
-        <div class="card-cta">
-          Open
-          <div class="card-cta-arrow">→</div>
-        </div>
+        <div class="card-cta">Open <div class="card-cta-arrow">→</div></div>
       </div>
     </a>
 
     <a class="card sda" href="student_data_analysis_2025_26.html">
       <div class="card-bg"></div>
       <div class="card-eyebrow">
-        <span class="card-badge">Current Year</span>
+        <span style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#aaa">Learning</span>
         <span class="card-index">02</span>
       </div>
+      <div class="card-type">Current Year</div>
       <div class="card-title">Student Data Analysis</div>
       <div class="card-subtitle">2025–26</div>
-      <p class="card-desc">
-        Deep dive into this year's SOY to EOY movement across all verticals. Track L1 reduction, L3+L4 growth, and identify where students are progressing fastest.
-      </p>
       <div class="card-footer">
         <div class="card-tags">
-          <span class="card-tag">SOY to EOY</span>
-          <span class="card-tag">Movement</span>
+          <span class="card-tag">SOY → EOY</span>
+          <span class="card-tag">Level Jump</span>
           <span class="card-tag">Heatmaps</span>
         </div>
-        <div class="card-cta">
-          Open
-          <div class="card-cta-arrow">→</div>
-        </div>
+        <div class="card-cta">Open <div class="card-cta-arrow">→</div></div>
       </div>
     </a>
 
     <a class="card cls" href="classroom_observation.html">
       <div class="card-bg"></div>
       <div class="card-eyebrow">
-        <span class="card-badge">Observation</span>
+        <span style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#aaa">Observation</span>
         <span class="card-index">03</span>
       </div>
+      <div class="card-type">Classroom</div>
       <div class="card-title">Classroom Observation</div>
       <div class="card-subtitle">2025–26</div>
-      <p class="card-desc">
-        Explore SOY to EOY shifts in classroom observation metrics across verticals. Compare CFU, practice time, student engagement, and teaching quality indicators.
-      </p>
       <div class="card-footer">
         <div class="card-tags">
           <span class="card-tag">SOY → EOY</span>
           <span class="card-tag">5 Verticals</span>
-          <span class="card-tag">Cross-Compare</span>
         </div>
-        <div class="card-cta">
-          Open
-          <div class="card-cta-arrow">→</div>
-        </div>
+        <div class="card-cta">Open <div class="card-cta-arrow">→</div></div>
       </div>
     </a>
 
     <a class="card tcb" href="tcb_student_learning.html">
       <div class="card-bg"></div>
       <div class="card-eyebrow">
-        <span class="card-badge">TCB</span>
+        <span style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#aaa">TCB</span>
         <span class="card-index">04</span>
       </div>
+      <div class="card-type">2-Year Comparison</div>
       <div class="card-title">TCB - Student Learning</div>
-      <div class="card-subtitle">HYD Govt - GP · 2024–26</div>
-      <p class="card-desc">
-        Two-year learning outcomes for HYD Govt - GP across English and Maths. Track SOY to EOY movement, year-over-year changes and grade-level performance.
-      </p>
+      <div class="card-subtitle">HYD Govt-GP · LCPS · 2024–26</div>
       <div class="card-footer">
         <div class="card-tags">
           <span class="card-tag">SOY → EOY</span>
           <span class="card-tag">YoY Change</span>
-          <span class="card-tag">Grades 2–5</span>
         </div>
-        <div class="card-cta">
-          Open
-          <div class="card-cta-arrow">→</div>
-        </div>
+        <div class="card-cta">Open <div class="card-cta-arrow">→</div></div>
       </div>
     </a>
 
     <a class="card partner" href="partner_analysis.html">
       <div class="card-bg"></div>
       <div class="card-eyebrow">
-        <span class="card-badge">PARTNER</span>
+        <span style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#aaa">Partners</span>
         <span class="card-index">05</span>
       </div>
-      <div class="card-title">Partner Analysis</div>
-      <div class="card-subtitle">6 Partners · 2024–26</div>
-      <p class="card-desc">
-        Compare SOY→EOY learning outcomes across all partners. English and Maths, both years, all grades where data is available.
-      </p>
+      <div class="card-type">Partner Analysis</div>
+      <div class="card-title">6 Partner Organisations</div>
+      <div class="card-subtitle">2024–26 · English & Maths</div>
       <div class="card-footer">
         <div class="card-tags">
-          <span class="card-tag">SOY → EOY</span>
-          <span class="card-tag">L1 Drop</span>
-          <span class="card-tag">All Partners</span>
+          <span class="card-tag">YoY Comparison</span>
+          <span class="card-tag">Grade View</span>
         </div>
-        <div class="card-cta">
-          Open
-          <div class="card-cta-arrow">→</div>
-        </div>
+        <div class="card-cta">Open <div class="card-cta-arrow">→</div></div>
       </div>
     </a>
 
