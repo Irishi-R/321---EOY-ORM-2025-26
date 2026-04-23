@@ -171,7 +171,7 @@ function renderOneView(){
   body.innerHTML=legendH+'<div style="background:#f8f8f8;border:1px solid #e0e0e0;border-radius:14px;padding:24px 16px 16px"><div style="font-size:14px;font-weight:600;color:#777;text-align:center;margin-bottom:14px">EOY distribution across all verticals: '+oneViewSubject+', '+oneViewGrade+'</div><div style="position:relative;width:100%;height:420px"><canvas id="oneViewCanvas"></canvas></div></div>';
   const labels=[],l1Data=[],l2Data=[],l3Data=[],l4Data=[],l1Drops=[],availV=[];
   verticals.forEach(v=>{const d=ALL_DATA[v][oneViewSubject];if(!d[oneViewGrade])return;availV.push(v);['2024-25','2025-26'].forEach(year=>{labels.push(year);const eoy=d[oneViewGrade][year].EOY,soy=d[oneViewGrade][year].SOY;l1Data.push(eoy[0]);l2Data.push(eoy[1]);l3Data.push(eoy[2]);l4Data.push(eoy[3]);l1Drops.push(soy[0]-eoy[0]);});});
-  const dropPlugin={id:'bucketsAndDrops',beforeDatasetsDraw(chart){const ctx=chart.ctx,meta=chart.getDatasetMeta(0),ca=chart.chartArea;if(!meta.data.length)return;ctx.save();for(let i=0;i<meta.data.length;i+=2){if(i+1>=meta.data.length)break;const b0=meta.data[i],b1=meta.data[i+1],pad=12,left=b0.x-b0.width/2-pad,right=b1.x+b1.width/2+pad;ctx.fillStyle=(i/2)%2===0?'rgba(0,0,0,0.025)':'rgba(0,0,0,0.045)';ctx.beginPath();if(ctx.roundRect)ctx.roundRect(left,ca.top-24,right-left,ca.bottom-ca.top+28,6);else ctx.rect(left,ca.top-24,right-left,ca.bottom-ca.top+28);ctx.fill();}ctx.restore();},afterDatasetsDraw(chart){const ctx=chart.ctx,meta=chart.getDatasetMeta(0),ca=chart.chartArea,lastMeta=chart.getDatasetMeta(chart.data.datasets.length-1);if(!meta.data.length)return;ctx.save();ctx.textAlign='center';ctx.textBaseline='bottom';ctx.font='600 12px -apple-system,sans-serif';ctx.fillStyle='#555';for(let i=0;i<meta.data.length;i+=2){if(i+1>=meta.data.length)break;ctx.fillText(vShort[availV[i/2]],(meta.data[i].x+meta.data[i+1].x)/2,ca.top-8);}ctx.font='bold 11px -apple-system,sans-serif';ctx.fillStyle=deltaC;l1Drops.forEach((drop,i)=>{const x=meta.data[i].x,topY=lastMeta.data[i].y;ctx.fillText(drop>0?'\u25BC '+drop:drop<0?'\u25B2 '+Math.abs(drop):'-',x,topY-4);});ctx.restore();}};
+  const dropPlugin={id:'bucketsAndDrops',beforeDatasetsDraw(chart){const ctx=chart.ctx,meta=chart.getDatasetMeta(0),ca=chart.chartArea;if(!meta.data.length)return;ctx.save();for(let i=0;i<meta.data.length;i+=2){if(i+1>=meta.data.length)break;const b0=meta.data[i],b1=meta.data[i+1],pad=12,left=b0.x-b0.width/2-pad,right=b1.x+b1.width/2+pad;ctx.fillStyle=(i/2)%2===0?'rgba(0,0,0,0.025)':'rgba(0,0,0,0.045)';ctx.beginPath();if(ctx.roundRect)ctx.roundRect(left,ca.top-24,right-left,ca.bottom-ca.top+28,6);else ctx.rect(left,ca.top-24,right-left,ca.bottom-ca.top+28);ctx.fill();}ctx.restore();},afterDatasetsDraw(chart){const ctx=chart.ctx,meta=chart.getDatasetMeta(0),ca=chart.chartArea,lastMeta=chart.getDatasetMeta(chart.data.datasets.length-1);if(!meta.data.length)return;ctx.save();ctx.textAlign='center';ctx.textBaseline='bottom';ctx.font='600 12px -apple-system,sans-serif';ctx.fillStyle='#555';for(let i=0;i<meta.data.length;i+=2){if(i+1>=meta.data.length)break;ctx.fillText(vShort[availV[i/2]],(meta.data[i].x+meta.data[i+1].x)/2,ca.top-8);}ctx.font='bold 11px -apple-system,sans-serif';l1Drops.forEach((drop,i)=>{const x=meta.data[i].x,topY=lastMeta.data[i].y;ctx.fillStyle=drop>0?'#0D6B50':drop<0?'#C0392B':'#999';ctx.fillText(drop>0?'\u25BC '+drop:drop<0?'\u25B2 '+Math.abs(drop):'-',x,topY-4);});ctx.restore();}};
   const cv=document.getElementById('oneViewCanvas');
   const c=new Chart(cv,{type:'bar',data:{labels,datasets:[{label:'L1',data:l1Data,backgroundColor:segC[0],borderWidth:0,stack:'a'},{label:'L2',data:l2Data,backgroundColor:segC[1],borderWidth:0,stack:'a'},{label:'L3',data:l3Data,backgroundColor:segC[2],borderWidth:0,stack:'a'},{label:'L4',data:l4Data,backgroundColor:segC[3],borderWidth:0,stack:'a'}]},plugins:[dropPlugin],options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:36}},plugins:{legend:{display:false},tooltip:{callbacks:{title:ctx=>{const i=ctx[0].dataIndex;return vShort[availV[Math.floor(i/2)]]+' ('+ctx[0].label+')';},label:ctx=>ctx.dataset.label+': '+ctx.raw+'%'}},datalabels:{display:ctx=>ctx.dataset.data[ctx.dataIndex]>=8,color:ctx=>ctx.datasetIndex===0?'#fff':ctx.datasetIndex===1?'#5a3e00':'#fff',font:{size:10,weight:'600'},formatter:v=>v+'%'}},scales:{x:{stacked:true,ticks:{color:'#333',font:{size:11,weight:'600'},autoSkip:false,maxRotation:0},grid:{display:false}},y:{stacked:true,max:110,ticks:{color:'#999',callback:v=>v<=100?v+'%':'',font:{size:11},stepSize:25},grid:{color:'rgba(0,0,0,0.06)'}}}}});
   charts.push(c);
@@ -302,12 +302,12 @@ function renderSoyEoy(){
         ctx.fillStyle='#0F6E56';ctx.fillText('EOY',eoyX,ca.top-8);
       }
       // L1 change on EOY bars
-      ctx.font='bold 10px -apple-system,sans-serif';ctx.fillStyle=deltaC;
+      ctx.font='bold 10px -apple-system,sans-serif';
       barMeta.forEach((m,i)=>{
         if(m.drop===null)return;
         const x=meta.data[i].x,topY=lastMeta.data[i].y;
         const d=m.drop;
-        ctx.fillText(d>0?'\u25BC'+d:d<0?'\u25B2'+Math.abs(d):'-',x,topY-3);
+        ctx.fillStyle=d>0?'#0D6B50':d<0?'#C0392B':'#999';ctx.fillText(d>0?'\u25BC'+d:d<0?'\u25B2'+Math.abs(d):'-',x,topY-3);
       });
       ctx.restore();
     }
@@ -675,7 +675,7 @@ function renderHydAllGrades(vName, vData, grades, th) {
       ctx.font='600 9px -apple-system,sans-serif';
       for(let i=0;i<meta.data.length;i+=4){if(i+3>=meta.data.length)break;const b0=meta.data[i],b1=meta.data[i+1],b2=meta.data[i+2],b3=meta.data[i+3];ctx.fillStyle=th.tabActive;ctx.fillText('SOY',(b0.x+b1.x)/2,ca.top-8);ctx.fillStyle=th.eoy;ctx.fillText('EOY',(b2.x+b3.x)/2,ca.top-8);}
       ctx.font='bold 9px -apple-system,sans-serif';ctx.fillStyle=deltaC;
-      barMeta.forEach((m,i)=>{if(m.drop===null||m.drop===undefined)return;const x=meta.data[i].x,topY=last.data[i].y,d=m.drop;ctx.fillText(d>0?'\u25BC'+d:d<0?'\u25B2'+Math.abs(d):'-',x,topY-3);});
+      barMeta.forEach((m,i)=>{if(m.drop===null||m.drop===undefined)return;const x=meta.data[i].x,topY=last.data[i].y,d=m.drop;ctx.fillStyle=d>0?'#0D6B50':d<0?'#C0392B':'#999';ctx.fillText(d>0?'\u25BC'+d:d<0?'\u25B2'+Math.abs(d):'-',x,topY-3);});
       ctx.restore();
     }
   };
