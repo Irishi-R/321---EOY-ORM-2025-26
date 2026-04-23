@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Partner Analysis</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#fff;color:#1a1a1a;padding:32px 24px;max-width:1200px;margin:0 auto}
+h1{font-size:26px;font-weight:600;text-align:center;margin-bottom:4px}
+.subtitle{font-size:15px;color:#777;text-align:center;margin-bottom:20px}
+.toggle-row{display:flex;justify-content:center;flex-wrap:wrap;gap:0;margin-bottom:14px}
+.toggle-row button{padding:10px 22px;font-size:13px;font-weight:400;border:1px solid #ccc;background:#f0f0f0;color:#666;cursor:pointer;font-family:inherit}
+.toggle-row button:first-child{border-radius:8px 0 0 8px}
+.toggle-row button:last-child{border-radius:0 8px 8px 0}
+.toggle-row button:not(:first-child):not(:last-child){border-radius:0}
+.heatmap-wrap{background:#f8f8f8;border:1px solid #e0e0e0;border-radius:14px;padding:22px 24px;margin-top:20px}
+.heatmap-title{font-size:14px;font-weight:600;color:#555;margin-bottom:14px;text-align:center}
+.heatmap-table{width:100%;border-collapse:separate;border-spacing:3px;font-size:12px}
+.heatmap-table th{padding:8px 10px;font-weight:600;font-size:11px;color:#666;text-align:center;background:transparent;text-transform:uppercase;letter-spacing:.4px;border:none}
+.heatmap-table th:first-child{text-align:left}
+.heatmap-table td{padding:9px 10px;text-align:center;font-weight:600;border-radius:4px;color:#2a2a2a}
+.heatmap-table td:first-child{text-align:left;background:transparent;color:#333;font-weight:600;padding-left:0}
+.heatmap-table td.none{background:#f5f5f5;color:#bbb;font-weight:400}
+.insights{background:#f8f8f8;border:1px solid #e0e0e0;border-radius:14px;padding:22px 24px;margin-top:16px}
+.insights-title{font-size:14px;font-weight:600;color:#555;margin-bottom:14px}
+.insight-item{font-size:13px;line-height:1.7;color:#444;margin-bottom:8px;padding-left:18px;position:relative}
+.insight-item::before{content:'';position:absolute;left:0;top:8px;width:8px;height:8px;border-radius:50%}
+.insight-item.positive::before{background:#0F6E56}
+.insight-item.negative::before{background:#E24B4A}
+.insight-item.neutral::before{background:#6B4DAA}
+</style>
+</head>
+<body>
+<h1>Partner Analysis</h1>
+<p class="subtitle">SOY → EOY · 2024–26</p>
+<div style="text-align:center;margin-bottom:20px"><a href="index.html" style="font-size:12px;color:#888;text-decoration:none">&larr; Back to Reports</a></div>
+<div id="controls"></div>
+<div id="content"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+<script>
+Chart.register(ChartDataLabels);
+
+/* ── PARTNER DATA ─────────────────────────────────────────────────────── */
+const PARTNER_DATA = {
+  'AMC Model': {
+    color: '#C47A1A',
+    English: {
+      '2024-25': {
+        'Grade 2':{SOY:[80,11,9,0],EOY:[37,33,31,0]},
+        'Grade 3':{SOY:[22,20,58,0],EOY:[36,36,28,0]},
+        'Grade 4':{SOY:[37,33,21,10],EOY:[44,17,18,22]},
+        'Grade 5':{SOY:[34,27,36,4],EOY:[45,29,10,16]}
+      },
+      '2025-26': {
+        'Grade 2':{SOY:[64,35,2,0],EOY:[36,47,17,0]},
+        'Grade 3':{SOY:[60,29,11,0],EOY:[15,67,17,0]},
+        'Grade 4':{SOY:[34,50,9,8],EOY:[31,44,15,9]},
+        'Grade 5':{SOY:[24,36,19,21],EOY:[21,38,23,18]}
+      }
+    },
+    Maths: {
+      '2024-25': {
+        'Grade 2':{SOY:[41,10,48,0],EOY:[28,17,55,0]},
+        'Grade 3':{SOY:[29,11,61,0],EOY:[19,14,68,0]},
+        'Grade 4':{SOY:[22,12,25,41],EOY:[17,3,33,47]},
+        'Grade 5':{SOY:[31,13,31,24],EOY:[15,6,35,44]}
+      },
+      '2025-26': {
+        'Grade 2':{SOY:[53,39,8,0],EOY:[34,21,45,0]},
+        'Grade 3':{SOY:[48,37,15,0],EOY:[7,30,63,0]},
+        'Grade 4':{SOY:[35,52,14,0],EOY:[5,11,23,60]},
+        'Grade 5':{SOY:[13,38,38,13],EOY:[6,7,14,74]}
+      }
+    }
+  },
+  'AMC Non-Model': {
+    color: '#C0392B',
+    English: {
+      '2024-25': {
+        'Grade 2':{SOY:[40,28,32,0],EOY:[32,26,42,0]},
+        'Grade 3':{SOY:[32,22,46,0],EOY:[22,30,48,0]},
+        'Grade 4':{SOY:[34,27,30,9],EOY:[36,22,16,27]},
+        'Grade 5':{SOY:[23,21,41,14],EOY:[22,22,13,42]}
+      },
+      '2025-26': {
+        'Grade 2':{SOY:[53,35,12,0],EOY:[29,47,24,0]},
+        'Grade 3':{SOY:[48,38,14,0],EOY:[26,39,35,0]},
+        'Grade 4':{SOY:[33,36,15,15],EOY:[19,21,23,36]},
+        'Grade 5':{SOY:[30,32,25,13],EOY:[15,27,21,37]}
+      }
+    },
+    Maths: {
+      '2024-25': {
+        'Grade 2':{SOY:[26,10,64,0],EOY:[14,10,77,0]},
+        'Grade 3':{SOY:[16,12,72,0],EOY:[9,10,81,0]},
+        'Grade 4':{SOY:[13,11,40,36],EOY:[9,9,33,50]},
+        'Grade 5':{SOY:[8,11,29,52],EOY:[6,6,24,64]}
+      },
+      '2025-26': {
+        'Grade 2':{SOY:[34,37,27,2],EOY:[23,18,59,0]},
+        'Grade 3':{SOY:[30,36,33,0],EOY:[17,21,62,0]},
+        'Grade 4':{SOY:[24,27,34,15],EOY:[13,14,20,53]},
+        'Grade 5':{SOY:[21,27,31,20],EOY:[7,8,14,71]}
+      }
+    }
+  },
+  'Nukkad': {
+    color: '#185FA5',
+    English: {
+      '2024-25': {
+        'Grade 2':{SOY:[40,34,26,0],EOY:[32,35,33,0]},
+        'Grade 3':{SOY:[37,31,32,0],EOY:[28,32,40,0]},
+        'Grade 4':{SOY:[21,22,27,30],EOY:[27,24,24,25]},
+        'Grade 5':{SOY:[23,23,25,28],EOY:[15,20,27,38]},
+        'Grade 6':{SOY:[25,28,28,18],EOY:[16,21,30,34]},
+        'Grade 7':{SOY:[14,33,26,26],EOY:[16,23,23,38]},
+        'Grade 8':{SOY:[18,26,29,26],EOY:[21,23,24,33]}
+      },
+      '2025-26': {
+        'Grade 1':{SOY:[65,29,6,0],EOY:[24,45,30,0]},
+        'Grade 2':{SOY:[46,44,10,0],EOY:[17,37,46,0]},
+        'Grade 3':{SOY:[50,29,21,0],EOY:[13,55,33,0]},
+        'Grade 4':{SOY:[23,37,37,2],EOY:[9,42,27,22]},
+        'Grade 5':{SOY:[15,36,44,5],EOY:[0,32,38,30]},
+        'Grade 6':{SOY:[26,32,28,13],EOY:[11,33,31,24]},
+        'Grade 7':{SOY:[14,22,48,16],EOY:[7,20,41,31]},
+        'Grade 8':{SOY:[16,28,47,10],EOY:[2,20,27,52]}
+      }
+    },
+    Maths: {
+      '2024-25': {
+        'Grade 2':{SOY:[34,34,32,0],EOY:[35,28,37,0]},
+        'Grade 3':{SOY:[26,35,39,0],EOY:[34,29,37,0]},
+        'Grade 4':{SOY:[21,27,26,27],EOY:[26,21,24,29]},
+        'Grade 5':{SOY:[19,27,27,26],EOY:[19,21,23,36]},
+        'Grade 6':{SOY:[22,29,29,20],EOY:[15,16,20,49]},
+        'Grade 7':{SOY:[14,31,28,28],EOY:[22,15,19,44]},
+        'Grade 8':{SOY:[17,27,25,31],EOY:[23,18,24,36]}
+      },
+      '2025-26': {
+        'Grade 1':{SOY:[68,29,3,0],EOY:[24,35,41,0]},
+        'Grade 2':{SOY:[28,63,10,0],EOY:[14,34,51,0]},
+        'Grade 3':{SOY:[15,63,23,0],EOY:[3,28,69,0]},
+        'Grade 4':{SOY:[12,40,45,2],EOY:[2,31,38,29]},
+        'Grade 5':{SOY:[5,32,54,8],EOY:[2,20,38,40]},
+        'Grade 6':{SOY:[13,24,46,17],EOY:[4,18,42,36]},
+        'Grade 7':{SOY:[5,21,51,23],EOY:[0,7,28,65]},
+        'Grade 8':{SOY:[3,17,55,25],EOY:[2,4,44,50]}
+      }
+    }
+  },
+  'NATCO': {
+    color: '#0F6E56',
+    English: {
+      '2024-25': {
+        'Grade 2':{EOY:[100,0,0,0]},
+        'Grade 4':{EOY:[38,31,15,15]},
+        'Grade 5':{EOY:[41,21,24,14]},
+        'Grade 6':{EOY:[56,44,0,0]},
+        'Grade 7':{EOY:[25,75,0,0]},
+        'Grade 8':{EOY:[0,100,0,0]}
+      },
+      '2025-26': {
+        'Grade 1':{SOY:[99,0,0,0],EOY:[83,15,1,1]},
+        'Grade 2':{SOY:[92,8,0,0],EOY:[56,38,6,0]},
+        'Grade 3':{SOY:[82,13,5,0],EOY:[41,43,16,0]},
+        'Grade 4':{SOY:[73,23,3,0],EOY:[39,30,18,13]},
+        'Grade 5':{SOY:[67,26,5,2],EOY:[33,24,21,22]},
+        'Grade 6':{SOY:[41,29,29,0],EOY:[39,17,27,17]},
+        'Grade 7':{SOY:[55,40,5,0],EOY:[7,35,29,29]}
+      }
+    },
+    Maths: {
+      '2025-26': {
+        'Grade 1':{SOY:[96,3,1,0],EOY:[66,24,10,0]},
+        'Grade 2':{SOY:[92,7,1,0],EOY:[41,36,23,0]},
+        'Grade 3':{SOY:[80,15,5,0],EOY:[27,28,45,0]},
+        'Grade 4':{SOY:[71,20,7,1],EOY:[32,18,31,19]},
+        'Grade 5':{SOY:[53,33,11,3],EOY:[29,21,31,19]},
+        'Grade 6':{SOY:[12,18,71,0],EOY:[25,11,44,20]},
+        'Grade 7':{SOY:[65,14,20,2],EOY:[11,19,31,39]},
+        'Grade 8':{EOY:[29,0,29,43]}
+      }
+    }
+  },
+  'CHI': {
+    color: '#7B4FAA',
+    English: {
+      '2024-25': {
+        'Grade 2':{SOY:[72,20,8,0],EOY:[37,33,30,0]},
+        'Grade 3':{SOY:[64,23,12,0],EOY:[38,29,33,0]},
+        'Grade 4':{SOY:[48,30,15,7],EOY:[9,20,30,41]},
+        'Grade 5':{SOY:[41,19,35,6],EOY:[8,24,33,34]},
+        'Grade 6':{SOY:[39,25,19,16],EOY:[7,12,16,66]},
+        'Grade 7':{SOY:[43,20,20,16],EOY:[28,12,12,48]},
+        'Grade 8':{SOY:[47,11,17,24],EOY:[19,19,30,33]}
+      },
+      '2025-26': {
+        'Grade 1':{SOY:[90,10,1,0],EOY:[45,33,21,0]},
+        'Grade 2':{SOY:[59,35,6,0],EOY:[30,46,24,0]},
+        'Grade 3':{SOY:[42,33,25,0],EOY:[16,41,43,0]},
+        'Grade 4':{SOY:[25,30,43,2],EOY:[13,30,32,26]},
+        'Grade 5':{SOY:[22,30,29,19],EOY:[9,21,33,37]},
+        'Grade 6':{SOY:[28,25,30,17],EOY:[11,20,29,40]},
+        'Grade 7':{SOY:[23,11,27,39],EOY:[8,15,30,48]},
+        'Grade 8':{SOY:[27,18,32,23],EOY:[4,17,27,52]}
+      }
+    },
+    Maths: {
+      '2024-25': {
+        'Grade 2':{SOY:[60,31,9,0],EOY:[15,31,54,0]},
+        'Grade 3':{SOY:[38,26,36,0],EOY:[12,22,66,0]},
+        'Grade 4':{SOY:[31,33,25,10],EOY:[4,10,31,55]},
+        'Grade 5':{SOY:[19,22,31,28],EOY:[13,3,12,72]},
+        'Grade 6':{SOY:[29,27,23,21],EOY:[5,12,40,43]},
+        'Grade 7':{SOY:[8,11,48,32],EOY:[21,5,10,64]},
+        'Grade 8':{SOY:[4,11,43,42],EOY:[15,23,19,43]}
+      },
+      '2025-26': {
+        'Grade 1':{SOY:[84,14,3,0],EOY:[27,50,23,0]},
+        'Grade 2':{SOY:[49,39,12,0],EOY:[18,32,50,0]},
+        'Grade 3':{SOY:[19,42,39,0],EOY:[5,23,72,0]},
+        'Grade 4':{SOY:[19,23,38,20],EOY:[5,18,32,45]},
+        'Grade 5':{SOY:[16,17,28,40],EOY:[2,6,34,58]},
+        'Grade 6':{SOY:[12,23,35,31],EOY:[2,7,28,63]},
+        'Grade 7':{SOY:[12,22,20,46],EOY:[3,11,19,67]},
+        'Grade 8':{SOY:[11,21,26,41],EOY:[3,8,14,75]}
+      }
+    }
+  },
+  'Udaan': {
+    color: '#E87722',
+    English: {
+      '2024-25': {
+        'Grade 2':{SOY:[41,31,28,0],EOY:[36,33,31,0]},
+        'Grade 3':{SOY:[45,40,15,0],EOY:[30,30,40,0]}
+      },
+      '2025-26': {
+        'Grade 1':{SOY:[100,0,0,0],EOY:[48,52,0,0]},
+        'Grade 2':{SOY:[50,39,11,0],EOY:[18,54,28,0]},
+        'Grade 3':{SOY:[51,33,16,0],EOY:[33,47,20,0]},
+        'Grade 5':{SOY:[100,0,0,0],EOY:[36,45,9,9]},
+        'Grade 6':{SOY:[100,0,0,0],EOY:[0,0,100,0]},
+        'Grade 7':{SOY:[100,0,0,0],EOY:[0,100,0,0]},
+        'Grade 8':{SOY:[100,0,0,0],EOY:[0,67,33,0]}
+      }
+    },
+    Maths: {
+      '2024-25': {
+        'Grade 2':{SOY:[36,41,22,0],EOY:[28,33,39,0]},
+        'Grade 3':{SOY:[60,23,17,0],EOY:[4,10,85,0]}
+      },
+      '2025-26': {
+        'Grade 1':{SOY:[100,0,0,0],EOY:[29,69,2,0]},
+        'Grade 2':{SOY:[55,45,0,0],EOY:[20,50,30,0]},
+        'Grade 5':{SOY:[0,10,70,20],EOY:[14,86,0,0]},
+        'Grade 6':{SOY:[0,0,100,0],EOY:[0,0,100,0]},
+        'Grade 7':{SOY:[0,0,100,0],EOY:[0,100,0,0]},
+        'Grade 8':{SOY:[0,0,0,100],EOY:[0,33,0,67]}
+      }
+    }
+  }
+};
+
+const partners = Object.keys(PARTNER_DATA);
+const allGrades = ['Grade 1','Grade 2','Grade 3','Grade 4','Grade 5','Grade 6','Grade 7','Grade 8'];
+const segC = ['#E24B4A','#EF9F27','#3266ad','#1D9E75'];
+const deltaC = '#6B4DAA';
+
+let curSubject = 'English', curYear = '2025-26', curGrade = 'Grade 2', curTab = 'yoy';
+let charts = [];
+
+function destroyCharts(){charts.forEach(c=>{try{c.destroy()}catch(e){}});charts=[];}
+
+function heatColor(val, isGood) {
+  if(val===null||isNaN(val)) return {bg:'#f5f5f5',text:'#ccc'};
+  if(val===0) return {bg:'#f0f0f0',text:'#aaa'};
+  const t = Math.max(0,Math.min(1,Math.abs(val)/30));
+  if((isGood&&val>0)||(!isGood&&val<0)) {
+    const r=Math.round(232+(29-232)*t),g=Math.round(245+(158-245)*t),b=Math.round(232+(117-232)*t);
+    return{bg:`rgb(${r},${g},${b})`,text:t>0.5?'#fff':'#0a3d2d'};
+  } else {
+    const r=Math.round(255+(200-255)*t),g=Math.round(245+(60-245)*t),b=Math.round(245+(60-245)*t);
+    return{bg:`rgb(${r},${g},${b})`,text:t>0.5?'#fff':'#7a1b1b'};
+  }
+}
+
+function render() {
+  destroyCharts();
+  const ctrl = document.getElementById('controls');
+  const content = document.getElementById('content');
+
+  // Top-level tabs
+  let h = `<div style="display:flex;justify-content:center;gap:0;margin-bottom:20px">
+    <button onclick="curTab='yoy';render()" style="padding:11px 28px;font-size:13px;font-weight:700;border:2px solid #333;border-radius:10px 0 0 10px;cursor:pointer;font-family:inherit;${curTab==='yoy'?'background:#333;color:#fff':'background:#fff;color:#555'}">YoY Comparison</button>
+    <button onclick="curTab='grade';render()" style="padding:11px 28px;font-size:13px;font-weight:700;border:2px solid #333;border-left:none;border-radius:0 10px 10px 0;cursor:pointer;font-family:inherit;${curTab==='grade'?'background:#333;color:#fff':'background:#fff;color:#555'}">Grade View</button>
+  </div>`;
+
+  // Subject toggle (both tabs)
+  h += '<div class="toggle-row">';
+  ['English','Maths'].forEach(s=>{
+    const a=s===curSubject;
+    h+=`<button onclick="curSubject='${s}';render()" style="${a?'background:#6B4DAA;color:#fff;font-weight:600;border-color:#6B4DAA;':''}font-family:inherit">${s}</button>`;
+  });
+  h += '</div>';
+
+  if(curTab==='grade') {
+    // Year + Grade selectors
+    h += '<div class="toggle-row">';
+    ['2024-25','2025-26'].forEach(y=>{
+      const a=y===curYear;
+      h+=`<button onclick="curYear='${y}';render()" style="${a?'background:#333;color:#fff;font-weight:600;border-color:#333;':''}font-family:inherit">${y}</button>`;
+    });
+    h += '</div><div class="toggle-row">';
+    allGrades.forEach((g,i)=>{
+      const a=g===curGrade;
+      const first=i===0,last=i===allGrades.length-1;
+      h+=`<button onclick="curGrade='${g}';render()" style="${a?'background:#185FA5;color:#fff;font-weight:600;border-color:#185FA5;':''}font-family:inherit;${first?'border-radius:8px 0 0 8px':last?'border-radius:0 8px 8px 0':'border-radius:0'};${i>0?'border-left:none':''};padding:9px 14px;font-size:12px">${g.replace('Grade ','G')}</button>`;
+    });
+    h += '</div>';
+  }
+
+  ctrl.innerHTML = h;
+
+  if(curTab === 'yoy') { renderYoY(content); return; }
+  renderGradeView(content);
+}
+
+function renderYoY(content) {
+  const legendH = `<div style="display:flex;justify-content:center;gap:16px;margin-bottom:20px;font-size:12px;color:#888;flex-wrap:wrap">
+    ${['L1','L2','L3','L4'].map((l,i)=>`<span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;border-radius:3px;background:${segC[i]};display:inline-block"></span>${l}</span>`).join('')}
+    <span style="display:flex;align-items:center;gap:6px"><span style="width:20px;height:3px;background:#185FA5;display:inline-block;border-radius:2px"></span>2024-25</span>
+    <span style="display:flex;align-items:center;gap:6px"><span style="width:20px;height:3px;background:#0F6E56;display:inline-block;border-radius:2px"></span>2025-26</span>
+    <span style="display:flex;align-items:center;gap:6px"><span style="color:#0D6B50;font-weight:800">▼</span><span style="color:#C0392B;font-weight:800">▲</span><span style="color:#888;font-size:12px"> L1 change</span></span>
+  </div>`;
+
+  let html = legendH;
+  let ci = 0;
+
+  partners.forEach(p => {
+    const pData = PARTNER_DATA[p][curSubject];
+    const d24 = pData?.['2024-25'], d25 = pData?.['2025-26'];
+    if(!d24 && !d25) return;
+
+    // Collect grades that have data in at least one year
+    const gradesWithData = allGrades.filter(g => (d24?.[g]?.SOY || d24?.[g]?.EOY) || (d25?.[g]?.SOY || d25?.[g]?.EOY));
+    if(!gradesWithData.length) return;
+
+    const cols = Math.min(gradesWithData.length, 4);
+    html += `<div style="margin-bottom:28px">
+      <div style="font-size:15px;font-weight:800;color:${PARTNER_DATA[p].color};border-left:4px solid ${PARTNER_DATA[p].color};padding-left:10px;margin-bottom:12px">${p}</div>
+      <div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:10px">`;
+
+    gradesWithData.forEach(g => {
+      const e24 = d24?.[g], e25 = d25?.[g];
+      // 4 bars: SOY24, SOY25, EOY24, EOY25 (null if missing)
+      const labels = ['24-25','25-26','24-25','25-26'];
+      const l1D=[e24?.SOY?.[0]??null, e25?.SOY?.[0]??null, e24?.EOY?.[0]??null, e25?.EOY?.[0]??null];
+      const l2D=[e24?.SOY?.[1]??null, e25?.SOY?.[1]??null, e24?.EOY?.[1]??null, e25?.EOY?.[1]??null];
+      const l3D=[e24?.SOY?.[2]??null, e25?.SOY?.[2]??null, e24?.EOY?.[2]??null, e25?.EOY?.[2]??null];
+      const l4D=[e24?.SOY?.[3]??null, e25?.SOY?.[3]??null, e24?.EOY?.[3]??null, e25?.EOY?.[3]??null];
+      const drop24 = e24?.SOY && e24?.EOY ? e24.SOY[0]-e24.EOY[0] : null;
+      const drop25 = e25?.SOY && e25?.EOY ? e25.SOY[0]-e25.EOY[0] : null;
+
+      // Tile summary
+      const l1c24 = drop24>0?'#0D6B50':drop24<0?'#C0392B':'#888';
+      const l1c25 = drop25>0?'#0D6B50':drop25<0?'#C0392B':'#888';
+      const stripH = (drop24!==null||drop25!==null) ? `<div style="display:flex;justify-content:space-around;padding:7px 6px;background:#f8f8f8;border-top:1px solid #e8e8e8;font-size:10px;font-weight:700;gap:2px">
+        ${drop24!==null?`<span style="color:${l1c24}">24: ${drop24>0?'▼'+drop24:drop24<0?'▲'+Math.abs(drop24):'-'}pp</span>`:'<span style="color:#ccc">24: —</span>'}
+        <span style="color:#ddd">|</span>
+        ${drop25!==null?`<span style="color:${l1c25}">25: ${drop25>0?'▼'+drop25:drop25<0?'▲'+Math.abs(drop25):'-'}pp</span>`:'<span style="color:#ccc">25: —</span>'}
+      </div>` : '';
+
+      html += `<div style="background:#fff;border:1px solid #e0e0e0;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05)">
+        <div style="font-size:11px;font-weight:700;color:#555;text-align:center;padding:9px 8px 5px">${g}</div>
+        <div style="padding:0 8px;position:relative;width:calc(100%-16px);height:200px"><canvas id="yoyCanvas${ci}"></canvas></div>
+        ${stripH}
+      </div>`;
+      ci++;
+    });
+
+    html += '</div></div>';
+  });
+
+  content.innerHTML = html;
+
+  // Render charts
+  let idx = 0;
+  partners.forEach(p => {
+    const pData = PARTNER_DATA[p][curSubject];
+    const d24 = pData?.['2024-25'], d25 = pData?.['2025-26'];
+    if(!d24 && !d25) return;
+    const gradesWithData = allGrades.filter(g => (d24?.[g]?.SOY||d24?.[g]?.EOY)||(d25?.[g]?.SOY||d25?.[g]?.EOY));
+
+    gradesWithData.forEach(g => {
+      const e24 = d24?.[g], e25 = d25?.[g];
+      const l1D=[e24?.SOY?.[0]??null,e25?.SOY?.[0]??null,e24?.EOY?.[0]??null,e25?.EOY?.[0]??null];
+      const l2D=[e24?.SOY?.[1]??null,e25?.SOY?.[1]??null,e24?.EOY?.[1]??null,e25?.EOY?.[1]??null];
+      const l3D=[e24?.SOY?.[2]??null,e25?.SOY?.[2]??null,e24?.EOY?.[2]??null,e25?.EOY?.[2]??null];
+      const l4D=[e24?.SOY?.[3]??null,e25?.SOY?.[3]??null,e24?.EOY?.[3]??null,e25?.EOY?.[3]??null];
+      const drop24=e24?.SOY&&e24?.EOY?e24.SOY[0]-e24.EOY[0]:null;
+      const drop25=e25?.SOY&&e25?.EOY?e25.SOY[0]-e25.EOY[0]:null;
+
+      const plugin={id:'yp'+idx,
+        beforeDatasetsDraw(chart){
+          const ctx=chart.ctx,meta=chart.getDatasetMeta(0),ca=chart.chartArea;
+          const bars=meta.data.filter(b=>b);if(bars.length<2)return;ctx.save();
+          // SOY bucket (bars 0-1)
+          const hasSoy0=l1D[0]!==null,hasSoy1=l1D[1]!==null;
+          const hasEoy0=l1D[2]!==null,hasEoy1=l1D[3]!==null;
+          if(hasSoy0||hasSoy1){
+            const b0=meta.data[0],b1=meta.data[1];
+            const sl=Math.min(b0?.x??Infinity,b1?.x??Infinity)-8,sr=Math.max(b0?.x??-Infinity,b1?.x??-Infinity)+8;
+            if(sl<sr){ctx.fillStyle='rgba(24,95,165,0.08)';ctx.strokeStyle='rgba(24,95,165,0.18)';ctx.lineWidth=1;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(sl,ca.top-20,sr-sl,ca.bottom-ca.top+24,5);else ctx.rect(sl,ca.top-20,sr-sl,ca.bottom-ca.top+24);ctx.fill();ctx.stroke();}
+          }
+          if(hasEoy0||hasEoy1){
+            const b2=meta.data[2],b3=meta.data[3];
+            const el=Math.min(b2?.x??Infinity,b3?.x??Infinity)-8,er=Math.max(b2?.x??-Infinity,b3?.x??-Infinity)+8;
+            if(el<er){ctx.fillStyle='rgba(15,110,86,0.08)';ctx.strokeStyle='rgba(15,110,86,0.18)';ctx.lineWidth=1;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(el,ca.top-20,er-el,ca.bottom-ca.top+24,5);else ctx.rect(el,ca.top-20,er-el,ca.bottom-ca.top+24);ctx.fill();ctx.stroke();}
+          }
+          ctx.restore();
+        },
+        afterDatasetsDraw(chart){
+          const ctx=chart.ctx,meta=chart.getDatasetMeta(0),last=chart.getDatasetMeta(3),ca=chart.chartArea;
+          ctx.save();ctx.textAlign='center';ctx.textBaseline='bottom';ctx.font='600 8px -apple-system,sans-serif';
+          if(l1D[0]!==null||l1D[1]!==null){const cx=(meta.data[0].x+meta.data[1].x)/2;ctx.fillStyle='#185FA5';ctx.fillText('SOY',cx,ca.top-7);}
+          if(l1D[2]!==null||l1D[3]!==null){const cx=(meta.data[2].x+meta.data[3].x)/2;ctx.fillStyle='#0F6E56';ctx.fillText('EOY',cx,ca.top-7);}
+          ctx.font='bold 8px -apple-system,sans-serif';ctx.fillStyle=deltaC;
+          if(drop24!==null){ctx.fillText(drop24>0?'▼'+drop24:drop24<0?'▲'+Math.abs(drop24):'-',meta.data[2].x,last.data[2].y-2);}
+          if(drop25!==null){ctx.fillText(drop25>0?'▼'+drop25:drop25<0?'▲'+Math.abs(drop25):'-',meta.data[3].x,last.data[3].y-2);}
+          ctx.restore();
+        }
+      };
+
+      const cv=document.getElementById('yoyCanvas'+idx);
+      if(!cv){idx++;return;}
+      const c=new Chart(cv,{type:'bar',data:{labels:['24-25','25-26','24-25','25-26'],datasets:[
+        {label:'L1',data:l1D,backgroundColor:segC[0],borderWidth:0,stack:'a',barPercentage:0.85,categoryPercentage:0.65},
+        {label:'L2',data:l2D,backgroundColor:segC[1],borderWidth:0,stack:'a',barPercentage:0.85,categoryPercentage:0.65},
+        {label:'L3',data:l3D,backgroundColor:segC[2],borderWidth:0,stack:'a',barPercentage:0.85,categoryPercentage:0.65},
+        {label:'L4',data:l4D,backgroundColor:segC[3],borderWidth:0,stack:'a',barPercentage:0.85,categoryPercentage:0.65}
+      ]},plugins:[plugin],options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:28,left:2,right:2,bottom:2}},
+        plugins:{legend:{display:false},
+          tooltip:{callbacks:{title:ctx=>`${p} · ${g} · ${['SOY 24-25','SOY 25-26','EOY 24-25','EOY 25-26'][ctx[0].dataIndex]}`,label:ctx=>ctx.dataset.label+': '+ctx.raw+'%'}},
+          datalabels:{display:ctx=>ctx.dataset.data[ctx.dataIndex]>=16,color:ctx=>ctx.datasetIndex===1?'#5a3e00':'#fff',font:{size:9,weight:'700'},formatter:v=>v+'%'}},
+        scales:{
+          x:{stacked:true,ticks:{color:'#555',font:{size:9,weight:'600'},autoSkip:false,maxRotation:0},grid:{display:false}},
+          y:{stacked:true,max:110,ticks:{color:'#999',callback:v=>v<=100?v+'%':'',font:{size:9},stepSize:50},grid:{color:'rgba(0,0,0,0.05)'}}
+        }}});
+      charts.push(c);
+      idx++;
+    });
+  });
+}
+
+function renderGradeView(content) {
+  // Get partners with data for this combo
+  const activePartners = partners.filter(p => {
+    const d = PARTNER_DATA[p][curSubject]?.[curYear]?.[curGrade];
+    return d && (d.SOY || d.EOY);
+  });
+
+  if(activePartners.length === 0) {
+    content.innerHTML = `<div style="text-align:center;padding:60px;color:#aaa;font-size:14px">No data available for ${curSubject} · ${curYear} · ${curGrade}</div>`;
+    return;
+  }
+
+  // Legend
+  let cH = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+    <div style="display:flex;gap:14px;flex-wrap:wrap">
+      ${['L1','L2','L3','L4'].map((l,i)=>`<span style="display:flex;align-items:center;gap:5px;font-size:12px;color:#888"><span style="width:12px;height:12px;border-radius:3px;background:${segC[i]};display:inline-block"></span>${l}</span>`).join('')}
+      <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:#888"><span style="width:20px;height:3px;background:#185FA5;display:inline-block;border-radius:2px"></span>SOY</span>
+      <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:#888"><span style="width:20px;height:3px;background:#0F6E56;display:inline-block;border-radius:2px"></span>EOY</span>
+    </div>
+    <div style="font-size:11px;color:#aaa">${activePartners.length} partners have data for ${curSubject} · ${curYear} · ${curGrade}</div>
+  </div>`;
+
+  // Grid of partner charts
+  const cols = Math.min(activePartners.length, 3);
+  cH += `<div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:16px;margin-bottom:24px">`;
+
+  activePartners.forEach((p, pi) => {
+    const d = PARTNER_DATA[p][curSubject][curYear][curGrade];
+    const hasSoy = !!d.SOY, hasEoy = !!d.EOY;
+    const drop = hasSoy && hasEoy ? d.SOY[0] - d.EOY[0] : null;
+    const l34gain = hasSoy && hasEoy ? (d.EOY[2]+d.EOY[3])-(d.SOY[2]+d.SOY[3]) : null;
+    const dropCol = drop===null?'#888':drop>0?'#0D6B50':drop<0?'#C0392B':'#888';
+    const gainCol = l34gain===null?'#888':l34gain>0?'#0D6B50':l34gain<0?'#C0392B':'#888';
+
+    // Tile summary strip
+    let stripH = '';
+    if(drop !== null) {
+      stripH = `<div style="display:flex;justify-content:space-around;padding:8px 6px;background:#f8f8f8;border-top:1px solid #e8e8e8;font-size:11px;font-weight:700;gap:4px">
+        <span style="color:${dropCol}">L1 ${drop>0?'▼'+drop:drop<0?'▲'+Math.abs(drop):'-'}pp</span>
+        <span style="color:#ddd">|</span>
+        <span style="color:${gainCol}">L3+4 ${l34gain>0?'▲'+l34gain:l34gain<0?'▼'+Math.abs(l34gain):'-'}pp</span>
+      </div>`;
+    }
+
+    cH += `<div style="background:#fff;border:1px solid #e0e0e0;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05)">
+      <div style="padding:10px 12px 6px;display:flex;align-items:center;justify-content:space-between">
+        <div style="font-size:13px;font-weight:800;color:${PARTNER_DATA[p].color}">${p}</div>
+        ${!hasSoy?'<div style="font-size:9px;background:#FFF3E0;color:#E67E22;padding:2px 6px;border-radius:4px;font-weight:600">EOY only</div>':''}
+      </div>
+      <div style="padding:0 10px;position:relative;width:calc(100% - 20px);height:240px"><canvas id="pChart${pi}"></canvas></div>
+      ${stripH}
+    </div>`;
+  });
+  cH += '</div>';
+
+  // Heatmap — L1 drop across all partners × grades
+  ['L1 Drop','L3+L4 Gain'].forEach((metric, mi) => {
+    cH += `<div class="heatmap-wrap" style="margin-bottom:16px">
+      <div class="heatmap-title">${metric} — SOY→EOY · ${curSubject} · ${curYear} &nbsp;·&nbsp; <span style="font-weight:400;color:#aaa">green = better · red = worse</span></div>
+      <table class="heatmap-table"><thead><tr><th>Partner</th>`;
+    allGrades.forEach(g => { cH += `<th>${g.replace('Grade ','G')}</th>`; });
+    cH += `</tr></thead><tbody>`;
+
+    partners.forEach(p => {
+      cH += `<tr><td style="color:${PARTNER_DATA[p].color};font-weight:700">${p}</td>`;
+      allGrades.forEach(g => {
+        const d = PARTNER_DATA[p][curSubject]?.[curYear]?.[g];
+        if(!d||!d.SOY||!d.EOY){cH+=`<td class="none">—</td>`;return;}
+        const val = mi===0 ? d.SOY[0]-d.EOY[0] : (d.EOY[2]+d.EOY[3])-(d.SOY[2]+d.SOY[3]);
+        const c = heatColor(val, true);
+        const arrow = val>0?'▲':val<0?'▼':'';
+        cH+=`<td style="background:${c.bg};color:${c.text};cursor:default" title="${p} ${g}: ${metric} = ${val>0?'+':''}${val}pp">${arrow}${Math.abs(val)}pp</td>`;
+      });
+      cH += '</tr>';
+    });
+    cH += '</tbody></table></div>';
+  });
+
+  content.innerHTML = cH;
+
+  // Render charts
+  activePartners.forEach((p, pi) => {
+    const d = PARTNER_DATA[p][curSubject][curYear][curGrade];
+    const hasSoy = !!d.SOY, hasEoy = !!d.EOY;
+    const drop = hasSoy && hasEoy ? d.SOY[0] - d.EOY[0] : null;
+
+    const labels = hasSoy && hasEoy ? ['SOY','EOY'] : hasEoy ? ['EOY'] : ['SOY'];
+    const l1D = hasSoy && hasEoy ? [d.SOY[0],d.EOY[0]] : hasEoy ? [d.EOY[0]] : [d.SOY[0]];
+    const l2D = hasSoy && hasEoy ? [d.SOY[1],d.EOY[1]] : hasEoy ? [d.EOY[1]] : [d.SOY[1]];
+    const l3D = hasSoy && hasEoy ? [d.SOY[2],d.EOY[2]] : hasEoy ? [d.EOY[2]] : [d.SOY[2]];
+    const l4D = hasSoy && hasEoy ? [d.SOY[3],d.EOY[3]] : hasEoy ? [d.EOY[3]] : [d.SOY[3]];
+
+    const plugin = {id:'pp'+pi,
+      afterDatasetsDraw(chart){
+        if(!hasSoy||!hasEoy)return;
+        const ctx=chart.ctx,meta=chart.getDatasetMeta(0),last=chart.getDatasetMeta(3),ca=chart.chartArea;
+        if(!meta.data.length)return;ctx.save();
+        const b0=meta.data[0],b1=meta.data[1];
+        ctx.fillStyle='rgba(24,95,165,0.08)';ctx.strokeStyle='rgba(24,95,165,0.20)';ctx.lineWidth=1;
+        ctx.beginPath();if(ctx.roundRect)ctx.roundRect(b0.x-b0.width/2-5,ca.top-20,b0.width+10,ca.bottom-ca.top+24,5);else ctx.rect(b0.x-b0.width/2-5,ca.top-20,b0.width+10,ca.bottom-ca.top+24);ctx.fill();ctx.stroke();
+        ctx.fillStyle='rgba(15,110,86,0.08)';ctx.strokeStyle='rgba(15,110,86,0.20)';
+        ctx.beginPath();if(ctx.roundRect)ctx.roundRect(b1.x-b1.width/2-5,ca.top-20,b1.width+10,ca.bottom-ca.top+24,5);else ctx.rect(b1.x-b1.width/2-5,ca.top-20,b1.width+10,ca.bottom-ca.top+24);ctx.fill();ctx.stroke();
+        ctx.textAlign='center';ctx.textBaseline='bottom';ctx.font='600 9px -apple-system,sans-serif';
+        ctx.fillStyle='#185FA5';ctx.fillText('SOY',b0.x,ca.top-7);
+        ctx.fillStyle='#0F6E56';ctx.fillText('EOY',b1.x,ca.top-7);
+        if(drop!==null){ctx.font='bold 9px -apple-system,sans-serif';ctx.fillStyle=deltaC;ctx.fillText(drop>0?'▼'+drop:drop<0?'▲'+Math.abs(drop):'-',b1.x,last.data[1].y-3);}
+        ctx.restore();
+      }
+    };
+
+    const cv = document.getElementById('pChart'+pi);
+    if(!cv) return;
+    const c = new Chart(cv,{type:'bar',data:{labels,datasets:[
+      {label:'L1',data:l1D,backgroundColor:segC[0],borderWidth:0,stack:'a',barPercentage:0.8,categoryPercentage:0.6},
+      {label:'L2',data:l2D,backgroundColor:segC[1],borderWidth:0,stack:'a',barPercentage:0.8,categoryPercentage:0.6},
+      {label:'L3',data:l3D,backgroundColor:segC[2],borderWidth:0,stack:'a',barPercentage:0.8,categoryPercentage:0.6},
+      {label:'L4',data:l4D,backgroundColor:segC[3],borderWidth:0,stack:'a',barPercentage:0.8,categoryPercentage:0.6}
+    ]},plugins:[plugin],options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:28,left:4,right:4,bottom:4}},
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{title:ctx=>`${p} · ${ctx[0].label} · ${curGrade}`,label:ctx=>ctx.dataset.label+': '+ctx.raw+'%'}},
+        datalabels:{display:ctx=>ctx.dataset.data[ctx.dataIndex]>=14,color:ctx=>ctx.datasetIndex===1?'#5a3e00':'#fff',font:{size:9,weight:'700'},formatter:v=>v+'%'}},
+      scales:{
+        x:{stacked:true,ticks:{color:'#333',font:{size:11,weight:'700'}},grid:{display:false}},
+        y:{stacked:true,max:110,ticks:{color:'#999',callback:v=>v<=100?v+'%':'',font:{size:10},stepSize:50},grid:{color:'rgba(0,0,0,0.05)'}}
+      }}});
+    charts.push(c);
+  });
+}
+
+render();
+</script>
+</body>
+</html>

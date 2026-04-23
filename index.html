@@ -206,6 +206,12 @@ h1 em {
 .card.tcb .card-cta { color: #0D6B50; }
 .card.tcb .card-cta-arrow { background: #E8F5EF; color: #0D6B50; }
 .card:nth-child(4) { animation: rise 0.7s 0.7s ease forwards; }
+.card.partner::before { background: linear-gradient(90deg, #185FA5, #3B82C4, #7DB8E8); }
+.card.partner .card-bg { background: #185FA5; }
+.card.partner .card-badge { background: #EBF3FB; color: #185FA5; }
+.card.partner .card-cta { color: #185FA5; }
+.card.partner .card-cta-arrow { background: #EBF3FB; color: #185FA5; }
+.card:nth-child(5) { animation: rise 0.7s 0.8s ease forwards; }
 
 .card {
   position: relative;
@@ -445,7 +451,7 @@ footer {
       <h1>321 April<br><em>ORM Dashboards</em></h1>
       <div class="header-stats">
         <div class="stat">
-          <span class="stat-val">4</span>
+          <span class="stat-val">5</span>
           <span class="stat-label">Reports</span>
         </div>
         <div class="stat">
@@ -556,6 +562,30 @@ footer {
           <span class="card-tag">SOY → EOY</span>
           <span class="card-tag">YoY Change</span>
           <span class="card-tag">Grades 2–5</span>
+        </div>
+        <div class="card-cta">
+          Open
+          <div class="card-cta-arrow">→</div>
+        </div>
+      </div>
+    </a>
+
+    <a class="card partner" href="partner_analysis.html">
+      <div class="card-bg"></div>
+      <div class="card-eyebrow">
+        <span class="card-badge">PARTNER</span>
+        <span class="card-index">05</span>
+      </div>
+      <div class="card-title">Partner Analysis</div>
+      <div class="card-subtitle">6 Partners · 2024–26</div>
+      <p class="card-desc">
+        Compare SOY→EOY learning outcomes across all partners. English and Maths, both years, all grades where data is available.
+      </p>
+      <div class="card-footer">
+        <div class="card-tags">
+          <span class="card-tag">SOY → EOY</span>
+          <span class="card-tag">L1 Drop</span>
+          <span class="card-tag">All Partners</span>
         </div>
         <div class="card-cta">
           Open
