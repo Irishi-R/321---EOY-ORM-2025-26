@@ -72,7 +72,7 @@ td:first-child{text-align:left;font-weight:600}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
 <script>
 Chart.register(ChartDataLabels);
-const ALL_DATA={'HYD Govt - GP':{grades:['Grade 2','Grade 3','Grade 4','Grade 5'],English:{'Grade 2':{'2024-25':{SOY:[100,0,0,0],EOY:[83,14,2,0]},'2025-26':{SOY:[95,5,0,0],EOY:[83,17,0,0]}},'Grade 3':{'2024-25':{SOY:[80,20,0,0],EOY:[51,28,20,0]},'2025-26':{SOY:[92,8,0,0],EOY:[72,27,0,0]}},'Grade 4':{'2024-25':{SOY:[77,19,4,0],EOY:[60,18,13,8]},'2025-26':{SOY:[81,17,1,0],EOY:[63,34,1,1]}},'Grade 5':{'2024-25':{SOY:[63,28,9,0],EOY:[51,24,11,14]},'2025-26':{SOY:[66,30,4,0],EOY:[44,47,3,6]}}},Maths:{'Grade 2':{'2024-25':{SOY:[93,10,1,0],EOY:[59,22,17,0]},'2025-26':{SOY:[97,3,0,0],EOY:[81,17,2,0]}},'Grade 3':{'2024-25':{SOY:[58,31,11,0],EOY:[32,20,48,0]},'2025-26':{SOY:[83,13,4,0],EOY:[61,18,21,0]}},'Grade 4':{'2024-25':{SOY:[55,29,10,5],EOY:[23,20,29,28]},'2025-26':{SOY:[80,16,5,0],EOY:[46,21,24,9]}},'Grade 5':{'2024-25':{SOY:[36,29,20,15],EOY:[16,16,19,51]},'2025-26':{SOY:[69,17,14,0],EOY:[34,21,10,35]}}}},'Foundations':{grades:['Grade 2','Grade 3','Grade 4','Grade 5','Grade 6','Grade 7','Grade 8'],English:{'Grade 2':{'2024-25':{SOY:[55,28,17,0],EOY:[35,33,32,0]},'2025-26':{SOY:[71,25,4,0],EOY:[37,45,18,0]}},'Grade 3':{'2024-25':{SOY:[50,31,19,0],EOY:[33,30,37,0]},'2025-26':{SOY:[64,23,13,0],EOY:[30,43,27,0]}},'Grade 4':{'2024-25':{SOY:[34,24,21,20],EOY:[20,22,26,32]},'2025-26':{SOY:[55,27,18,1],EOY:[27,31,24,17]}},'Grade 5':{'2024-25':{SOY:[28,22,24,27],EOY:[15,22,30,34]},'2025-26':{SOY:[47,29,16,8],EOY:[22,25,26,27]}},'Grade 6':{'2024-25':{SOY:[26,24,28,21],EOY:[14,19,25,43]},'2025-26':{SOY:[29,26,29,15],EOY:[18,22,29,32]}},'Grade 7':{'2024-25':{SOY:[17,23,39,21],EOY:[20,22,19,40]},'2025-26':{SOY:[28,27,26,19],EOY:[8,18,29,44]}},'Grade 8':{'2024-25':{SOY:[19,33,33,15],EOY:[19,22,26,32]},'2025-26':{SOY:[24,21,36,19],EOY:[3,20,27,50]}}},Maths:{'Grade 2':{'2024-25':{SOY:[43,35,22,0],EOY:[25,30,45,0]},'2025-26':{SOY:[67,27,6,0],EOY:[26,35,39,0]}},'Grade 3':{'2024-25':{SOY:[33,30,37,0],EOY:[19,24,57,0]},'2025-26':{SOY:[54,27,18,0],EOY:[18,26,56,0]}},'Grade 4':{'2024-25':{SOY:[19,27,26,28],EOY:[17,16,30,38]},'2025-26':{SOY:[49,22,22,7],EOY:[22,19,31,28]}},'Grade 5':{'2024-25':{SOY:[17,26,27,30],EOY:[15,9,16,59]},'2025-26':{SOY:[35,27,23,16],EOY:[18,16,31,35]}},'Grade 6':{'2024-25':{SOY:[20,23,29,28],EOY:[12,15,26,47]},'2025-26':{SOY:[12,22,39,26],EOY:[10,10,36,44]}},'Grade 7':{'2024-25':{SOY:[10,20,32,38],EOY:[21,12,16,51]},'2025-26':{SOY:[22,20,31,27],EOY:[3,13,23,60]}},'Grade 8':{'2024-25':{SOY:[10,18,32,39],EOY:[19,20,22,39]},'2025-26':{SOY:[35,19,9,37],EOY:[3,7,23,67]}}}},'AMC - Model':{grades:['Grade 2','Grade 3','Grade 4','Grade 5'],English:{'Grade 2':{'2024-25':{SOY:[80,11,9,0],EOY:[37,33,31,0]},'2025-26':{SOY:[64,35,2,0],EOY:[36,47,17,0]}},'Grade 3':{'2024-25':{SOY:[22,20,58,0],EOY:[36,36,28,0]},'2025-26':{SOY:[60,29,11,0],EOY:[15,67,17,0]}},'Grade 4':{'2024-25':{SOY:[37,21,32,10],EOY:[44,17,18,22]},'2025-26':{SOY:[34,50,9,8],EOY:[24,41,21,13]}},'Grade 5':{'2024-25':{SOY:[34,27,36,4],EOY:[45,29,10,16]},'2025-26':{SOY:[24,36,19,21],EOY:[21,38,18,23]}}},Maths:{'Grade 2':{'2024-25':{SOY:[41,10,48,0],EOY:[28,17,55,0]},'2025-26':{SOY:[53,39,8,0],EOY:[34,21,45,0]}},'Grade 3':{'2024-25':{SOY:[29,11,61,0],EOY:[19,14,68,0]},'2025-26':{SOY:[48,37,15,0],EOY:[7,30,63,0]}},'Grade 4':{'2024-25':{SOY:[22,12,25,41],EOY:[17,3,33,47]},'2025-26':{SOY:[35,52,14,0],EOY:[5,11,23,60]}},'Grade 5':{'2024-25':{SOY:[31,13,31,24],EOY:[15,6,35,44]},'2025-26':{SOY:[13,38,38,13],EOY:[6,7,14,74]}}}},'AMC - Non - Model':{grades:['Grade 2','Grade 3','Grade 4','Grade 5'],English:{'Grade 2':{'2024-25':{SOY:[40,28,32,0],EOY:[32,26,42,0]},'2025-26':{SOY:[53,35,12,0],EOY:[29,47,24,0]}},'Grade 3':{'2024-25':{SOY:[32,22,46,0],EOY:[22,30,48,0]},'2025-26':{SOY:[48,38,14,0],EOY:[26,39,35,0]}},'Grade 4':{'2024-25':{SOY:[34,27,30,9],EOY:[36,22,16,27]},'2025-26':{SOY:[33,36,15,15],EOY:[19,36,21,23]}},'Grade 5':{'2024-25':{SOY:[23,21,41,14],EOY:[22,22,13,42]},'2025-26':{SOY:[30,32,13,25],EOY:[17,28,20,36]}}},Maths:{'Grade 2':{'2024-25':{SOY:[26,10,64,0],EOY:[14,10,77,0]},'2025-26':{SOY:[34,37,27,2],EOY:[23,18,59,0]}},'Grade 3':{'2024-25':{SOY:[16,12,72,0],EOY:[9,10,81,1]},'2025-26':{SOY:[30,36,33,0],EOY:[17,21,62,0]}},'Grade 4':{'2024-25':{SOY:[13,11,40,36],EOY:[9,9,33,50]},'2025-26':{SOY:[24,27,34,15],EOY:[13,14,20,53]}},'Grade 5':{'2024-25':{SOY:[8,11,29,52],EOY:[6,6,24,64]},'2025-26':{SOY:[21,27,31,20],EOY:[7,8,14,71]}}}},
+const ALL_DATA={'HYD Govt - GP':{grades:['Grade 2','Grade 3','Grade 4','Grade 5'],English:{'Grade 2':{'2024-25':{SOY:[100,0,0,0],EOY:[83,14,2,0]},'2025-26':{SOY:[95,5,0,0],EOY:[83,17,0,0]}},'Grade 3':{'2024-25':{SOY:[80,20,0,0],EOY:[51,28,20,0]},'2025-26':{SOY:[92,8,0,0],EOY:[72,27,0,0]}},'Grade 4':{'2024-25':{SOY:[77,19,4,0],EOY:[60,18,13,8]},'2025-26':{SOY:[81,17,1,0],EOY:[63,34,1,1]}},'Grade 5':{'2024-25':{SOY:[63,28,9,0],EOY:[51,24,11,14]},'2025-26':{SOY:[66,30,4,0],EOY:[44,47,3,6]}}},Maths:{'Grade 2':{'2024-25':{SOY:[93,10,1,0],EOY:[59,22,17,0]},'2025-26':{SOY:[97,3,0,0],EOY:[81,17,2,0]}},'Grade 3':{'2024-25':{SOY:[58,31,11,0],EOY:[32,20,48,0]},'2025-26':{SOY:[83,13,4,0],EOY:[61,18,21,0]}},'Grade 4':{'2024-25':{SOY:[55,29,10,5],EOY:[23,20,29,28]},'2025-26':{SOY:[80,16,5,0],EOY:[46,21,9,24]}},'Grade 5':{'2024-25':{SOY:[36,29,20,15],EOY:[16,16,19,51]},'2025-26':{SOY:[69,17,14,0],EOY:[34,21,10,35]}}}},'Foundations':{grades:['Grade 2','Grade 3','Grade 4','Grade 5','Grade 6','Grade 7','Grade 8'],English:{'Grade 2':{'2024-25':{SOY:[55,28,17,0],EOY:[35,33,32,0]},'2025-26':{SOY:[71,25,4,0],EOY:[37,45,18,0]}},'Grade 3':{'2024-25':{SOY:[50,31,19,0],EOY:[33,30,37,0]},'2025-26':{SOY:[64,23,13,0],EOY:[30,43,27,0]}},'Grade 4':{'2024-25':{SOY:[34,24,21,20],EOY:[20,22,26,32]},'2025-26':{SOY:[55,27,18,1],EOY:[27,31,24,17]}},'Grade 5':{'2024-25':{SOY:[28,22,24,27],EOY:[15,22,30,34]},'2025-26':{SOY:[47,29,16,8],EOY:[22,25,26,27]}},'Grade 6':{'2024-25':{SOY:[26,24,28,21],EOY:[14,19,25,43]},'2025-26':{SOY:[29,26,29,15],EOY:[18,22,29,32]}},'Grade 7':{'2024-25':{SOY:[17,23,39,21],EOY:[20,22,19,40]},'2025-26':{SOY:[28,27,26,19],EOY:[8,18,29,44]}},'Grade 8':{'2024-25':{SOY:[19,33,33,15],EOY:[19,22,26,32]},'2025-26':{SOY:[24,21,36,19],EOY:[3,20,27,50]}}},Maths:{'Grade 2':{'2024-25':{SOY:[43,35,22,0],EOY:[25,30,45,0]},'2025-26':{SOY:[67,27,6,0],EOY:[26,35,39,0]}},'Grade 3':{'2024-25':{SOY:[33,30,37,0],EOY:[19,24,57,0]},'2025-26':{SOY:[54,27,18,0],EOY:[18,26,56,0]}},'Grade 4':{'2024-25':{SOY:[19,27,26,28],EOY:[17,16,30,38]},'2025-26':{SOY:[49,22,22,7],EOY:[22,19,31,28]}},'Grade 5':{'2024-25':{SOY:[17,26,27,30],EOY:[15,9,16,59]},'2025-26':{SOY:[35,27,23,16],EOY:[18,16,31,35]}},'Grade 6':{'2024-25':{SOY:[20,23,29,28],EOY:[12,15,26,47]},'2025-26':{SOY:[12,22,39,26],EOY:[10,10,36,44]}},'Grade 7':{'2024-25':{SOY:[10,20,32,38],EOY:[21,12,16,51]},'2025-26':{SOY:[22,20,31,27],EOY:[3,13,23,60]}},'Grade 8':{'2024-25':{SOY:[10,18,32,39],EOY:[19,20,22,39]},'2025-26':{SOY:[35,19,9,37],EOY:[3,7,23,67]}}}},'AMC - Model':{grades:['Grade 2','Grade 3','Grade 4','Grade 5'],English:{'Grade 2':{'2024-25':{SOY:[80,11,9,0],EOY:[37,33,31,0]},'2025-26':{SOY:[64,35,2,0],EOY:[36,47,17,0]}},'Grade 3':{'2024-25':{SOY:[22,20,58,0],EOY:[36,36,28,0]},'2025-26':{SOY:[60,29,11,0],EOY:[15,67,17,0]}},'Grade 4':{'2024-25':{SOY:[37,21,32,10],EOY:[44,17,18,22]},'2025-26':{SOY:[34,50,9,8],EOY:[24,41,21,13]}},'Grade 5':{'2024-25':{SOY:[34,27,36,4],EOY:[45,29,10,16]},'2025-26':{SOY:[24,36,19,21],EOY:[21,38,18,23]}}},Maths:{'Grade 2':{'2024-25':{SOY:[41,10,48,0],EOY:[28,17,55,0]},'2025-26':{SOY:[53,39,8,0],EOY:[34,21,45,0]}},'Grade 3':{'2024-25':{SOY:[29,11,61,0],EOY:[19,14,68,0]},'2025-26':{SOY:[48,37,15,0],EOY:[7,30,63,0]}},'Grade 4':{'2024-25':{SOY:[22,12,25,41],EOY:[17,3,33,47]},'2025-26':{SOY:[35,52,14,0],EOY:[5,11,23,60]}},'Grade 5':{'2024-25':{SOY:[31,13,31,24],EOY:[15,6,35,44]},'2025-26':{SOY:[13,38,38,13],EOY:[6,7,14,74]}}}},'AMC - Non - Model':{grades:['Grade 2','Grade 3','Grade 4','Grade 5'],English:{'Grade 2':{'2024-25':{SOY:[40,28,32,0],EOY:[32,26,42,0]},'2025-26':{SOY:[53,35,12,0],EOY:[29,47,24,0]}},'Grade 3':{'2024-25':{SOY:[32,22,46,0],EOY:[22,30,48,0]},'2025-26':{SOY:[48,38,14,0],EOY:[26,39,35,0]}},'Grade 4':{'2024-25':{SOY:[34,27,30,9],EOY:[36,22,16,27]},'2025-26':{SOY:[33,36,15,15],EOY:[19,36,21,23]}},'Grade 5':{'2024-25':{SOY:[23,21,41,14],EOY:[22,22,13,42]},'2025-26':{SOY:[30,32,13,25],EOY:[17,28,20,36]}}},Maths:{'Grade 2':{'2024-25':{SOY:[26,10,64,0],EOY:[14,10,77,0]},'2025-26':{SOY:[34,37,27,2],EOY:[23,18,59,0]}},'Grade 3':{'2024-25':{SOY:[16,12,72,0],EOY:[9,10,81,1]},'2025-26':{SOY:[30,36,33,0],EOY:[17,21,62,0]}},'Grade 4':{'2024-25':{SOY:[13,11,40,36],EOY:[9,9,33,50]},'2025-26':{SOY:[24,27,34,15],EOY:[13,14,20,53]}},'Grade 5':{'2024-25':{SOY:[8,11,29,52],EOY:[6,6,24,64]},'2025-26':{SOY:[21,27,31,20],EOY:[7,8,14,71]}}}},
 'MTAR':{grades:['Grade 2','Grade 3','Grade 4','Grade 5'],English:{'Grade 2':{'2024-25':{SOY:[100,0,0,0],EOY:[100,0,0,0]},'2025-26':{SOY:[79,21,0,0],EOY:[7,77,16,0]}},'Grade 3':{'2024-25':{SOY:[98,2,0,0],EOY:[97,3,0,0]},'2025-26':{SOY:[63,37,0,0],EOY:[2,36,61,0]}},'Grade 4':{'2024-25':{SOY:[75,24,2,0],EOY:[76,19,4,2]},'2025-26':{SOY:[34,66,0,0],EOY:[3,31,40,26]}},'Grade 5':{'2024-25':{SOY:[74,11,15,0],EOY:[53,44,3,0]},'2025-26':{SOY:[38,62,0,0],EOY:[0,15,58,27]}}}}};
 const verticals=Object.keys(ALL_DATA).filter(v=>v!=='HYD Govt - GP');
 const vShort={'HYD Govt - GP':'HYD Govt','Foundations':'Foundations','AMC - Model':'AMC Model','AMC - Non - Model':'AMC Non-Model','MTAR':'MTAR'};
@@ -1266,7 +1266,7 @@ let ljVertical = 'Foundations';
 let ljSubject = 'English';
 let ljGrade = 'Grade 2';
 let ljCmpGrade = 'Grade 2';
-let ljGradeCompare = false;
+let ljGradeCompare = true;
 
 /* ── RENDER LEVEL JUMP ────────────────────────────────────────────────── */
 function renderLevelJump() {
@@ -1441,85 +1441,102 @@ function renderLJGradeCompare(el, subjectData, grades, themeCol) {
   const lvlLabels = ['Level 1','Level 2','Level 3','Level 4'];
   const lvlColors = ['#E24B4A','#EF9F27','#3266ad','#1D9E75'];
 
-  let h = `<div style="background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;gap:24px;flex-wrap:wrap">
-    <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:1px;text-transform:uppercase">How to read</div>
+  // Legend
+  let h = `<div style="background:#f8f8f8;border:1px solid #e0e0e0;border-radius:12px;padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+    <div style="font-size:10px;font-weight:700;color:#777;letter-spacing:1px;text-transform:uppercase">How to read</div>
     <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
-      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#0D6B50;font-weight:600"><div style="width:16px;height:10px;border-radius:2px;background:#0D6B50"></div>↑ Jumped</div>
-      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#666;font-weight:600"><div style="width:16px;height:10px;border-radius:2px;background:#bbb"></div>→ Stayed</div>
-      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#E24B4A;font-weight:600"><div style="width:16px;height:10px;border-radius:2px;background:#E24B4A"></div>↓ Dropped</div>
-      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#6B4DAA;font-weight:600"><div style="width:16px;height:10px;border-radius:2px;background:#6B4DAA;opacity:0.8"></div>Jump depth</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#0D6B50;font-weight:700"><div style="width:16px;height:10px;border-radius:2px;background:#0D6B50"></div>↑ Jumped up</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#444;font-weight:700"><div style="width:16px;height:10px;border-radius:2px;background:#999"></div>→ Stayed</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#C0392B;font-weight:700"><div style="width:16px;height:10px;border-radius:2px;background:#C0392B"></div>↓ Dropped down</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#6B4DAA;font-weight:700"><div style="width:16px;height:10px;border-radius:2px;background:#6B4DAA;opacity:0.8"></div>Jump depth</div>
     </div>
-    <div style="margin-left:auto;font-size:10px;color:#ccc;font-style:italic">🏆 = highest % jumped in that level</div>
   </div>`;
 
-  h += '<div style="display:flex;flex-direction:column;gap:20px">';
+  // Column headers — Levels
+  h += `<div style="display:grid;grid-template-columns:72px repeat(${lvlKeys.length},1fr);gap:8px;margin-bottom:8px;align-items:stretch">
+    <div></div>`;
+  lvlKeys.forEach((lk,li) => {
+    h += `<div style="text-align:center;padding:10px 6px;background:${lvlColors[li]};border-radius:8px">
+      <div style="font-size:13px;font-weight:800;color:#fff;letter-spacing:.3px">${lvlLabels[li]}</div>
+    </div>`;
+  });
+  h += '</div>';
 
-  lvlKeys.forEach((lk, li) => {
-    const gradesWithData = grades.filter(g => subjectData[lk]?.[g]);
-    if(!gradesWithData.length) return;
+  // Rows — Grades
+  h += `<div style="display:flex;flex-direction:column;gap:6px">`;
+  grades.forEach((g,gi) => {
+    const rowBg = gi%2===0 ? '#fafafa' : '#fff';
+    h += `<div style="display:grid;grid-template-columns:72px repeat(${lvlKeys.length},1fr);gap:8px;align-items:stretch;background:${rowBg};border-radius:12px;border:1px solid #e8e8e8;overflow:hidden">`;
 
-    // Find best grade (highest % jumped for L1-L3, highest % stayed for L4)
-    let bestGrade = null, bestPct = -1;
-    gradesWithData.forEach(g => {
-      const {soy,eoy} = subjectData[lk][g];
-      const s = jumpStats(li,eoy);
-      const metric = lk==='L4' ? s.stayedPct : s.jumpedPct;
-      if(metric > bestPct) { bestPct = metric; bestGrade = g; }
-    });
+    // Grade label
+    h += `<div style="display:flex;align-items:center;justify-content:center;padding:12px 4px;border-right:3px solid ${themeCol};background:${themeCol}12">
+      <span style="font-size:16px;font-weight:800;color:${themeCol}">${g.replace('Grade ','G')}</span>
+    </div>`;
 
-    h += `<div style="background:#fff;border:1px solid #e0e0e0;border-radius:14px;padding:22px 24px;box-shadow:0 1px 4px rgba(0,0,0,.04)">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
-        <div style="width:10px;height:10px;border-radius:50%;background:${lvlColors[li]}"></div>
-        <div style="font-size:14px;font-weight:700;color:#1a1a1a">${lvlLabels[li]} → EOY Movement</div>
-        <div style="margin-left:auto;font-size:11px;color:#aaa">${gradesWithData.length} grades · all values in %</div>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(${Math.min(gradesWithData.length,4)},1fr);gap:12px">`;
-
-    gradesWithData.forEach(g => {
-      const {soy,eoy} = subjectData[lk][g];
+    // Level tiles
+    lvlKeys.forEach((lk, li) => {
+      const entry = subjectData[lk]?.[g];
+      if(!entry) {
+        h += `<div style="display:flex;align-items:center;justify-content:center;padding:16px;color:#ccc;font-size:11px;border-left:1px solid #eee">—</div>`;
+        return;
+      }
+      const {soy, eoy} = entry;
       const stats = jumpStats(li, eoy);
       const depth = jumpDepth(li, eoy);
-      const isBest = g === bestGrade;
 
-      h += `<div style="background:${isBest?'#F0FFF7':'#f8f8f8'};border:1px solid ${isBest?'#0D6B50':'#eee'};border-radius:10px;padding:14px;position:relative">
-        ${isBest?`<div style="position:absolute;top:8px;right:8px;font-size:12px" title="Highest % jumped">🏆</div>`:''}
-        <!-- Grade header -->
-        <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:10px">
-          <div style="font-size:15px;font-weight:800;color:${themeCol}">${g.replace('Grade ','G')}</div>
-          <div style="font-size:10px;color:#aaa">n=${soy}</div>
+      // Drop destinations — which levels did droppers go to
+      const dropDests = [];
+      if(stats.dropped > 0) {
+        for(let di = 0; di < li; di++) {
+          if(eoy[di] > 0) dropDests.push({label: `L${di+1}`, n: eoy[di], pct: soy>0?+(eoy[di]/soy*100).toFixed(0):0});
+        }
+      }
+
+      h += `<div style="padding:12px 10px;border-left:1px solid #eee">
+        <div style="font-size:9px;font-weight:600;color:#999;margin-bottom:6px;text-align:right">n=${soy}</div>
+        <!-- Stacked bar -->
+        <div style="display:flex;height:22px;border-radius:5px;overflow:hidden;margin-bottom:8px;background:#eee">
+          ${stats.jumped>0?`<div style="width:${stats.jumpedPct}%;background:#0D6B50;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;overflow:hidden">${stats.jumpedPct>=18?stats.jumpedPct+'%':''}</div>`:''}
+          <div style="width:${stats.stayedPct}%;background:#999;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;overflow:hidden">${stats.stayedPct>=18?stats.stayedPct+'%':''}</div>
+          ${stats.dropped>0?`<div style="width:${stats.droppedPct}%;background:#C0392B;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;overflow:hidden">${stats.droppedPct>=18?stats.droppedPct+'%':''}</div>`:''}
         </div>
-        <!-- Main stacked bar -->
-        <div style="display:flex;height:24px;border-radius:5px;overflow:hidden;margin-bottom:6px;box-shadow:0 1px 3px rgba(0,0,0,.08)">
-          ${stats.jumped>0?`<div style="width:${stats.jumpedPct}%;background:#0D6B50;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;overflow:hidden" title="Jumped: ${stats.jumpedPct}%">${stats.jumpedPct>=15?stats.jumpedPct+'%':''}</div>`:''}
-          <div style="width:${stats.stayedPct}%;background:#bbb;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;overflow:hidden" title="Stayed: ${stats.stayedPct}%">${stats.stayedPct>=15?stats.stayedPct+'%':''}</div>
-          ${stats.dropped>0?`<div style="width:${stats.droppedPct}%;background:#E24B4A;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;overflow:hidden" title="Dropped: ${stats.droppedPct}%">${stats.droppedPct>=15?stats.droppedPct+'%':''}</div>`:''}
-        </div>
-        <!-- % labels row -->
-        <div style="display:flex;justify-content:space-around;margin-bottom:10px">
-          ${stats.jumped>0?`<div style="text-align:center"><div style="font-size:14px;font-weight:800;color:#0D6B50;line-height:1">${stats.jumpedPct}%</div><div style="font-size:9px;color:#0D6B50;margin-top:1px">↑ jumped</div></div>`:''}
-          <div style="text-align:center"><div style="font-size:14px;font-weight:700;color:#888;line-height:1">${stats.stayedPct}%</div><div style="font-size:9px;color:#aaa;margin-top:1px">→ stayed</div></div>
-          ${stats.dropped>0?`<div style="text-align:center"><div style="font-size:14px;font-weight:700;color:#E24B4A;line-height:1">${stats.droppedPct}%</div><div style="font-size:9px;color:#E24B4A;margin-top:1px">↓ dropped</div></div>`:''}
+        <!-- % stats -->
+        <div style="display:flex;justify-content:space-around;margin-bottom:8px;gap:2px">
+          ${stats.jumped>0?`<div style="text-align:center"><div style="font-size:14px;font-weight:800;color:#0D6B50;line-height:1">${stats.jumpedPct}%</div><div style="font-size:8px;color:#0D6B50;font-weight:600;margin-top:2px">↑ jumped</div></div>`:''}
+          <div style="text-align:center"><div style="font-size:14px;font-weight:700;color:#555;line-height:1">${stats.stayedPct}%</div><div style="font-size:8px;color:#888;font-weight:600;margin-top:2px">→ stayed</div></div>
+          ${stats.dropped>0?`<div style="text-align:center"><div style="font-size:14px;font-weight:700;color:#C0392B;line-height:1">${stats.droppedPct}%</div><div style="font-size:8px;color:#C0392B;font-weight:600;margin-top:2px">↓ dropped</div></div>`:''}
         </div>`;
+
+      // Drop destinations
+      if(dropDests.length) {
+        h += `<div style="background:#FCEAEA;border-radius:5px;padding:5px 7px;margin-bottom:6px">
+          <div style="font-size:8px;font-weight:700;color:#C0392B;margin-bottom:3px">Dropped to:</div>`;
+        dropDests.forEach(d => {
+          h += `<div style="font-size:9px;color:#7f1d1d;font-weight:600">↓ ${d.label}: ${d.n} students (${d.pct}%)</div>`;
+        });
+        h += `</div>`;
+      }
 
       // Jump depth
       if(depth.length) {
-        h += `<div style="border-top:1px solid #eee;padding-top:8px">`;
+        h += `<div style="border-top:1px solid #eee;padding-top:6px">
+          <div style="font-size:8px;font-weight:700;color:#6B4DAA;margin-bottom:4px">Jump depth:</div>`;
         depth.forEach(d => {
           const pct = soy>0 ? +(d.n/soy*100).toFixed(1) : 0;
-          h += `<div style="display:flex;align-items:center;gap:5px;margin-bottom:4px">
-            <div style="font-size:9px;color:#888;width:28px;flex-shrink:0">${d.label}</div>
-            <div style="flex:1;height:10px;background:#e8e8e8;border-radius:3px;overflow:hidden">
-              <div style="width:${pct}%;height:100%;background:#6B4DAA;opacity:0.8;border-radius:3px"></div>
+          h += `<div style="display:flex;align-items:center;gap:4px;margin-bottom:3px">
+            <div style="font-size:9px;font-weight:600;color:#444;width:26px;flex-shrink:0">${d.label}</div>
+            <div style="flex:1;height:9px;background:#e8e8e8;border-radius:3px;overflow:hidden">
+              <div style="width:${pct}%;height:100%;background:#6B4DAA;opacity:0.75;border-radius:3px"></div>
             </div>
-            <div style="font-size:9px;font-weight:700;color:#6B4DAA;width:34px;text-align:right">${pct}%</div>
+            <div style="font-size:9px;font-weight:700;color:#6B4DAA;width:32px;text-align:right">${pct}%</div>
           </div>`;
         });
         h += '</div>';
       }
+
       h += '</div>';
     });
-
-    h += '</div></div>';
+    h += '</div>';
   });
 
   h += '</div>';
