@@ -1649,27 +1649,294 @@ function buildNav() {
   navEl.style.display = 'flex';
   navEl.style.justifyContent = 'center';
 
-  const tabs = [
-    {key:'SoyEoy', label:'SOY → EOY Comparison'},
-    {key:'LevelJump', label:'Level Jump'}
-  ];
+  // Summary button
+  const sumBtn = document.createElement('button');
+  sumBtn.textContent = showSummary ? '✕ Close Summary' : '⚡ Summary';
+  sumBtn.style.cssText = `margin-right:16px;padding:8px 16px;font-size:12px;font-weight:700;border:1.5px solid ${showSummary?'#333':'#6B4DAA'};border-radius:8px;background:${showSummary?'#333':'#F5F3FF'};color:${showSummary?'#fff':'#6B4DAA'};cursor:pointer;font-family:inherit`;
+  sumBtn.addEventListener('click', ()=>{showSummary=!showSummary;buildNav();render();});
+  navEl.appendChild(sumBtn);
 
-  tabs.forEach((tab,i) => {
-    const btn = document.createElement('button');
-    btn.textContent = tab.label;
-    btn.dataset.view = tab.key;
-    if(i===0) btn.style.borderRadius='8px 0 0 8px';
-    else if(i===tabs.length-1) btn.style.borderRadius='0 8px 8px 0';
-    btn.addEventListener('click', ()=>{
-      currentView = tab.key;
-      render();
+  if(!showSummary){
+    const tabs = [
+      {key:'SoyEoy', label:'SOY → EOY Comparison'},
+      {key:'LevelJump', label:'Level Jump'}
+    ];
+    tabs.forEach((tab,i) => {
+      const btn = document.createElement('button');
+      btn.textContent = tab.label;
+      btn.dataset.view = tab.key;
+      if(i===0) btn.style.borderRadius='8px 0 0 8px';
+      else if(i===tabs.length-1) btn.style.borderRadius='0 8px 8px 0';
+      btn.addEventListener('click', ()=>{ currentView = tab.key; render(); });
+      navEl.appendChild(btn);
     });
-    navEl.appendChild(btn);
+  }
+}
+
+let showSummary = false;
+
+function renderSummary() {
+  const el = document.getElementById('content');
+  try { renderSummaryInner(el); }
+  catch(e) { el.innerHTML=`<div style="padding:40px;color:red;font-family:monospace">Summary error: ${e.message}</div>`; }
+}
+
+function renderSummaryInner(el) {
+  const subjects = ['English','Maths'];
+  const year = '2025-26';
+
+  // ── COMPUTE METRICS ──
+  let l1ImpCount=0, l1TotalCount=0;        // L1 dropped SOY→EOY
+  let l34GainCount=0, l34TotalCount=0;     // L3+L4 grew SOY→EOY
+  let l1HighCount=0;                        // EOY L1 still > 50%
+  let bestMove={v:'',g:'',s:'',val:-99,soy:0,eoy:0};
+  let worstMove={v:'',g:'',s:'',val:99,soy:0,eoy:0};
+
+  // Per vertical summary for strip
+  const vSummary={};
+  verticals.forEach(v=>{vSummary[v]={engL1Imp:0,engTot:0,mathL1Imp:0,mathTot:0};});
+
+  verticals.forEach(v=>{
+    subjects.forEach(s=>{
+      if(!ALL_DATA[v][s])return;
+      Object.keys(ALL_DATA[v][s]).forEach(g=>{
+        const d=ALL_DATA[v][s][g]?.[year];
+        if(!d?.SOY||!d?.EOY)return;
+        const l1drop=d.SOY[0]-d.EOY[0];
+        const l34gain=(d.EOY[2]+d.EOY[3])-(d.SOY[2]+d.SOY[3]);
+        l1TotalCount++;
+        if(l1drop>0)l1ImpCount++;
+        l34TotalCount++;
+        if(l34gain>0)l34GainCount++;
+        if(d.EOY[0]>50)l1HighCount++;
+        if(l1drop>bestMove.val){bestMove={v,g,s,val:l1drop,soy:d.SOY[0],eoy:d.EOY[0]};}
+        if(l1drop<worstMove.val){worstMove={v,g,s,val:l1drop,soy:d.SOY[0],eoy:d.EOY[0]};}
+        if(s==='English'){vSummary[v].engTot++;if(l1drop>0)vSummary[v].engL1Imp++;}
+        else{vSummary[v].mathTot++;if(l1drop>0)vSummary[v].mathL1Imp++;}
+      });
+    });
   });
+
+  // Best vertical — most grades improved L1 in English
+  let bestV='',bestVScore=0;
+  verticals.forEach(v=>{
+    const score=vSummary[v].engTot>0?vSummary[v].engL1Imp/vSummary[v].engTot:0;
+    if(score>bestVScore){bestVScore=score;bestV=v;}
+  });
+
+  // Subject comparison
+  let engL1Imp=0,engL1Tot=0,mathL1Imp=0,mathL1Tot=0;
+  verticals.forEach(v=>{engL1Imp+=vSummary[v].engL1Imp;engL1Tot+=vSummary[v].engTot;mathL1Imp+=vSummary[v].mathL1Imp;mathL1Tot+=vSummary[v].mathTot;});
+
+  // ── HTML ──
+  let h=`<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">`;
+
+  // Header banner
+  h+=`<div style="background:linear-gradient(135deg,#0a1628 0%,#0d2137 50%,#0a3d2d 100%);border-radius:16px;padding:28px 32px;margin-bottom:20px;color:#fff;position:relative;overflow:hidden">
+    <div style="position:absolute;top:-40px;right:-40px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,0.03)"></div>
+    <div style="position:relative">
+      <div style="font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:6px">Student Data Analysis · Summary</div>
+      <div style="font-size:20px;font-weight:800;margin-bottom:20px">2025–26 · SOY → EOY Movement</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+        <div style="background:rgba(255,255,255,0.08);border-radius:10px;padding:14px;text-align:center;border:1px solid rgba(255,255,255,0.1)">
+          <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:4px">L1 dropped · G2–G5</div>
+          <div style="font-size:24px;font-weight:800;color:#4ade80">${l1ImpCount}<span style="font-size:14px;color:rgba(255,255,255,0.4)"> / ${l1TotalCount}</span></div>
+          <div style="font-size:9px;color:rgba(255,255,255,0.4);margin-top:2px">grade groups SOY→EOY</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.08);border-radius:10px;padding:14px;text-align:center;border:1px solid rgba(255,255,255,0.1)">
+          <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:4px">L3+L4 grew · G2–G5</div>
+          <div style="font-size:24px;font-weight:800;color:#4ade80">${l34GainCount}<span style="font-size:14px;color:rgba(255,255,255,0.4)"> / ${l34TotalCount}</span></div>
+          <div style="font-size:9px;color:rgba(255,255,255,0.4);margin-top:2px">grade groups SOY→EOY</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.08);border-radius:10px;padding:14px;text-align:center;border:1px solid rgba(255,255,255,0.1)">
+          <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:4px">English · L1 dropped</div>
+          <div style="font-size:24px;font-weight:800;color:#60a5fa">${engL1Imp}<span style="font-size:14px;color:rgba(255,255,255,0.4)"> / ${engL1Tot}</span></div>
+          <div style="font-size:9px;color:rgba(255,255,255,0.4);margin-top:2px">grade groups</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.08);border-radius:10px;padding:14px;text-align:center;border:1px solid rgba(255,255,255,0.1)">
+          <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:4px">Maths · L1 dropped</div>
+          <div style="font-size:24px;font-weight:800;color:#60a5fa">${mathL1Imp}<span style="font-size:14px;color:rgba(255,255,255,0.4)"> / ${mathL1Tot}</span></div>
+          <div style="font-size:9px;color:rgba(255,255,255,0.4);margin-top:2px">grade groups</div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  // 5 insight cards
+  const cards=[
+    // 1. Biggest L1 change
+    bestMove.v?{
+      bg:'linear-gradient(135deg,#E8F5EF,#d1fae5)',border:'#6ee7b7',
+      label:'Biggest L1 change · SOY→EOY',labelCol:'#059669',
+      big:`▼${bestMove.val}pp`,bigCol:'#0D6B50',
+      body:`Students in ${vShort[bestMove.v]}<br>${bestMove.g} · ${bestMove.s}`,bodyCol:'#065f46',
+      sub:`${bestMove.soy}% SOY → ${bestMove.eoy}% EOY`,subCol:'#34d399'
+    }:null,
+    // 2. L1 increased at EOY
+    worstMove.val<0?{
+      bg:'linear-gradient(135deg,#FEF2F2,#fee2e2)',border:'#fca5a5',
+      label:'L1 increased at EOY',labelCol:'#dc2626',
+      big:`▲${Math.abs(worstMove.val)}pp`,bigCol:'#991b1b',
+      body:`Students in ${vShort[worstMove.v]}<br>${worstMove.g} · ${worstMove.s}`,bodyCol:'#7f1d1d',
+      sub:`${worstMove.soy}% SOY → ${worstMove.eoy}% EOY`,subCol:'#fca5a5'
+    }:{
+      bg:'linear-gradient(135deg,#F0FFF4,#dcfce7)',border:'#86efac',
+      label:'L1 dropped in all grade groups',labelCol:'#16a34a',
+      big:'✓',bigCol:'#15803d',
+      body:`Every tracked grade group<br>ended the year with lower L1`,bodyCol:'#14532d',
+      sub:`Across all verticals · 2025-26`,subCol:'#4ade80'
+    },
+    // 3. EOY L1 still high
+    l1HighCount>0?{
+      bg:'linear-gradient(135deg,#FEF2F2,#fee2e2)',border:'#fca5a5',
+      label:'EOY L1 still above 50%',labelCol:'#dc2626',
+      big:`${l1HighCount}`,bigCol:'#991b1b',
+      body:`Grade groups where more than<br>half of students ended at L1`,bodyCol:'#7f1d1d',
+      sub:`Progress happening but base remains large`,subCol:'#fca5a5'
+    }:{
+      bg:'linear-gradient(135deg,#E8F5EF,#d1fae5)',border:'#6ee7b7',
+      label:'EOY L1 below 50% everywhere',labelCol:'#059669',
+      big:'✓',bigCol:'#0D6B50',
+      body:`No grade group ended with<br>more than half at L1`,bodyCol:'#065f46',
+      sub:`Across all verticals · 2025-26`,subCol:'#34d399'
+    },
+    // 4. Grade with most L3+L4 growth across all verticals
+    (()=>{
+      const gradeL34={};
+      verticals.forEach(v=>{
+        subjects.forEach(s=>{
+          if(!ALL_DATA[v][s])return;
+          Object.keys(ALL_DATA[v][s]).forEach(g=>{
+            const d=ALL_DATA[v][s][g]?.[year];
+            if(!d?.SOY||!d?.EOY)return;
+            if(!gradeL34[g])gradeL34[g]={gain:0,cnt:0,grew:0};
+            const gain=(d.EOY[2]+d.EOY[3])-(d.SOY[2]+d.SOY[3]);
+            gradeL34[g].gain+=gain;
+            gradeL34[g].cnt++;
+            if(gain>0)gradeL34[g].grew++;
+          });
+        });
+      });
+      let bestG='',bestGain=-99,bestGrew=0,bestCnt=0;
+      Object.keys(gradeL34).forEach(g=>{
+        if(gradeL34[g].gain>bestGain){bestGain=gradeL34[g].gain;bestG=g;bestGrew=gradeL34[g].grew;bestCnt=gradeL34[g].cnt;}
+      });
+      return bestG?{
+        bg:'linear-gradient(135deg,#E8F5EF,#d1fae5)',border:'#6ee7b7',
+        label:'Most L3+L4 growth · by grade',labelCol:'#059669',
+        big:bestG.replace('Grade ','G'),bigCol:'#0D6B50',
+        body:`${bestGrew}/${bestCnt} grade groups saw<br>L3+L4 grow SOY→EOY`,bodyCol:'#065f46',
+        sub:`Highest total L3+L4 gain across all verticals`,subCol:'#34d399'
+      }:null;
+    })(),
+  ].filter(Boolean);
+
+  h+=`<div style="display:grid;grid-template-columns:repeat(${Math.min(cards.length,3)},1fr);gap:14px;margin-bottom:20px">`;
+  cards.forEach(card=>{
+    h+=`<div style="background:${card.bg};border:1px solid ${card.border};border-radius:14px;padding:20px">
+      <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:${card.labelCol};margin-bottom:10px">${card.label}</div>
+      <div style="font-size:34px;font-weight:800;color:${card.bigCol};line-height:1;margin-bottom:8px">${card.big}</div>
+      <div style="font-size:13px;font-weight:600;color:${card.bodyCol};margin-bottom:6px;line-height:1.5">${card.body}</div>
+      <div style="font-size:10px;color:${card.subCol};margin-top:6px">${card.sub}</div>
+    </div>`;
+  });
+  h+=`</div>`;
+
+  // Vertical strip
+  h+=`<div style="background:#fff;border:1px solid #e0e0e0;border-radius:14px;padding:18px 20px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.04)">
+    <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">
+      <span>L1 change SOY→EOY · by vertical</span>
+      <span style="font-size:10px;font-weight:400;color:#aaa">2025-26 · all grades</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(${verticals.length},1fr);gap:10px">`;
+
+  verticals.forEach(v=>{
+    h+=`<div style="text-align:center">
+      <div style="font-size:11px;font-weight:800;color:#1a1a1a;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #f0f0f0">${vShort[v]}</div>`;
+    subjects.forEach(subj=>{
+      const subCol=subj==='English'?'#185FA5':'#0F6E56';
+      let imp=[],dec=[],tot=0;
+      if(ALL_DATA[v][subj]) Object.keys(ALL_DATA[v][subj]).forEach(g=>{
+        const d=ALL_DATA[v][subj][g]?.[year];
+        if(!d?.SOY||!d?.EOY)return;
+        tot++;const drop=d.SOY[0]-d.EOY[0];
+        if(drop>0)imp.push(g.replace('Grade ','G'));
+        else if(drop<0)dec.push(g.replace('Grade ','G'));
+      });
+      const fracCol=imp.length===tot&&tot>0?'#0D6B50':dec.length>imp.length?'#C0392B':'#555';
+      const bg=imp.length===tot&&tot>0?'#E8F5EF':dec.length>imp.length?'#FCEAEA':'#f5f5f5';
+      h+=`<div style="background:${bg};border-radius:6px;padding:8px 6px;margin-bottom:4px">
+        <div style="font-size:9px;font-weight:700;color:${subCol};margin-bottom:4px">${subj}</div>
+        <div style="font-size:18px;font-weight:800;color:${fracCol};line-height:1">${imp.length}<span style="font-size:11px;color:#aaa">/${tot}</span></div>
+        <div style="display:flex;gap:2px;flex-wrap:wrap;margin-top:4px">
+          ${imp.map(g=>`<span style="background:#0D6B50;color:#fff;font-size:7px;font-weight:700;padding:1px 4px;border-radius:2px">${g}</span>`).join('')}
+          ${dec.map(g=>`<span style="background:#C0392B;color:#fff;font-size:7px;font-weight:700;padding:1px 4px;border-radius:2px">${g}</span>`).join('')}
+        </div>
+      </div>`;
+    });
+    h+=`</div>`;
+  });
+  h+=`</div></div>`;
+
+  // Level Jump section
+  // Compute jump stats from JUMP_DATA
+  let topJumper={v:'',g:'',s:'',pct:0,n:0,soy:0};
+  let topMulti={v:'',g:'',s:'',pct:0,n:0,soy:0};
+  let topStayed={v:'',g:'',s:'',pct:0,n:0,soy:0};
+
+  Object.keys(JUMP_DATA).forEach(v=>{
+    subjects.forEach(s=>{
+      const sd=JUMP_DATA[v]?.[s];
+      if(!sd)return;
+      const grades=sd.grades||[];
+      grades.forEach(g=>{
+        const d=sd.L1?.[g];
+        if(!d||d.soy===0)return;
+        const jumped=d.eoy[1]+d.eoy[2]+d.eoy[3];
+        const multi=d.eoy[2]+d.eoy[3];
+        const stayed=d.eoy[0];
+        const jumpPct=Math.round(jumped/d.soy*100);
+        const multiPct=Math.round(multi/d.soy*100);
+        const stayPct=Math.round(stayed/d.soy*100);
+        if(jumpPct>topJumper.pct){topJumper={v,g,s,pct:jumpPct,n:jumped,soy:d.soy};}
+        if(multiPct>topMulti.pct){topMulti={v,g,s,pct:multiPct,n:multi,soy:d.soy};}
+        if(stayPct>topStayed.pct){topStayed={v,g,s,pct:stayPct,n:stayed,soy:d.soy};}
+      });
+    });
+  });
+
+  h+=`<div style="background:#fff;border:1px solid #e0e0e0;border-radius:14px;padding:20px;margin-top:16px;box-shadow:0 1px 4px rgba(0,0,0,.04)">
+    <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:16px;display:flex;align-items:center;gap:8px">
+      <span style="width:8px;height:8px;border-radius:50%;background:#6B4DAA;display:inline-block"></span>
+      Level Jump Highlights · Students who started at L1
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+      <div style="background:linear-gradient(135deg,#E8F5EF,#d1fae5);border:1px solid #6ee7b7;border-radius:12px;padding:16px">
+        <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#059669;margin-bottom:8px">Most students moved up from L1</div>
+        <div style="font-size:28px;font-weight:800;color:#0D6B50;line-height:1;margin-bottom:6px">${topJumper.pct}%</div>
+        <div style="font-size:12px;font-weight:600;color:#065f46;margin-bottom:4px;line-height:1.5">Students in ${vShort[topJumper.v]}<br>${topJumper.g} · ${topJumper.s}</div>
+        <div style="font-size:10px;color:#34d399;margin-top:6px">${topJumper.n} of ${topJumper.soy} L1 students moved up</div>
+      </div>
+      <div style="background:linear-gradient(135deg,#E8F5EF,#d1fae5);border:1px solid #6ee7b7;border-radius:12px;padding:16px">
+        <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#059669;margin-bottom:8px">Most multi-level jumpers from L1</div>
+        <div style="font-size:28px;font-weight:800;color:#0D6B50;line-height:1;margin-bottom:6px">${topMulti.pct}%</div>
+        <div style="font-size:12px;font-weight:600;color:#065f46;margin-bottom:4px;line-height:1.5">Students in ${vShort[topMulti.v]}<br>${topMulti.g} · ${topMulti.s}</div>
+        <div style="font-size:10px;color:#34d399;margin-top:6px">${topMulti.n} of ${topMulti.soy} jumped 2+ levels</div>
+      </div>
+      <div style="background:linear-gradient(135deg,#FEF2F2,#fee2e2);border:1px solid #fca5a5;border-radius:12px;padding:16px">
+        <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#dc2626;margin-bottom:8px">Most students stayed at L1</div>
+        <div style="font-size:28px;font-weight:800;color:#991b1b;line-height:1;margin-bottom:6px">${topStayed.pct}%</div>
+        <div style="font-size:12px;font-weight:600;color:#7f1d1d;margin-bottom:4px;line-height:1.5">Students in ${vShort[topStayed.v]}<br>${topStayed.g} · ${topStayed.s}</div>
+        <div style="font-size:10px;color:#fca5a5;margin-top:6px">${topStayed.n} of ${topStayed.soy} remained at L1 by EOY</div>
+      </div>
+    </div>
+  </div>`;
+  el.innerHTML=h;
 }
 
 function render() {
   updateNav();
+  if(showSummary){renderSummary();return;}
   if(currentView==='SoyEoy') renderSoyEoy();
   else if(currentView==='LevelJump') renderLevelJump();
 }
