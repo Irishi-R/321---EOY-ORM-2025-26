@@ -1261,12 +1261,13 @@ function jumpDepth(startLvl, eoy) {
 }
 
 /* ── LEVEL JUMP STATE ─────────────────────────────────────────────────── */
-let ljView = 'standalone'; // 'standalone' or 'compare'
+let ljView = 'allverticals'; // 'allverticals', 'standalone' or 'compare'
 let ljVertical = 'Foundations';
 let ljSubject = 'English';
 let ljGrade = 'Grade 2';
 let ljCmpGrade = 'Grade 2';
 let ljGradeCompare = true;
+let ljShowVerticals = false;
 
 /* ── RENDER LEVEL JUMP ────────────────────────────────────────────────── */
 function renderLevelJump() {
@@ -1274,14 +1275,141 @@ function renderLevelJump() {
   const el = document.getElementById('content');
 
   // Sub-tab toggle
-  let h = `<div style="display:flex;justify-content:center;margin-bottom:24px;gap:0">
-    <button onclick="ljView='standalone';renderLevelJump()" style="padding:10px 28px;font-size:13px;font-weight:600;border:1px solid #ccc;border-radius:8px 0 0 8px;cursor:pointer;font-family:inherit;${ljView==='standalone'?'background:#333;color:#fff;border-color:#333':'background:#f0f0f0;color:#666'}">Standalone</button>
-    <button onclick="ljView='compare';renderLevelJump()" style="padding:10px 28px;font-size:13px;font-weight:600;border:1px solid #ccc;border-left:none;border-radius:0 8px 8px 0;cursor:pointer;font-family:inherit;${ljView==='compare'?'background:#333;color:#fff;border-color:#333':'background:#f0f0f0;color:#666'}">Compare (English)</button>
+  let h = `<div style="display:flex;justify-content:center;align-items:center;margin-bottom:24px;gap:8px;flex-wrap:wrap">
+    <div style="display:flex;gap:0">
+      <button onclick="ljView='allverticals';renderLevelJump()" style="padding:10px 24px;font-size:13px;font-weight:600;border:1px solid #ccc;border-radius:${ljShowVerticals?'8px 0 0 8px':'8px'};cursor:pointer;font-family:inherit;${ljView==='allverticals'?'background:#6B4DAA;color:#fff;border-color:#6B4DAA':'background:#f0f0f0;color:#666'}">All Verticals</button>
+      ${ljShowVerticals?`
+      <button onclick="ljView='standalone';renderLevelJump()" style="padding:10px 24px;font-size:13px;font-weight:600;border:1px solid #ccc;border-left:none;cursor:pointer;font-family:inherit;${ljView==='standalone'?'background:#333;color:#fff;border-color:#333':'background:#f0f0f0;color:#666'}">Standalone</button>
+      <button onclick="ljView='compare';renderLevelJump()" style="padding:10px 24px;font-size:13px;font-weight:600;border:1px solid #ccc;border-left:none;border-radius:0 8px 8px 0;cursor:pointer;font-family:inherit;${ljView==='compare'?'background:#333;color:#fff;border-color:#333':'background:#f0f0f0;color:#666'}">Compare</button>`:''}
+    </div>
+    <button onclick="ljShowVerticals=!ljShowVerticals;if(!ljShowVerticals&&ljView!=='allverticals'){ljView='allverticals';}renderLevelJump()" style="padding:8px 14px;font-size:11px;font-weight:600;border:1px dashed #aaa;border-radius:8px;background:#fafafa;color:#888;cursor:pointer;font-family:inherit">${ljShowVerticals?'Hide Views ▲':'More Views ▾'}</button>
   </div>`;
   el.innerHTML = h + '<div id="lj-body"></div>';
 
-  if(ljView==='standalone') renderLJStandalone();
+  if(ljView==='allverticals') renderLJAllVerticals();
+  else if(ljView==='standalone') renderLJStandalone();
   else renderLJCompare();
+}
+
+function renderLJAllVerticals() {
+  const el = document.getElementById('lj-body');
+  const lvlKeys = ['L1','L2','L3','L4'];
+  const lvlLabels = ['Level 1','Level 2','Level 3','Level 4'];
+  const lvlColors = ['#E24B4A','#EF9F27','#3266ad','#1D9E75'];
+  const cmpVerticals = Object.keys(JUMP_DATA);
+  const vColors = {'Foundations':'#185FA5','AMC - Model':'#C47A1A','AMC - Non - Model':'#C0392B','MTAR':'#0F6E56'};
+  const vShortLJ = {'Foundations':'Found.','AMC - Model':'AMC-M','AMC - Non - Model':'AMC-NM','MTAR':'MTAR'};
+
+  // Subject toggle
+  let h = `<div style="display:flex;justify-content:center;gap:0;margin-bottom:20px">
+    ${['English','Maths'].map((s,i)=>{
+      const active=s===ljSubject;
+      const col=s==='English'?'#185FA5':'#0F6E56';
+      return `<button onclick="ljSubject='${s}';renderLJAllVerticals()" style="padding:9px 22px;font-size:12px;font-weight:600;border:1px solid #ccc;${i===0?'border-radius:8px 0 0 8px':'border-radius:0 8px 8px 0;border-left:none'};cursor:pointer;font-family:inherit;${active?`background:${col};color:#fff;border-color:${col}`:'background:#f0f0f0;color:#666'}">${s}</button>`;
+    }).join('')}
+  </div>`;
+
+  // Get common grades across all verticals for this subject
+  const gradeSet = new Set();
+  cmpVerticals.forEach(v=>{
+    const sd = JUMP_DATA[v]?.[ljSubject];
+    if(sd?.grades) sd.grades.forEach(g=>gradeSet.add(g));
+  });
+  const grades = ['Grade 2','Grade 3','Grade 4','Grade 5'].filter(g=>gradeSet.has(g));
+
+  // Legend
+  h += `<div style="background:#f8f8f8;border:1px solid #e0e0e0;border-radius:12px;padding:12px 20px;margin-bottom:16px;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+    <div style="font-size:10px;font-weight:700;color:#777;letter-spacing:1px;text-transform:uppercase">Verticals</div>
+    ${cmpVerticals.map(v=>`<div style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:${vColors[v]||'#555'}"><div style="width:10px;height:10px;border-radius:2px;background:${vColors[v]||'#555'}"></div>${vShortLJ[v]||v}</div>`).join('')}
+    <div style="width:1px;background:#ddd;height:16px"></div>
+    <div style="display:flex;gap:14px">
+      <div style="font-size:11px;font-weight:700;color:#0D6B50">↑ Jumped</div>
+      <div style="font-size:11px;font-weight:700;color:#555">→ Stayed</div>
+      <div style="font-size:11px;font-weight:700;color:#C0392B">↓ Dropped</div>
+    </div>
+  </div>`;
+
+  // Header row
+  h += `<div style="display:grid;grid-template-columns:72px repeat(${lvlKeys.length},1fr);gap:8px;margin-bottom:8px">
+    <div></div>`;
+  lvlKeys.forEach((lk,li)=>{
+    h += `<div style="text-align:center;padding:10px 6px;background:${lvlColors[li]};border-radius:8px">
+      <div style="font-size:13px;font-weight:800;color:#fff">${lvlLabels[li]}</div>
+    </div>`;
+  });
+  h += '</div>';
+
+  // Rows — grades
+  h += `<div style="display:flex;flex-direction:column;gap:6px">`;
+  grades.forEach((g,gi)=>{
+    const rowBg = gi%2===0?'#fafafa':'#fff';
+    h += `<div style="display:grid;grid-template-columns:72px repeat(${lvlKeys.length},1fr);gap:8px;background:${rowBg};border-radius:12px;border:1px solid #e8e8e8;overflow:hidden;align-items:stretch">`;
+
+    // Grade label
+    h += `<div style="display:flex;align-items:center;justify-content:center;padding:12px 4px;border-right:3px solid #6B4DAA;background:#6B4DAA12">
+      <span style="font-size:16px;font-weight:800;color:#6B4DAA">${g.replace('Grade ','G')}</span>
+    </div>`;
+
+    // Level columns
+    lvlKeys.forEach((lk,li)=>{
+      h += `<div style="padding:10px 8px;border-left:1px solid #eee;display:flex;flex-direction:column;gap:6px">`;
+
+      cmpVerticals.forEach(v=>{
+        const sd = JUMP_DATA[v]?.[ljSubject];
+        const entry = sd?.[lk]?.[g];
+        if(!entry){
+          h += `<div style="background:#f5f5f5;border-radius:6px;padding:6px 8px;text-align:center;color:#ccc;font-size:9px;flex:1;display:flex;align-items:center;justify-content:center">${vShortLJ[v]||v}: —</div>`;
+          return;
+        }
+        const {soy, eoy} = entry;
+        const stats = jumpStats(li,eoy);
+        const depth = jumpDepth(li,eoy);
+        const vCol = vColors[v]||'#555';
+
+        // Drop destinations
+        const dropDests = [];
+        if(stats.dropped>0){
+          for(let di=0;di<li;di++){
+            if(eoy[di]>0) dropDests.push({label:`L${di+1}`,n:eoy[di],pct:soy>0?+(eoy[di]/soy*100).toFixed(0):0});
+          }
+        }
+
+        h += `<div style="background:#fff;border:1px solid ${vCol}30;border-left:3px solid ${vCol};border-radius:6px;padding:8px 10px;display:flex;flex-direction:column;flex:1">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+            <div style="font-size:9px;font-weight:800;color:${vCol}">${vShortLJ[v]||v}</div>
+            <div style="font-size:9px;color:#aaa">n=${soy}</div>
+          </div>
+          <!-- Bar -->
+          <div style="display:flex;height:14px;border-radius:3px;overflow:hidden;margin-bottom:5px;background:#eee">
+            ${stats.jumped>0?`<div style="width:${stats.jumpedPct}%;background:#0D6B50"></div>`:''}
+            <div style="width:${stats.stayedPct}%;background:#999"></div>
+            ${stats.dropped>0?`<div style="width:${stats.droppedPct}%;background:#C0392B"></div>`:''}
+          </div>
+          <!-- Stats -->
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            ${stats.jumped>0?`<span style="font-size:9px;font-weight:700;color:#0D6B50">↑${stats.jumpedPct}%</span>`:''}
+            <span style="font-size:9px;font-weight:600;color:#666">→${stats.stayedPct}%</span>
+            ${stats.dropped>0?`<span style="font-size:9px;font-weight:700;color:#C0392B">↓${stats.droppedPct}%</span>`:''}
+          </div>
+          ${dropDests.length?`<div style="margin-top:4px;font-size:8px;color:#C0392B;font-weight:600">${dropDests.map(d=>`↓${d.label}: ${d.n} (${d.pct}%)`).join(' · ')}</div>`:''}
+          ${depth.length?`<div style="border-top:1px solid #eee;margin-top:5px;padding-top:5px">
+            <div style="font-size:8px;font-weight:700;color:#6B4DAA;margin-bottom:3px">Jump depth:</div>
+            ${depth.map(d=>{const pct=soy>0?+(d.n/soy*100).toFixed(1):0;return `<div style="display:flex;align-items:center;gap:3px;margin-bottom:2px">
+              <div style="font-size:8px;font-weight:600;color:#444;width:22px;flex-shrink:0">${d.label}</div>
+              <div style="flex:1;height:7px;background:#e8e8e8;border-radius:2px;overflow:hidden"><div style="width:${pct}%;height:100%;background:#6B4DAA;opacity:0.75;border-radius:2px"></div></div>
+              <div style="font-size:8px;font-weight:700;color:#6B4DAA;width:46px;text-align:right">${d.n} (${pct}%)</div>
+            </div>`;}).join('')}
+          </div>`:''}
+        </div>`;
+      });
+
+      h += `</div>`;
+    });
+    h += '</div>';
+  });
+
+  h += '</div>';
+  el.innerHTML = h;
 }
 
 function renderLJStandalone() {
@@ -1299,15 +1427,17 @@ function renderLJStandalone() {
   // ── Build full nav HTML ──
   let h = '';
 
-  // Vertical toggle
-  h += '<div style="display:flex;justify-content:center;flex-wrap:wrap;gap:0;margin-bottom:16px">';
-  verticals.forEach((v,i) => {
-    const active = v===ljVertical;
-    const first=i===0, last=i===verticals.length-1;
-    h += `<button onclick="ljVertical='${v}';ljGradeCompare=false;ljGrade=JUMP_DATA['${v}'][ljSubject]?.grades[0]||'Grade 2';renderLJStandalone()"
-      style="padding:9px 18px;font-size:12px;font-weight:600;border:1px solid #ccc;${first?'border-radius:8px 0 0 8px':last?'border-radius:0 8px 8px 0':'border-radius:0'};${i>0?'border-left:none':''};cursor:pointer;font-family:inherit;${active?'background:#333;color:#fff;border-color:#333':'background:#f0f0f0;color:#666'}">${v}</button>`;
-  });
-  h += '</div>';
+  // Vertical toggle — hidden by default
+  if(ljShowVerticals) {
+    h += '<div style="display:flex;justify-content:center;flex-wrap:wrap;gap:0;margin-bottom:16px">';
+    verticals.forEach((v,i) => {
+      const active = v===ljVertical;
+      const first=i===0, last=i===verticals.length-1;
+      h += `<button onclick="ljVertical='${v}';ljGradeCompare=false;ljGrade=JUMP_DATA['${v}'][ljSubject]?.grades[0]||'Grade 2';renderLJStandalone()"
+        style="padding:9px 18px;font-size:12px;font-weight:600;border:1px solid #ccc;${first?'border-radius:8px 0 0 8px':last?'border-radius:0 8px 8px 0':'border-radius:0'};${i>0?'border-left:none':''};cursor:pointer;font-family:inherit;${active?'background:#333;color:#fff;border-color:#333':'background:#f0f0f0;color:#666'}">${v}</button>`;
+    });
+    h += '</div>';
+  }
 
   // Subject toggle (Foundations only)
   if(hasMaths) {
@@ -1475,6 +1605,13 @@ function renderLJGradeCompare(el, subjectData, grades, themeCol) {
 
     // Level tiles
     lvlKeys.forEach((lk, li) => {
+      // L4 doesn't exist for G2 and G3
+      if(lk==='L4' && (g==='Grade 2'||g==='Grade 3')) {
+        h += `<div style="padding:10px 8px;border-left:1px solid #eee;display:flex;align-items:center;justify-content:center;min-height:120px">
+          <span style="font-size:10px;color:#ddd;font-style:italic">N/A</span>
+        </div>`;
+        return;
+      }
       const entry = subjectData[lk]?.[g];
       if(!entry) {
         h += `<div style="display:flex;align-items:center;justify-content:center;padding:16px;color:#ccc;font-size:11px;border-left:1px solid #eee">—</div>`;
