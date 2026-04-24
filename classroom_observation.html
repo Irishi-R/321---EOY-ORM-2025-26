@@ -65,9 +65,9 @@ body{font-family:'Outfit',-apple-system,sans-serif;background:#F7F5F0;color:#111
     <p>Observation data across verticals · April 2026</p>
   </div>
   <div class="main-tabs">
-    <button class="main-tab active" onclick="switchTab('soy-eoy')">SOY → EOY 2025-26</button>
+    <button class="main-tab active" onclick="switchTab('yoy')">2024-25 vs 2025-26</button>
+    <button class="main-tab" onclick="switchTab('soy-eoy')">SOY → EOY 2025-26</button>
     <button class="main-tab" onclick="switchTab('overall')">Overall 2025-26</button>
-    <button class="main-tab disabled">2024-25 vs 2025-26</button>
   </div>
   <div id="tab-content"></div>
 </div>
@@ -152,7 +152,7 @@ const COMMON_MAP=[
     map:{'HYD Govt - GP':{metric:'Errors'},'Jamnagar':{metric:'Errors'},'AMC - Model':{metric:'Content Error'},'AMC - Non-Model':{metric:'Content Error'}}}
 ];
 
-let currentTab='soy-eoy';
+let currentTab='yoy';
 let currentSoyV='LCPS';
 let currentOverallV='LCPS';
 
@@ -235,13 +235,109 @@ function genCmpOverallIns(){
   return ins.slice(0,6);
 }
 
+/* ── 2024-25 vs 2025-26 DATA ─────────────────────────────────────────── */
+const YOY_DATA = {
+  'LCPS': {
+    'CFU':            { '2024-25': [93.2, 6.8],         '2025-26': [95.4, 4.6],      options: ['Yes','No'] },
+    'Practice Time':  { '2024-25': [55, 38.1, 7],       '2025-26': [33, 31, 36],     options: ['Yes','Yes, but to some students','No'] },
+    'Students on Task':{ '2024-25': [53.4, 34.5, 12.2], '2025-26': [37.5, 54.4, 8], options: ['More than 75%','50–75%','Less than 50%'] }
+  },
+  'HYD Govt - GP': {
+    'CFU':            { '2024-25': [74.5, 25.5],              '2025-26': [88.1, 11.9],        options: ['Yes','No'] },
+    'Practice Time':  { '2024-25': [39.2, 43.1, 15.7, 2],    '2025-26': [35.7, 60.1, 4.2],   options: ['Yes','Yes, but to some students','No','No Opportunity'] },
+    'Students on Task':{ '2024-25': [43.1, 37.3, 19.6],      '2025-26': [30.8, 61.5, 7.7],   options: ['More than 75%','50–75%','Less than 50%'] }
+  },
+  'Jamnagar': {
+    'CFU':            { '2024-25': [51.9, 48.1],         '2025-26': [63.8, 36.2],      options: ['Yes','No'] },
+    'Practice Time':  { '2024-25': [11.1, 7.4, 81.5],   '2025-26': [60.1, 35.7, 4.2], options: ['Yes','Yes, but to some students','No Opportunity'] },
+    'Students on Task':{ '2024-25': [3.7, 66.7, 29.6],  '2025-26': [4.3, 57.4, 38.3], options: ['More than 75%','50–75%','Less than 50%'] }
+  },
+  'AMC - Model': {
+    'CFU':            { '2024-25': [69.2, 30.8],          '2025-26': [64.7, 35.3],       options: ['Yes','No'] },
+    'Practice Time':  { '2024-25': [15.4, 46.2, 38.5],   '2025-26': [31.4, 19.6, 49],   options: ['Yes','Yes, but to some students','No'] },
+    'Students on Task':{ '2024-25': [38.5, 7.7, 53.9],   '2025-26': [37.3, 29.4, 33.3], options: ['More than 75%','50–75%','Less than 50%'] }
+  },
+  'AMC - Non-Model': {
+    'CFU':            { '2024-25': [77.3, 22.7],               '2025-26': [69.4, 30.6],        options: ['Yes','No'] },
+    'Practice Time':  { '2024-25': [40.9, 27.3, 22.7, 9.1],   '2025-26': [28.6, 8.2, 63.3],   options: ['Yes','Yes, but to some students','No','No Opportunity'] },
+    'Students on Task':{ '2024-25': [22.7, 31.8, 45.5],       '2025-26': [29.2, 43.8, 27.1],  options: ['More than 75%','50–75%','Less than 50%'] }
+  }
+};
+
+function renderYoY() {
+  const el = document.getElementById('tab-content');
+  const verticals = Object.keys(YOY_DATA);
+  const metrics = ['CFU', 'Practice Time', 'Students on Task'];
+
+  let h = `<div style="display:flex;flex-direction:column;gap:28px">`;
+
+  metrics.forEach(metric => {
+    h += `<div class="metric-card">
+      <div style="margin-bottom:18px;display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div class="metric-card-title" style="font-size:15px;margin-bottom:2px">${metric}</div>
+          <div style="font-size:10px;color:#bbb;display:flex;gap:14px;margin-top:4px">
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:24px;height:3px;background:#888;display:inline-block;border-radius:2px;opacity:.5"></span>2024–25</span>
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:24px;height:3px;background:#333;display:inline-block;border-radius:2px"></span>2025–26</span>
+          </div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(${verticals.length},1fr);gap:14px">`;
+
+    verticals.forEach(v => {
+      const d = YOY_DATA[v]?.[metric];
+      if (!d) { h += `<div></div>`; return; }
+      const col = V_COLORS[v];
+      const pos24 = d['2024-25'][0];
+      const pos25 = d['2025-26'][0];
+      const diff = +(pos25 - pos24).toFixed(1);
+      const diffCol = diff > 1 ? '#0D6B50' : diff < -1 ? '#C0392B' : '#888';
+      const diffArrow = diff > 1 ? '▲' : diff < -1 ? '▼' : '—';
+
+      h += `<div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div style="font-size:11px;font-weight:700;color:${col}">${v.replace('AMC - ','AMC ')}</div>
+          <span style="font-size:10px;font-weight:700;color:${diffCol}">${diff !== 0 ? diffArrow + Math.abs(diff) + '%' : '—'}</span>
+        </div>
+        <div style="margin-bottom:8px">
+          <div style="font-size:9px;color:#aaa;margin-bottom:3px;font-weight:600">2024–25</div>
+          <div class="bar-track" style="height:22px;opacity:0.65">`;
+      d['2024-25'].forEach((val, i) => {
+        if (!val) return;
+        const show = val >= 8;
+        h += `<div class="bar-seg${show ? '' : ' tiny'}" style="width:${val}%;background:${SLOT_COLORS[i]||SLOT_COLORS[2]}" title="${d.options[i]}: ${val}%">${show ? val + '%' : ''}</div>`;
+      });
+      h += `</div></div>
+        <div>
+          <div style="font-size:9px;color:#aaa;margin-bottom:3px;font-weight:600">2025–26</div>
+          <div class="bar-track" style="height:22px">`;
+      d['2025-26'].forEach((val, i) => {
+        if (!val) return;
+        const show = val >= 8;
+        h += `<div class="bar-seg${show ? '' : ' tiny'}" style="width:${val}%;background:${SLOT_COLORS[i]||SLOT_COLORS[2]}" title="${d.options[i]}: ${val}%">${show ? val + '%' : ''}</div>`;
+      });
+      h += `</div></div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px">`;
+      d.options.forEach((opt, i) => {
+        h += `<div style="display:flex;align-items:center;gap:3px;font-size:9px;color:#888"><div style="width:7px;height:7px;border-radius:2px;background:${SLOT_COLORS[i]||SLOT_COLORS[2]}"></div>${opt}</div>`;
+      });
+      h += `</div></div>`;
+    });
+    h += `</div></div>`;
+  });
+
+  h += `</div>`;
+  el.innerHTML = h;
+}
+
 /* ── TAB SWITCH ─────────────────────────────────────────────────────── */
 function switchTab(tab){
   currentTab=tab;
   document.querySelectorAll('.main-tab').forEach((t,i)=>{
-    t.classList.toggle('active',(i===0&&tab==='soy-eoy')||(i===1&&tab==='overall'));
+    t.classList.toggle('active',(i===0&&tab==='yoy')||(i===1&&tab==='soy-eoy')||(i===2&&tab==='overall'));
   });
-  if(tab==='soy-eoy')renderSoyEoy();
+  if(tab==='yoy')renderYoY();
+  else if(tab==='soy-eoy')renderSoyEoy();
   else if(tab==='overall')renderOverall();
 }
 
@@ -421,7 +517,7 @@ function paintOverallCmp(el){
 }
 
 /* ── INIT ───────────────────────────────────────────────────────────── */
-renderSoyEoy();
+renderYoY();
 </script>
 </body>
 </html>
