@@ -1352,57 +1352,50 @@ function renderLJAllVerticals() {
 
     // Level columns
     lvlKeys.forEach((lk,li)=>{
+      // L4 N/A for G2 and G3
+      if(lk==='L4'&&(g==='Grade 2'||g==='Grade 3')){
+        h+=`<div style="padding:10px 8px;border-left:1px solid #eee;display:flex;flex-direction:column;gap:6px">
+          ${cmpVerticals.map(()=>`<div style="height:200px;background:#f8f8f8;border-radius:8px;border:1px solid #eee;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:11px;font-style:italic">N/A</div>`).join('')}
+        </div>`;
+        return;
+      }
       h += `<div style="padding:10px 8px;border-left:1px solid #eee;display:flex;flex-direction:column;gap:6px">`;
-
       cmpVerticals.forEach(v=>{
         const sd = JUMP_DATA[v]?.[ljSubject];
         const entry = sd?.[lk]?.[g];
         if(!entry){
-          h += `<div style="background:#f5f5f5;border-radius:6px;padding:6px 8px;text-align:center;color:#ccc;font-size:9px;flex:1;display:flex;align-items:center;justify-content:center">${vShortLJ[v]||v}: —</div>`;
+          h += `<div style="height:200px;background:#f5f5f5;border-radius:8px;border:1px solid #eee;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:11px;font-weight:600">${vShortLJ[v]||v}: —</div>`;
           return;
         }
         const {soy, eoy} = entry;
         const stats = jumpStats(li,eoy);
         const depth = jumpDepth(li,eoy);
         const vCol = vColors[v]||'#555';
-
-        // Drop destinations
         const dropDests = [];
         if(stats.dropped>0){
           for(let di=0;di<li;di++){
             if(eoy[di]>0) dropDests.push({label:`L${di+1}`,n:eoy[di],pct:soy>0?+(eoy[di]/soy*100).toFixed(0):0});
           }
         }
-
-        h += `<div style="background:#fff;border:1px solid ${vCol}30;border-left:3px solid ${vCol};border-radius:6px;padding:8px 10px;display:flex;flex-direction:column;flex:1">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
-            <div style="font-size:9px;font-weight:800;color:${vCol}">${vShortLJ[v]||v}</div>
-            <div style="font-size:9px;color:#aaa">n=${soy}</div>
+        h += `<div style="height:200px;background:#fff;border:1px solid ${vCol}25;border-left:4px solid ${vCol};border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;box-sizing:border-box;overflow:hidden">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-shrink:0">
+            <div style="font-size:12px;font-weight:800;color:${vCol}">${vShortLJ[v]||v}</div>
+            <div style="font-size:10px;font-weight:700;color:#777;background:#f5f5f5;padding:2px 6px;border-radius:4px">n=${soy}</div>
           </div>
-          <!-- Bar -->
-          <div style="display:flex;height:14px;border-radius:3px;overflow:hidden;margin-bottom:5px;background:#eee">
-            ${stats.jumped>0?`<div style="width:${stats.jumpedPct}%;background:#0D6B50"></div>`:''}
-            <div style="width:${stats.stayedPct}%;background:#999"></div>
-            ${stats.dropped>0?`<div style="width:${stats.droppedPct}%;background:#C0392B"></div>`:''}
+          <div style="display:flex;height:20px;border-radius:4px;overflow:hidden;margin-bottom:7px;background:#eee;flex-shrink:0">
+            ${stats.jumped>0?`<div style="width:${stats.jumpedPct}%;background:#0D6B50;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff">${stats.jumpedPct>=22?stats.jumpedPct+'%':''}</div>`:''}
+            <div style="width:${stats.stayedPct}%;background:#999;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff">${stats.stayedPct>=22?stats.stayedPct+'%':''}</div>
+            ${stats.dropped>0?`<div style="width:${stats.droppedPct}%;background:#C0392B;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff">${stats.droppedPct>=22?stats.droppedPct+'%':''}</div>`:''}
           </div>
-          <!-- Stats -->
-          <div style="display:flex;gap:6px;flex-wrap:wrap">
-            ${stats.jumped>0?`<span style="font-size:9px;font-weight:700;color:#0D6B50">↑${stats.jumpedPct}%</span>`:''}
-            <span style="font-size:9px;font-weight:600;color:#666">→${stats.stayedPct}%</span>
-            ${stats.dropped>0?`<span style="font-size:9px;font-weight:700;color:#C0392B">↓${stats.droppedPct}%</span>`:''}
+          <div style="display:flex;gap:10px;flex-shrink:0;margin-bottom:6px">
+            ${stats.jumped>0?`<div style="text-align:center"><div style="font-size:15px;font-weight:800;color:#0D6B50;line-height:1">${stats.jumpedPct}%</div><div style="font-size:9px;color:#0D6B50;font-weight:700;margin-top:2px">↑ jumped</div></div>`:''}
+            <div style="text-align:center"><div style="font-size:15px;font-weight:700;color:#444;line-height:1">${stats.stayedPct}%</div><div style="font-size:9px;color:#777;font-weight:700;margin-top:2px">→ stayed</div></div>
+            ${stats.dropped>0?`<div style="text-align:center"><div style="font-size:15px;font-weight:700;color:#C0392B;line-height:1">${stats.droppedPct}%</div><div style="font-size:9px;color:#C0392B;font-weight:700;margin-top:2px">↓ dropped</div></div>`:''}
           </div>
-          ${dropDests.length?`<div style="margin-top:4px;font-size:8px;color:#C0392B;font-weight:600">${dropDests.map(d=>`↓${d.label}: ${d.n} (${d.pct}%)`).join(' · ')}</div>`:''}
-          ${depth.length?`<div style="border-top:1px solid #eee;margin-top:5px;padding-top:5px">
-            <div style="font-size:8px;font-weight:700;color:#6B4DAA;margin-bottom:3px">Jump depth:</div>
-            ${depth.map(d=>{const pct=soy>0?+(d.n/soy*100).toFixed(1):0;return `<div style="display:flex;align-items:center;gap:3px;margin-bottom:2px">
-              <div style="font-size:8px;font-weight:600;color:#444;width:22px;flex-shrink:0">${d.label}</div>
-              <div style="flex:1;height:7px;background:#e8e8e8;border-radius:2px;overflow:hidden"><div style="width:${pct}%;height:100%;background:#6B4DAA;opacity:0.75;border-radius:2px"></div></div>
-              <div style="font-size:8px;font-weight:700;color:#6B4DAA;width:46px;text-align:right">${d.n} (${pct}%)</div>
-            </div>`;}).join('')}
-          </div>`:''}
+          ${dropDests.length?`<div style="background:#FEF2F2;border-radius:4px;padding:3px 7px;margin-bottom:5px;flex-shrink:0"><span style="font-size:9px;font-weight:700;color:#C0392B">${dropDests.map(d=>`↓${d.label}: ${d.n} (${d.pct}%)`).join(' · ')}</span></div>`:''}
+          ${depth.length?`<div style="flex:1;overflow:hidden">${depth.map(d=>{const pct=soy>0?+(d.n/soy*100).toFixed(1):0;return `<div style="display:flex;align-items:center;gap:4px;margin-bottom:3px"><div style="font-size:10px;font-weight:700;color:#6B4DAA;width:24px;flex-shrink:0">${d.label}</div><div style="flex:1;height:8px;background:#e8e8e8;border-radius:2px;overflow:hidden"><div style="width:${pct}%;height:100%;background:#6B4DAA;opacity:0.8;border-radius:2px"></div></div><div style="font-size:10px;font-weight:700;color:#6B4DAA;width:58px;text-align:right;flex-shrink:0">${d.n} (${pct}%)</div></div>`;}).join('')}</div>`:''}
         </div>`;
       });
-
       h += `</div>`;
     });
     h += '</div>';
