@@ -1296,7 +1296,8 @@ function renderLJAllVerticals() {
   const lvlKeys = ['L1','L2','L3','L4'];
   const lvlLabels = ['Level 1','Level 2','Level 3','Level 4'];
   const lvlColors = ['#E24B4A','#EF9F27','#3266ad','#1D9E75'];
-  const cmpVerticals = Object.keys(JUMP_DATA);
+  // Only show verticals that have data for selected subject
+  const cmpVerticals = Object.keys(JUMP_DATA).filter(v => JUMP_DATA[v]?.[ljSubject]);
   const vColors = {'Foundations':'#185FA5','AMC - Model':'#C47A1A','AMC - Non - Model':'#C0392B','MTAR':'#0F6E56'};
   const vShortLJ = {'Foundations':'Found.','AMC - Model':'AMC-M','AMC - Non - Model':'AMC-NM','MTAR':'MTAR'};
 
@@ -1383,9 +1384,9 @@ function renderLJAllVerticals() {
             <div style="font-size:10px;font-weight:700;color:#777;background:#f5f5f5;padding:2px 6px;border-radius:4px">n=${soy}</div>
           </div>
           <div style="display:flex;height:20px;border-radius:4px;overflow:hidden;margin-bottom:7px;background:#eee;flex-shrink:0">
-            ${stats.jumped>0?`<div style="width:${stats.jumpedPct}%;background:#0D6B50;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff">${stats.jumpedPct>=22?stats.jumpedPct+'%':''}</div>`:''}
-            <div style="width:${stats.stayedPct}%;background:#999;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff">${stats.stayedPct>=22?stats.stayedPct+'%':''}</div>
-            ${stats.dropped>0?`<div style="width:${stats.droppedPct}%;background:#C0392B;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff">${stats.droppedPct>=22?stats.droppedPct+'%':''}</div>`:''}
+            ${stats.jumped>0?`<div style="width:${stats.jumpedPct}%;background:#0D6B50;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;cursor:default" title="↑ Jumped up: ${stats.jumpedPct}% (${stats.jumped} students)">${stats.jumpedPct>=22?stats.jumpedPct+'%':''}</div>`:''}
+            <div style="width:${stats.stayedPct}%;background:#999;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;cursor:default" title="→ Stayed: ${stats.stayedPct}% (${stats.stayed} students)">${stats.stayedPct>=22?stats.stayedPct+'%':''}</div>
+            ${stats.dropped>0?`<div style="width:${stats.droppedPct}%;background:#C0392B;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;cursor:default" title="↓ Dropped: ${stats.droppedPct}% (${stats.dropped} students)">${stats.droppedPct>=22?stats.droppedPct+'%':''}</div>`:''}
           </div>
           <div style="display:flex;gap:10px;flex-shrink:0;margin-bottom:6px">
             ${stats.jumped>0?`<div style="text-align:center"><div style="font-size:15px;font-weight:800;color:#0D6B50;line-height:1">${stats.jumpedPct}%</div><div style="font-size:9px;color:#0D6B50;font-weight:700;margin-top:2px">↑ jumped</div></div>`:''}
@@ -1393,7 +1394,7 @@ function renderLJAllVerticals() {
             ${stats.dropped>0?`<div style="text-align:center"><div style="font-size:15px;font-weight:700;color:#C0392B;line-height:1">${stats.droppedPct}%</div><div style="font-size:9px;color:#C0392B;font-weight:700;margin-top:2px">↓ dropped</div></div>`:''}
           </div>
           ${dropDests.length?`<div style="background:#FEF2F2;border-radius:4px;padding:3px 7px;margin-bottom:5px;flex-shrink:0"><span style="font-size:9px;font-weight:700;color:#C0392B">${dropDests.map(d=>`↓${d.label}: ${d.n} (${d.pct}%)`).join(' · ')}</span></div>`:''}
-          ${depth.length?`<div style="flex:1;overflow:hidden">${depth.map(d=>{const pct=soy>0?+(d.n/soy*100).toFixed(1):0;return `<div style="display:flex;align-items:center;gap:4px;margin-bottom:3px"><div style="font-size:10px;font-weight:700;color:#6B4DAA;width:24px;flex-shrink:0">${d.label}</div><div style="flex:1;height:8px;background:#e8e8e8;border-radius:2px;overflow:hidden"><div style="width:${pct}%;height:100%;background:#6B4DAA;opacity:0.8;border-radius:2px"></div></div><div style="font-size:10px;font-weight:700;color:#6B4DAA;width:58px;text-align:right;flex-shrink:0">${d.n} (${pct}%)</div></div>`;}).join('')}</div>`:''}
+          ${depth.length?`<div style="flex:1;overflow:hidden">${depth.map(d=>{const pct=soy>0?+(d.n/soy*100).toFixed(1):0;return `<div style="display:flex;align-items:center;gap:4px;margin-bottom:3px"><div style="font-size:10px;font-weight:700;color:#6B4DAA;width:24px;flex-shrink:0">${d.label}</div><div style="flex:1;height:8px;background:#e8e8e8;border-radius:2px;overflow:hidden" title="${d.label}: ${d.n} students (${pct}%)"><div style="width:${pct}%;height:100%;background:#6B4DAA;opacity:0.8;border-radius:2px"></div></div><div style="font-size:10px;font-weight:700;color:#6B4DAA;width:58px;text-align:right;flex-shrink:0">${d.n} (${pct}%)</div></div>`;}).join('')}</div>`:''}
         </div>`;
       });
       h += `</div>`;
@@ -1625,10 +1626,10 @@ function renderLJGradeCompare(el, subjectData, grades, themeCol) {
       h += `<div style="padding:12px 10px;border-left:1px solid #eee">
         <div style="font-size:9px;font-weight:600;color:#999;margin-bottom:6px;text-align:right">n=${soy}</div>
         <!-- Stacked bar -->
-        <div style="display:flex;height:22px;border-radius:5px;overflow:hidden;margin-bottom:8px;background:#eee">
-          ${stats.jumped>0?`<div style="width:${stats.jumpedPct}%;background:#0D6B50;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;overflow:hidden">${stats.jumpedPct>=18?stats.jumpedPct+'%':''}</div>`:''}
-          <div style="width:${stats.stayedPct}%;background:#999;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;overflow:hidden">${stats.stayedPct>=18?stats.stayedPct+'%':''}</div>
-          ${stats.dropped>0?`<div style="width:${stats.droppedPct}%;background:#C0392B;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;overflow:hidden">${stats.droppedPct>=18?stats.droppedPct+'%':''}</div>`:''}
+        <div style="display:flex;height:22px;border-radius:5px;overflow:hidden;margin-bottom:8px;background:#eee;cursor:default">
+          ${stats.jumped>0?`<div style="width:${stats.jumpedPct}%;background:#0D6B50;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;overflow:hidden;cursor:default" title="↑ Jumped: ${stats.jumpedPct}% (${stats.jumped} students)">${stats.jumpedPct>=18?stats.jumpedPct+'%':''}</div>`:''}
+          <div style="width:${stats.stayedPct}%;background:#999;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;overflow:hidden;cursor:default" title="→ Stayed: ${stats.stayedPct}% (${stats.stayed} students)">${stats.stayedPct>=18?stats.stayedPct+'%':''}</div>
+          ${stats.dropped>0?`<div style="width:${stats.droppedPct}%;background:#C0392B;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;overflow:hidden;cursor:default" title="↓ Dropped: ${stats.droppedPct}% (${stats.dropped} students)">${stats.droppedPct>=18?stats.droppedPct+'%':''}</div>`:''}
         </div>
         <!-- % stats -->
         <div style="display:flex;justify-content:space-around;margin-bottom:8px;gap:2px">
