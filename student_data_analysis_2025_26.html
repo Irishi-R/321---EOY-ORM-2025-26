@@ -2060,22 +2060,44 @@ function renderSummaryInner(el) {
       }).join('')}
     </div>
 
-    <!-- Per vertical bars -->
+    <!-- Per vertical bars - split by English and Maths -->
     <div style="font-size:11px;font-weight:600;color:#777;margin-bottom:10px">Movement by vertical</div>
-    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
       ${Object.keys(ljByVertical).map(v=>{
-        const d=ljByVertical[v];
-        if(!d.soy)return '';
-        const jPct=Math.round(d.jumped/d.soy*100);
-        const sPct=Math.round(d.stayed/d.soy*100);
-        const mPct=Math.round(d.multi/d.soy*100);
-        return `<div style="display:flex;align-items:center;gap:10px">
-          <div style="width:110px;font-size:11px;font-weight:700;color:#333;text-align:right;flex-shrink:0">${vShort[v]}</div>
-          <div style="flex:1;display:flex;height:24px;border-radius:5px;overflow:hidden;background:#eee">
-            <div style="width:${jPct}%;background:#0D6B50;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff" title="Jumped: ${jPct}% (${d.jumped})">${jPct>=15?jPct+'%':''}</div>
-            <div style="width:${sPct}%;background:#bbb;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff" title="Stayed: ${sPct}% (${d.stayed})">${sPct>=15?sPct+'%':''}</div>
+        const engD={}; const mathD={};
+        subjects.forEach(s=>{
+          const sd=JUMP_DATA[v]?.[s];
+          if(!sd)return;
+          let soy=0,jumped=0,multi=0,stayed=0;
+          (sd.grades||[]).forEach(g=>{
+            const d=sd.L1?.[g];
+            if(!d||d.soy===0)return;
+            soy+=d.soy; jumped+=d.eoy[1]+d.eoy[2]+d.eoy[3]; multi+=d.eoy[2]+d.eoy[3]; stayed+=d.eoy[0];
+          });
+          if(s==='English'){engD.soy=soy;engD.jumped=jumped;engD.multi=multi;engD.stayed=stayed;}
+          else{mathD.soy=soy;mathD.jumped=jumped;mathD.multi=multi;mathD.stayed=stayed;}
+        });
+
+        return `<div style="background:#f8f8f8;border-radius:10px;padding:12px 14px">
+          <div style="font-size:12px;font-weight:800;color:#333;margin-bottom:10px">${vShort[v]}</div>
+          <div style="display:grid;grid-template-columns:${mathD.soy?'1fr 1fr':'1fr'};gap:12px">
+            ${engD.soy?`<div>
+              <div style="font-size:10px;font-weight:700;color:#185FA5;margin-bottom:5px">English · ${engD.soy} students</div>
+              <div style="display:flex;height:22px;border-radius:4px;overflow:hidden;background:#eee;margin-bottom:4px">
+                <div style="width:${Math.round(engD.jumped/engD.soy*100)}%;background:#0D6B50;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff" title="Jumped: ${Math.round(engD.jumped/engD.soy*100)}% (${engD.jumped})">${Math.round(engD.jumped/engD.soy*100)>=18?Math.round(engD.jumped/engD.soy*100)+'%':''}</div>
+                <div style="width:${Math.round(engD.stayed/engD.soy*100)}%;background:#bbb;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff" title="Stayed: ${Math.round(engD.stayed/engD.soy*100)}% (${engD.stayed})">${Math.round(engD.stayed/engD.soy*100)>=18?Math.round(engD.stayed/engD.soy*100)+'%':''}</div>
+              </div>
+              <div style="font-size:9px;color:#6B4DAA;font-weight:600">${Math.round(engD.multi/engD.soy*100)}% jumped 2+ levels (${engD.multi})</div>
+            </div>`:''}
+            ${mathD.soy?`<div>
+              <div style="font-size:10px;font-weight:700;color:#0F6E56;margin-bottom:5px">Maths · ${mathD.soy} students</div>
+              <div style="display:flex;height:22px;border-radius:4px;overflow:hidden;background:#eee;margin-bottom:4px">
+                <div style="width:${Math.round(mathD.jumped/mathD.soy*100)}%;background:#0D6B50;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff" title="Jumped: ${Math.round(mathD.jumped/mathD.soy*100)}% (${mathD.jumped})">${Math.round(mathD.jumped/mathD.soy*100)>=18?Math.round(mathD.jumped/mathD.soy*100)+'%':''}</div>
+                <div style="width:${Math.round(mathD.stayed/mathD.soy*100)}%;background:#bbb;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff" title="Stayed: ${Math.round(mathD.stayed/mathD.soy*100)}% (${mathD.stayed})">${Math.round(mathD.stayed/mathD.soy*100)>=18?Math.round(mathD.stayed/mathD.soy*100)+'%':''}</div>
+              </div>
+              <div style="font-size:9px;color:#6B4DAA;font-weight:600">${Math.round(mathD.multi/mathD.soy*100)}% jumped 2+ levels (${mathD.multi})</div>
+            </div>`:''}
           </div>
-          <div style="width:80px;font-size:10px;color:#6B4DAA;font-weight:700;flex-shrink:0">${mPct}% (2+ levels)</div>
         </div>`;
       }).join('')}
     </div>
