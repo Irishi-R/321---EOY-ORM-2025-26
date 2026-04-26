@@ -1331,7 +1331,7 @@ function renderLJAllVerticals() {
   </div>`;
 
   // Header row
-  h += `<div style="display:grid;grid-template-columns:72px repeat(${lvlKeys.length},1fr);gap:8px;margin-bottom:8px">
+  h += `<div style="display:grid;grid-template-columns:72px repeat(${lvlKeys.length},1fr);gap:8px;margin-bottom:8px;position:sticky;top:0;z-index:10;background:#fff;padding:8px 0 4px">
     <div></div>`;
   lvlKeys.forEach((lk,li)=>{
     h += `<div style="text-align:center;padding:10px 6px;background:${lvlColors[li]};border-radius:8px">
@@ -1577,7 +1577,7 @@ function renderLJGradeCompare(el, subjectData, grades, themeCol) {
   </div>`;
 
   // Column headers — Levels
-  h += `<div style="display:grid;grid-template-columns:72px repeat(${lvlKeys.length},1fr);gap:8px;margin-bottom:8px;align-items:stretch">
+  h += `<div style="display:grid;grid-template-columns:72px repeat(${lvlKeys.length},1fr);gap:8px;margin-bottom:8px;align-items:stretch;position:sticky;top:0;z-index:10;background:#fff;padding:8px 0 4px">
     <div></div>`;
   lvlKeys.forEach((lk,li) => {
     h += `<div style="text-align:center;padding:10px 6px;background:${lvlColors[li]};border-radius:8px">
