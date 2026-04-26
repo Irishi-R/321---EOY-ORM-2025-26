@@ -159,8 +159,8 @@ const COMMON_MAP=[
 
 let currentTab='yoy';
 let showJamnagar = false;
-let currentSoyV='LCPS';
-let currentOverallV='LCPS';
+let currentSoyV='compare';
+let currentOverallV='compare';
 
 function sc(m,i){return(m.naSlot&&m.naSlot.includes(i))?SLOT_COLORS[3]:(SLOT_COLORS[i]||SLOT_COLORS[2]);}
 
@@ -275,57 +275,66 @@ function renderYoY() {
   const verticals = Object.keys(YOY_DATA).filter(v=>showJamnagar||v!=='Jamnagar');
   const metrics = ['CFU', 'Practice Time', 'Students on Task'];
 
-  let h = `<div style="display:flex;flex-direction:column;gap:20px">`;
+  let h = `<div style="background:#fff;border:1px solid #E5E2DC;border-radius:16px;overflow:hidden">`;
 
-  metrics.forEach(metric => {
-    h += `<div class="metric-card">
-      <div style="font-size:15px;font-weight:700;color:#111;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #f0f0ec">${metric}</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">`;
+  // Header row
+  h += `<div style="display:grid;grid-template-columns:140px repeat(${metrics.length},1fr);border-bottom:2px solid #E5E2DC">
+    <div style="padding:14px 16px;background:#fafaf8"></div>`;
+  metrics.forEach(m => {
+    h += `<div style="padding:14px 16px;border-left:1px solid #E5E2DC;background:#fafaf8">
+      <div style="font-size:13px;font-weight:700;color:#111">${m}</div>
+    </div>`;
+  });
+  h += `</div>`;
 
-    verticals.forEach(v => {
+  // One row per vertical
+  verticals.forEach((v, vi) => {
+    const rowBg = vi%2===0 ? '#fff' : '#fafaf8';
+    h += `<div style="display:grid;grid-template-columns:140px repeat(${metrics.length},1fr);border-bottom:1px solid #eee;background:${rowBg}">
+      <!-- Vertical label -->
+      <div style="padding:16px;display:flex;flex-direction:column;justify-content:center;border-right:1px solid #eee">
+        <div style="font-size:12px;font-weight:800;color:${V_COLORS[v]}">${v.replace('AMC - ','AMC ')}</div>
+      </div>`;
+
+    metrics.forEach(metric => {
       const d = YOY_DATA[v]?.[metric];
-      if (!d) return;
-      const col = V_COLORS[v];
-      const pos24 = d['2024-25'][0];
-      const pos25 = d['2025-26'][0];
-      const diff = +(pos25 - pos24).toFixed(1);
+      if (!d) { h += `<div style="padding:16px;border-left:1px solid #eee;display:flex;align-items:center;justify-content:center;color:#ddd;font-size:11px">—</div>`; return; }
+      const diff = +(d['2025-26'][0] - d['2024-25'][0]).toFixed(1);
       const diffCol = diff > 1 ? '#0D6B50' : diff < -1 ? '#C0392B' : '#888';
       const diffBg = diff > 1 ? '#E8F5EF' : diff < -1 ? '#FCEAEA' : '#f5f5f5';
       const diffArrow = diff > 1 ? '▲' : diff < -1 ? '▼' : '—';
 
-      h += `<div style="background:#fafaf8;border:1px solid #eee;border-radius:12px;padding:14px 16px">
-        <!-- Vertical name + change badge -->
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-          <div style="font-size:12px;font-weight:800;color:${col}">${v.replace('AMC - ','AMC ')}</div>
-          <div style="font-size:11px;font-weight:700;color:${diffCol};background:${diffBg};padding:3px 8px;border-radius:6px">${diff !== 0 ? diffArrow + Math.abs(diff) + '%' : '—'}</div>
+      h += `<div style="padding:12px 16px;border-left:1px solid #eee">
+        <!-- Change badge -->
+        <div style="display:flex;justify-content:flex-end;margin-bottom:6px">
+          <span style="font-size:10px;font-weight:700;color:${diffCol};background:${diffBg};padding:2px 7px;border-radius:4px">${diff!==0?diffArrow+Math.abs(diff)+'%':'—'}</span>
         </div>
         <!-- 2024-25 bar -->
-        <div style="margin-bottom:8px">
-          <div style="font-size:9px;font-weight:700;color:#bbb;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px">2024–25</div>
-          <div class="bar-track" style="height:24px;opacity:0.6;border-radius:5px">
-            ${d['2024-25'].map((val,i)=>val?`<div class="bar-seg${val<8?' tiny':''}" style="width:${val}%;background:${SLOT_COLORS[i]||SLOT_COLORS[2]}" title="${d.options[i]}: ${val}%">${val>=8?val+'%':''}</div>`:'').join('')}
+        <div style="margin-bottom:5px">
+          <div style="font-size:8px;font-weight:600;color:#bbb;letter-spacing:.4px;margin-bottom:2px">24–25</div>
+          <div style="display:flex;height:18px;border-radius:4px;overflow:hidden;background:#eee;opacity:0.65">
+            ${d['2024-25'].map((val,i)=>val?`<div style="width:${val}%;background:${SLOT_COLORS[i]||SLOT_COLORS[2]};display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff;overflow:hidden" title="${d.options[i]}: ${val}%">${val>=12?val+'%':''}</div>`:'').join('')}
           </div>
         </div>
         <!-- 2025-26 bar -->
-        <div style="margin-bottom:10px">
-          <div style="font-size:9px;font-weight:700;color:#888;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px">2025–26</div>
-          <div class="bar-track" style="height:24px;border-radius:5px">
-            ${d['2025-26'].map((val,i)=>val?`<div class="bar-seg${val<8?' tiny':''}" style="width:${val}%;background:${SLOT_COLORS[i]||SLOT_COLORS[2]}" title="${d.options[i]}: ${val}%">${val>=8?val+'%':''}</div>`:'').join('')}
+        <div style="margin-bottom:8px">
+          <div style="font-size:8px;font-weight:600;color:#888;letter-spacing:.4px;margin-bottom:2px">25–26</div>
+          <div style="display:flex;height:18px;border-radius:4px;overflow:hidden;background:#eee">
+            ${d['2025-26'].map((val,i)=>val?`<div style="width:${val}%;background:${SLOT_COLORS[i]||SLOT_COLORS[2]};display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff;overflow:hidden" title="${d.options[i]}: ${val}%">${val>=12?val+'%':''}</div>`:'').join('')}
           </div>
         </div>
         <!-- Legend -->
-        <div style="display:flex;flex-wrap:wrap;gap:6px">
-          ${d.options.map((opt,i)=>`<div style="display:flex;align-items:center;gap:3px;font-size:9px;color:#888"><div style="width:7px;height:7px;border-radius:2px;background:${SLOT_COLORS[i]||SLOT_COLORS[2]};flex-shrink:0"></div>${opt}</div>`).join('')}
+        <div style="display:flex;flex-wrap:wrap;gap:4px">
+          ${d.options.map((opt,i)=>`<div style="display:flex;align-items:center;gap:3px;font-size:8px;color:#999"><div style="width:6px;height:6px;border-radius:1px;background:${SLOT_COLORS[i]||SLOT_COLORS[2]};flex-shrink:0"></div>${opt}</div>`).join('')}
         </div>
       </div>`;
     });
-    h += `</div></div>`;
+    h += `</div>`;
   });
 
   h += `</div>`;
   el.innerHTML = h;
 }
-
 /* ── TAB SWITCH ─────────────────────────────────────────────────────── */
 function switchTab(tab){
   currentTab=tab;
@@ -343,8 +352,8 @@ function switchTab(tab){
 function renderSoyEoy(){
   const el=document.getElementById('tab-content');
   let h='<div class="vertical-toggle">';
-  Object.keys(OBS_DATA).filter(v=>showJamnagar||v!=='Jamnagar').forEach(v=>{h+=`<button class="vtab${v===currentSoyV?' active':''}" data-v="${v}" onclick="switchSoyV('${v}')">${v}</button>`;});
-  h+=`<button class="vtab${currentSoyV==='compare'?' active':''}" data-v="compare" onclick="switchSoyV('compare')" style="border-left:none">Compare Common</button>`;
+  h+=`<button class="vtab${currentSoyV==='compare'?' active':''}" data-v="compare" onclick="switchSoyV('compare')">Compare Common</button>`;
+  Object.keys(OBS_DATA).filter(v=>showJamnagar||v!=='Jamnagar').forEach(v=>{h+=`<button class="vtab${v===currentSoyV?' active':''}" data-v="${v}" onclick="switchSoyV('${v}')" style="border-left:none">${v}</button>`;});
   h+='</div><div id="soy-area"></div>';
   el.innerHTML=h;
   paintSoy();
@@ -360,70 +369,101 @@ function paintSoy(){
   const el=document.getElementById('soy-area');
   if(currentSoyV==='compare'){paintSoyCmp(el);return;}
   const data=OBS_DATA[currentSoyV];
-  let h='<div class="metrics-grid">';
+  const col=V_COLORS[currentSoyV]||'#333';
+
+  let h=`<div style="background:#fff;border:1px solid #E5E2DC;border-radius:16px;overflow:hidden">`;
+  // Header
+  h+=`<div style="display:grid;grid-template-columns:140px repeat(${data.metrics.length},1fr);border-bottom:2px solid #E5E2DC">
+    <div style="padding:14px 16px;background:#fafaf8"></div>`;
   data.metrics.forEach(m=>{
-    const posIdx=m.positive[0];
-    const diff=parseFloat((m.EOY[posIdx]-m.SOY[posIdx]).toFixed(1));
-    h+=`<div class="metric-card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-        <div class="metric-card-title">${m.name}</div>${badge(diff)}
-      </div>`;
-    h+=buildBar('SOY',m.SOY,m.options,m.naSlot);
-    h+=buildBar('EOY',m.EOY,m.options,m.naSlot);
-    h+='<div class="legend-row">';
-    m.options.forEach((opt,i)=>{if(m.SOY[i]>0||m.EOY[i]>0)h+=`<div class="legend-item"><div class="legend-dot" style="background:${sc(m,i)}"></div>${opt}</div>`;});
-    h+='</div></div>';
+    h+=`<div style="padding:14px 16px;border-left:1px solid #E5E2DC;background:#fafaf8">
+      <div style="font-size:13px;font-weight:700;color:#111">${m.name}</div>
+    </div>`;
   });
-  h+='</div>';
+  h+=`</div>`;
+
+  // SOY row
+  ['SOY','EOY'].forEach((period,pi)=>{
+    const rowBg=pi===0?'#fafaf8':'#fff';
+    h+=`<div style="display:grid;grid-template-columns:140px repeat(${data.metrics.length},1fr);border-bottom:1px solid #eee;background:${rowBg}">
+      <div style="padding:16px;display:flex;align-items:center;border-right:1px solid #eee">
+        <div style="font-size:13px;font-weight:800;color:${pi===0?'#aaa':col}">${period}</div>
+      </div>`;
+    data.metrics.forEach(m=>{
+      const vals=pi===0?m.SOY:m.EOY;
+      const posIdx=m.positive[0];
+      const diff=pi===1?parseFloat((m.EOY[posIdx]-m.SOY[posIdx]).toFixed(1)):null;
+      const diffCol=diff!==null?(diff>1?'#0D6B50':diff<-1?'#C0392B':'#888'):null;
+      const diffBg=diff!==null?(diff>1?'#E8F5EF':diff<-1?'#FCEAEA':'#f5f5f5'):null;
+      h+=`<div style="padding:12px 16px;border-left:1px solid #eee">
+        ${diff!==null?`<div style="display:flex;justify-content:flex-end;margin-bottom:5px">
+          <span style="font-size:10px;font-weight:700;color:${diffCol};background:${diffBg};padding:2px 7px;border-radius:4px">${diff!==0?(diff>0?'▲':'▼')+Math.abs(diff)+'%':'—'}</span>
+        </div>`:'<div style="height:21px;margin-bottom:5px"></div>'}
+        <div style="display:flex;height:22px;border-radius:5px;overflow:hidden;background:#eee${pi===0?';opacity:0.65':''}">
+          ${vals.map((v,i)=>v?`<div style="width:${v}%;background:${sc(m,i)};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;overflow:hidden" title="${m.options[i]}: ${v}%">${v>=12?v+'%':''}</div>`:'').join('')}
+        </div>
+        ${pi===1?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px">
+          ${m.options.map((opt,i)=>(m.SOY[i]>0||m.EOY[i]>0)?`<div style="display:flex;align-items:center;gap:3px;font-size:8px;color:#999"><div style="width:6px;height:6px;border-radius:1px;background:${sc(m,i)}"></div>${opt}</div>`:'').join('')}
+        </div>`:''}
+      </div>`;
+    });
+    h+=`</div>`;
+  });
+  h+=`</div>`;
   el.innerHTML=h;
 }
 
 function paintSoyCmp(el){
   const COMMON=[
-    {name:'CFU',options:['Yes','No'],note:'Checking for understanding during class'},
-    {name:'Practice Time',options:['Yes','Yes, but to some students','No'],note:'Students given dedicated practice time'},
-    {name:'Students on Task',options:['More than 75%','50–75%','Less than 50%'],note:'Proportion of students actively engaged'}
+    {name:'CFU',options:['Yes','No']},
+    {name:'Practice Time',options:['Yes','Yes, but to some students','No']},
+    {name:'Students on Task',options:['More than 75%','50–75%','Less than 50%']}
   ];
   const V1='LCPS',V2='HYD Govt - GP';
   const getM=(v,name)=>OBS_DATA[v].metrics.find(m=>m.name===name);
-  let h=`<div style="background:#fff;border:1px solid #E5E2DC;border-radius:12px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
-    <div style="font-size:11px;font-weight:700;color:#aaa;letter-spacing:.6px;text-transform:uppercase">Legend</div>
-    <div style="display:flex;gap:16px;flex-wrap:wrap">
-      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#555"><div style="width:12px;height:12px;border-radius:3px;background:#2D9E6F"></div>Positive</div>
-      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#555"><div style="width:12px;height:12px;border-radius:3px;background:#F0A843"></div>Partial</div>
-      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#555"><div style="width:12px;height:12px;border-radius:3px;background:#E05A5A"></div>Negative</div>
-    </div>
-    <div style="margin-left:auto;font-size:11px;color:#bbb">3 metrics in common</div>
-  </div>`;
+
+  let h=`<div style="background:#fff;border:1px solid #E5E2DC;border-radius:16px;overflow:hidden">
+    <div style="display:grid;grid-template-columns:140px repeat(${COMMON.length},1fr);border-bottom:2px solid #E5E2DC">
+      <div style="padding:14px 16px;background:#fafaf8"></div>`;
   COMMON.forEach(cm=>{
-    const m1=getM(V1,cm.name),m2=getM(V2,cm.name);
-    if(!m1||!m2)return;
-    const d1=parseFloat((m1.EOY[0]-m1.SOY[0]).toFixed(1)),d2=parseFloat((m2.EOY[0]-m2.SOY[0]).toFixed(1));
-    h+=`<div class="metric-card" style="margin-bottom:16px">
-      <div style="margin-bottom:18px">
-        <div class="metric-card-title" style="font-size:15px;margin-bottom:3px">${cm.name}</div>
-        <div style="font-size:11px;color:#bbb">${cm.note}</div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
-        <div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-            <div style="font-size:12px;font-weight:700;color:${V_COLORS[V1]}">${V1}</div>${badge(d1)}
-          </div>
-          ${buildBar('SOY',m1.SOY,cm.options,m1.naSlot)}${buildBar('EOY',m1.EOY,cm.options,m1.naSlot)}
-        </div>
-        <div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-            <div style="font-size:12px;font-weight:700;color:${V_COLORS[V2]}">${V2}</div>${badge(d2)}
-          </div>
-          ${buildBar('SOY',m2.SOY,cm.options,m2.naSlot)}${buildBar('EOY',m2.EOY,cm.options,m2.naSlot)}
-        </div>
-      </div>
-      <div class="legend-row">`;
-    cm.options.forEach((opt,i)=>{h+=`<div class="legend-item"><div class="legend-dot" style="background:${SLOT_COLORS[i]}"></div>${opt}</div>`;});
-    const cIns=genCmpSOYIns(m1,m2,cm.name,V1,V2);
-    if(cIns.length){h+='</div><div style="margin-top:12px;padding-top:12px;border-top:1px solid #f0f0ec">';cIns.forEach(i=>{h+=`<div class="insight-item ${i.type}" style="margin-bottom:4px">${i.text}</div>`;});}
-    h+='</div></div>';
+    h+=`<div style="padding:14px 16px;border-left:1px solid #E5E2DC;background:#fafaf8">
+      <div style="font-size:13px;font-weight:700;color:#111">${cm.name}</div>
+    </div>`;
   });
+  h+=`</div>`;
+
+  [V1,V2].forEach((v,vi)=>{
+    const col=V_COLORS[v];
+    ['SOY','EOY'].forEach((period,pi)=>{
+      const rowBg=(vi*2+pi)%2===0?'#fafaf8':'#fff';
+      h+=`<div style="display:grid;grid-template-columns:140px repeat(${COMMON.length},1fr);border-bottom:1px solid #eee;background:${rowBg}">
+        <div style="padding:12px 16px;border-right:1px solid #eee;display:flex;flex-direction:column;justify-content:center">
+          ${pi===0?`<div style="font-size:11px;font-weight:800;color:${col};margin-bottom:2px">${v}</div>`:'<div style="font-size:10px;color:#ccc"></div>'}
+          <div style="font-size:10px;font-weight:700;color:${pi===0?'#aaa':col}">${period}</div>
+        </div>`;
+      COMMON.forEach(cm=>{
+        const m=getM(v,cm.name);
+        if(!m){h+=`<div style="padding:12px 16px;border-left:1px solid #eee;color:#ddd;font-size:11px;display:flex;align-items:center;justify-content:center">—</div>`;return;}
+        const vals=pi===0?m.SOY:m.EOY;
+        const diff=pi===1?parseFloat((m.EOY[0]-m.SOY[0]).toFixed(1)):null;
+        const diffCol=diff!==null?(diff>1?'#0D6B50':diff<-1?'#C0392B':'#888'):null;
+        const diffBg=diff!==null?(diff>1?'#E8F5EF':diff<-1?'#FCEAEA':'#f5f5f5'):null;
+        h+=`<div style="padding:10px 16px;border-left:1px solid #eee">
+          ${diff!==null?`<div style="display:flex;justify-content:flex-end;margin-bottom:5px">
+            <span style="font-size:10px;font-weight:700;color:${diffCol};background:${diffBg};padding:2px 7px;border-radius:4px">${diff!==0?(diff>0?'▲':'▼')+Math.abs(diff)+'%':'—'}</span>
+          </div>`:'<div style="height:21px;margin-bottom:5px"></div>'}
+          <div style="display:flex;height:20px;border-radius:4px;overflow:hidden;background:#eee${pi===0?';opacity:0.65':''}">
+            ${vals.map((val,i)=>val?`<div style="width:${val}%;background:${SLOT_COLORS[i]||SLOT_COLORS[2]};display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff;overflow:hidden" title="${cm.options[i]}: ${val}%">${val>=12?val+'%':''}</div>`:'').join('')}
+          </div>
+          ${pi===1?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px">
+            ${cm.options.map((opt,i)=>`<div style="display:flex;align-items:center;gap:3px;font-size:8px;color:#999"><div style="width:6px;height:6px;border-radius:1px;background:${SLOT_COLORS[i]||SLOT_COLORS[2]}"></div>${opt}</div>`).join('')}
+          </div>`:''}
+        </div>`;
+      });
+      h+=`</div>`;
+    });
+  });
+  h+=`</div>`;
   el.innerHTML=h;
 }
 
@@ -431,12 +471,12 @@ function paintSoyCmp(el){
 function renderOverall(){
   const el=document.getElementById('tab-content');
   let h='<div class="vertical-toggle" style="flex-wrap:wrap;gap:4px;margin-bottom:24px">';
+  const cmpA=currentOverallV==='compare';
+  h+=`<button class="vtab${cmpA?' active':''}" data-v="compare" style="${cmpA?'background:#333;border-color:#333;color:#fff':''}" onclick="switchOverallV('compare')">Compare Common</button>`;
   Object.keys(OVERALL_DATA).filter(v=>showJamnagar||v!=='Jamnagar').forEach(v=>{
     const col=V_COLORS[v]||'#333',active=v===currentOverallV;
-    h+=`<button class="vtab${active?' active':''}" data-v="${v}" style="${active?`background:${col};border-color:${col};color:#fff`:''}" onclick="switchOverallV('${v}')">${v}</button>`;
+    h+=`<button class="vtab${active?' active':''}" data-v="${v}" style="${active?`background:${col};border-color:${col};color:#fff`:'border-left:none'}" onclick="switchOverallV('${v}')">${v}</button>`;
   });
-  const cmpA=currentOverallV==='compare';
-  h+=`<button class="vtab${cmpA?' active':''}" data-v="compare" style="${cmpA?'background:#333;border-color:#333;color:#fff;border-left:none':'border-left:none'}" onclick="switchOverallV('compare')">Compare Common</button>`;
   h+='</div><div id="overall-area"></div>';
   el.innerHTML=h;
   paintOverall();
@@ -456,61 +496,75 @@ function paintOverall(){
   const el=document.getElementById('overall-area');
   if(currentOverallV==='compare'){paintOverallCmp(el);return;}
   const data=OVERALL_DATA[currentOverallV],col=V_COLORS[currentOverallV]||'#333';
-  let h='<div class="metrics-grid">';
+
+  let h=`<div style="background:#fff;border:1px solid #E5E2DC;border-radius:16px;overflow:hidden">
+    <div style="display:grid;grid-template-columns:140px repeat(${data.metrics.length},1fr);border-bottom:2px solid #E5E2DC">
+      <div style="padding:14px 16px;background:#fafaf8"></div>`;
+  data.metrics.forEach(m=>{
+    h+=`<div style="padding:14px 16px;border-left:1px solid #E5E2DC;background:#fafaf8">
+      <div style="font-size:13px;font-weight:700;color:#111">${m.name}</div>
+    </div>`;
+  });
+  h+=`</div><div style="display:grid;grid-template-columns:140px repeat(${data.metrics.length},1fr)">
+    <div style="padding:16px;display:flex;align-items:center;border-right:1px solid #eee">
+      <div style="font-size:12px;font-weight:800;color:${col}">${currentOverallV.replace('AMC - ','AMC ')}</div>
+    </div>`;
   data.metrics.forEach(m=>{
     const posVal=m.vals[m.positive[0]];
-    h+=`<div class="metric-card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-        <div class="metric-card-title">${m.name}</div>
-        <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px;background:${col}20;color:${col}">${posVal}%</span>
+    h+=`<div style="padding:12px 16px;border-left:1px solid #eee">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:6px">
+        <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;background:${col}15;color:${col}">${posVal}%</span>
       </div>
-      <div class="bar-row" style="margin-bottom:0"><div class="bar-track" style="height:32px">`;
-    m.vals.forEach((v,i)=>{
-      if(v===0)return;
-      const show=v>=8;
-      h+=`<div class="bar-seg${show?'':' tiny'}" style="width:${v}%;background:${sc(m,i)}" title="${m.options[i]}: ${v}%">${show?v+'%':''}</div>`;
-    });
-    h+=`</div></div><div class="legend-row">`;
-    m.options.forEach((opt,i)=>{if(m.vals[i]>0)h+=`<div class="legend-item"><div class="legend-dot" style="background:${sc(m,i)}"></div>${opt}: <strong>${m.vals[i]}%</strong></div>`;});
-    h+='</div></div>';
+      <div style="display:flex;height:22px;border-radius:5px;overflow:hidden;background:#eee;margin-bottom:8px">
+        ${m.vals.map((v,i)=>v?`<div style="width:${v}%;background:${sc(m,i)};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;overflow:hidden" title="${m.options[i]}: ${v}%">${v>=12?v+'%':''}</div>`:'').join('')}
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px">
+        ${m.options.map((opt,i)=>m.vals[i]>0?`<div style="display:flex;align-items:center;gap:3px;font-size:8px;color:#999"><div style="width:6px;height:6px;border-radius:1px;background:${sc(m,i)}"></div>${opt}: <strong style="color:#555">${m.vals[i]}%</strong></div>`:'').join('')}
+      </div>
+    </div>`;
   });
-  h+='</div>';
+  h+=`</div></div>`;
   el.innerHTML=h;
 }
 
 function paintOverallCmp(el){
   const allV=Object.keys(OVERALL_DATA).filter(v=>showJamnagar||v!=='Jamnagar');
-  let h='<div style="display:flex;flex-direction:column;gap:24px">';
+  let h=`<div style="background:#fff;border:1px solid #E5E2DC;border-radius:16px;overflow:hidden">
+    <div style="display:grid;grid-template-columns:140px repeat(${COMMON_MAP.length},1fr);border-bottom:2px solid #E5E2DC">
+      <div style="padding:14px 16px;background:#fafaf8"></div>`;
   COMMON_MAP.forEach(cm=>{
-    const showV=allV.filter(v=>!cm.skipVerticals.includes(v)&&cm.map[v]);
-    h+=`<div class="metric-card">
-      <div style="margin-bottom:18px">
-        <div class="metric-card-title" style="font-size:15px;margin-bottom:2px">${cm.label}</div>
-        <div style="font-size:11px;color:#bbb">${cm.note}</div>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(${showV.length},1fr);gap:16px">`;
-    showV.forEach(v=>{
-      const mD=OVERALL_DATA[v].metrics.find(m=>m.name===cm.map[v].metric);
-      if(!mD)return;
-      const col=V_COLORS[v],posVal=mD.vals[0];
-      h+=`<div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-          <div style="font-size:11px;font-weight:700;color:${col}">${v}</div>
-          <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;background:${col}20;color:${col}">${posVal}%</span>
-        </div>
-        <div class="bar-track" style="height:28px;margin-bottom:6px">`;
-      mD.vals.forEach((val,i)=>{
-        if(val===0)return;
-        const show=val>=8;
-        h+=`<div class="bar-seg${show?'':' tiny'}" style="width:${val}%;background:${sc(mD,i)}" title="${mD.options[i]}: ${val}%">${show?val+'%':''}</div>`;
-      });
-      h+=`</div><div style="display:flex;flex-wrap:wrap;gap:5px">`;
-      mD.options.forEach((opt,i)=>{if((mD.vals[i]||0)>0)h+=`<div style="display:flex;align-items:center;gap:3px;font-size:9px;color:#888"><div style="width:7px;height:7px;border-radius:2px;background:${sc(mD,i)}"></div>${opt}</div>`;});
-      h+='</div></div>';
-    });
-    h+='</div></div>';
+    h+=`<div style="padding:14px 16px;border-left:1px solid #E5E2DC;background:#fafaf8">
+      <div style="font-size:13px;font-weight:700;color:#111">${cm.label}</div>
+    </div>`;
   });
-  h+='</div>';
+  h+=`</div>`;
+
+  allV.forEach((v,vi)=>{
+    const col=V_COLORS[v]||'#333';
+    h+=`<div style="display:grid;grid-template-columns:140px repeat(${COMMON_MAP.length},1fr);border-bottom:1px solid #eee;background:${vi%2===0?'#fafaf8':'#fff'}">
+      <div style="padding:16px;display:flex;align-items:center;border-right:1px solid #eee">
+        <div style="font-size:12px;font-weight:800;color:${col}">${v.replace('AMC - ','AMC ')}</div>
+      </div>`;
+    COMMON_MAP.forEach(cm=>{
+      if(cm.skipVerticals?.includes(v)||!cm.map[v]){h+=`<div style="padding:12px 16px;border-left:1px solid #eee;display:flex;align-items:center;justify-content:center;color:#ddd;font-size:11px">—</div>`;return;}
+      const mD=OVERALL_DATA[v].metrics.find(m=>m.name===cm.map[v].metric);
+      if(!mD){h+=`<div style="padding:12px 16px;border-left:1px solid #eee"></div>`;return;}
+      const posVal=mD.vals[0];
+      h+=`<div style="padding:12px 16px;border-left:1px solid #eee">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:6px">
+          <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;background:${col}15;color:${col}">${posVal}%</span>
+        </div>
+        <div style="display:flex;height:20px;border-radius:4px;overflow:hidden;background:#eee;margin-bottom:6px">
+          ${mD.vals.map((val,i)=>val?`<div style="width:${val}%;background:${sc(mD,i)};display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff;overflow:hidden" title="${mD.options[i]}: ${val}%">${val>=12?val+'%':''}</div>`:'').join('')}
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px">
+          ${mD.options.map((opt,i)=>(mD.vals[i]||0)>0?`<div style="display:flex;align-items:center;gap:3px;font-size:8px;color:#999"><div style="width:6px;height:6px;border-radius:1px;background:${sc(mD,i)}"></div>${opt}</div>`:'').join('')}
+        </div>
+      </div>`;
+    });
+    h+=`</div>`;
+  });
+  h+=`</div>`;
   el.innerHTML=h;
 }
 
