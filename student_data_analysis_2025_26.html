@@ -1990,54 +1990,23 @@ function renderSummaryInner(el) {
   });
   h+=`</div>`;
 
-  // Vertical strip
-  h+=`<div style="background:#fff;border:1px solid #e0e0e0;border-radius:14px;padding:18px 20px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.04)">
-    <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">
-      <span>L1 change SOY→EOY · by vertical</span>
-      <span style="font-size:10px;font-weight:400;color:#aaa">2025-26 · all grades</span>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(${verticals.length},1fr);gap:10px">`;
 
-  verticals.forEach(v=>{
-    h+=`<div style="text-align:center">
-      <div style="font-size:11px;font-weight:800;color:#1a1a1a;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #f0f0f0">${vShort[v]}</div>`;
-    subjects.forEach(subj=>{
-      const subCol=subj==='English'?'#185FA5':'#0F6E56';
-      let imp=[],dec=[],tot=0;
-      if(ALL_DATA[v][subj]) Object.keys(ALL_DATA[v][subj]).forEach(g=>{
-        const d=ALL_DATA[v][subj][g]?.[year];
-        if(!d?.SOY||!d?.EOY)return;
-        tot++;const drop=d.SOY[0]-d.EOY[0];
-        if(drop>0)imp.push(g.replace('Grade ','G'));
-        else if(drop<0)dec.push(g.replace('Grade ','G'));
-      });
-      const fracCol=imp.length===tot&&tot>0?'#0D6B50':dec.length>imp.length?'#C0392B':'#555';
-      const bg=imp.length===tot&&tot>0?'#E8F5EF':dec.length>imp.length?'#FCEAEA':'#f5f5f5';
-      h+=`<div style="background:${bg};border-radius:6px;padding:8px 6px;margin-bottom:4px">
-        <div style="font-size:9px;font-weight:700;color:${subCol};margin-bottom:4px">${subj}</div>
-        <div style="font-size:18px;font-weight:800;color:${fracCol};line-height:1">${imp.length}<span style="font-size:11px;color:#aaa">/${tot}</span></div>
-        <div style="display:flex;gap:2px;flex-wrap:wrap;margin-top:4px">
-          ${imp.map(g=>`<span style="background:#0D6B50;color:#fff;font-size:7px;font-weight:700;padding:1px 4px;border-radius:2px">${g}</span>`).join('')}
-          ${dec.map(g=>`<span style="background:#C0392B;color:#fff;font-size:7px;font-weight:700;padding:1px 4px;border-radius:2px">${g}</span>`).join('')}
-        </div>
-      </div>`;
-    });
-    h+=`</div>`;
-  });
-  h+=`</div></div>`;
-
-  // Level Jump section
-  // Compute jump stats from JUMP_DATA
+  // ── LEVEL JUMP SECTION ──
+  // Aggregate separately for English and Maths
+  let ljTotalSoy=0, ljTotalJumped=0, ljTotalMulti=0, ljTotalStayed=0;
+  let ljEngSoy=0, ljEngJumped=0, ljEngMulti=0, ljEngStayed=0;
+  let ljMathSoy=0, ljMathJumped=0, ljMathMulti=0, ljMathStayed=0;
   let topJumper={v:'',g:'',s:'',pct:0,n:0,soy:0};
   let topMulti={v:'',g:'',s:'',pct:0,n:0,soy:0};
   let topStayed={v:'',g:'',s:'',pct:0,n:0,soy:0};
 
+  const ljByVertical={};
   Object.keys(JUMP_DATA).forEach(v=>{
+    ljByVertical[v]={soy:0,jumped:0,multi:0,stayed:0};
     subjects.forEach(s=>{
       const sd=JUMP_DATA[v]?.[s];
       if(!sd)return;
-      const grades=sd.grades||[];
-      grades.forEach(g=>{
+      (sd.grades||[]).forEach(g=>{
         const d=sd.L1?.[g];
         if(!d||d.soy===0)return;
         const jumped=d.eoy[1]+d.eoy[2]+d.eoy[3];
@@ -2046,6 +2015,10 @@ function renderSummaryInner(el) {
         const jumpPct=Math.round(jumped/d.soy*100);
         const multiPct=Math.round(multi/d.soy*100);
         const stayPct=Math.round(stayed/d.soy*100);
+        ljTotalSoy+=d.soy; ljTotalJumped+=jumped; ljTotalMulti+=multi; ljTotalStayed+=stayed;
+        ljByVertical[v].soy+=d.soy; ljByVertical[v].jumped+=jumped; ljByVertical[v].multi+=multi; ljByVertical[v].stayed+=stayed;
+        if(s==='English'){ljEngSoy+=d.soy;ljEngJumped+=jumped;ljEngMulti+=multi;ljEngStayed+=stayed;}
+        else{ljMathSoy+=d.soy;ljMathJumped+=jumped;ljMathMulti+=multi;ljMathStayed+=stayed;}
         if(jumpPct>topJumper.pct){topJumper={v,g,s,pct:jumpPct,n:jumped,soy:d.soy};}
         if(multiPct>topMulti.pct){topMulti={v,g,s,pct:multiPct,n:multi,soy:d.soy};}
         if(stayPct>topStayed.pct){topStayed={v,g,s,pct:stayPct,n:stayed,soy:d.soy};}
@@ -2053,29 +2026,79 @@ function renderSummaryInner(el) {
     });
   });
 
-  h+=`<div style="background:#fff;border:1px solid #e0e0e0;border-radius:14px;padding:20px;margin-top:16px;box-shadow:0 1px 4px rgba(0,0,0,.04)">
-    <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:16px;display:flex;align-items:center;gap:8px">
+  const ljJumpPct=ljTotalSoy>0?Math.round(ljTotalJumped/ljTotalSoy*100):0;
+  const ljMultiPct=ljTotalSoy>0?Math.round(ljTotalMulti/ljTotalSoy*100):0;
+  const ljStayPct=ljTotalSoy>0?Math.round(ljTotalStayed/ljTotalSoy*100):0;
+
+  h+=`<div style="background:#fff;border:1px solid #e0e0e0;border-radius:14px;padding:22px 24px;margin-top:0;box-shadow:0 1px 4px rgba(0,0,0,.04)">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px">
       <span style="width:8px;height:8px;border-radius:50%;background:#6B4DAA;display:inline-block"></span>
-      Level Jump Highlights · Students who started at L1
+      <span style="font-size:13px;font-weight:700;color:#333">Level Jump · Students who started at L1</span>
+      <span style="font-size:11px;color:#185FA5;font-weight:600;margin-left:8px;background:#EBF3FB;padding:2px 8px;border-radius:4px">English: ${ljEngSoy}</span>
+      <span style="font-size:11px;color:#0F6E56;font-weight:600;background:#E8F5EF;padding:2px 8px;border-radius:4px">Maths: ${ljMathSoy}</span>
     </div>
+
+    <!-- Overall movement bars - English and Maths separate -->
+    <div style="margin-bottom:20px;display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      ${[['English',ljEngSoy,ljEngJumped,ljEngMulti,ljEngStayed,'#185FA5'],['Maths',ljMathSoy,ljMathJumped,ljMathMulti,ljMathStayed,'#0F6E56']].map(([subj,soy,jumped,multi,stayed,col])=>{
+        if(!soy)return '';
+        const jPct=Math.round(jumped/soy*100);
+        const sPct=Math.round(stayed/soy*100);
+        const mPct=Math.round(multi/soy*100);
+        return `<div>
+          <div style="font-size:11px;font-weight:700;color:${col};margin-bottom:8px">${subj} · ${soy} L1 students</div>
+          <div style="display:flex;height:32px;border-radius:6px;overflow:hidden;background:#eee;margin-bottom:8px">
+            <div style="width:${jPct}%;background:#0D6B50;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff" title="Jumped: ${jPct}% (${jumped})">${jPct>=15?jPct+'%':''}</div>
+            <div style="width:${sPct}%;background:#999;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff" title="Stayed: ${sPct}% (${stayed})">${sPct>=15?sPct+'%':''}</div>
+          </div>
+          <div style="display:flex;gap:14px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:5px"><div style="width:10px;height:10px;border-radius:2px;background:#0D6B50"></div><span style="font-size:10px;color:#333;font-weight:600">${jPct}% jumped (${jumped})</span></div>
+            <div style="display:flex;align-items:center;gap:5px"><div style="width:10px;height:10px;border-radius:2px;background:#999"></div><span style="font-size:10px;color:#555;font-weight:600">${sPct}% stayed (${stayed})</span></div>
+            <div style="display:flex;align-items:center;gap:5px"><div style="width:10px;height:10px;border-radius:2px;background:#6B4DAA"></div><span style="font-size:10px;color:#6B4DAA;font-weight:600">${mPct}% jumped 2+ levels (${multi})</span></div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+
+    <!-- Per vertical bars -->
+    <div style="font-size:11px;font-weight:600;color:#777;margin-bottom:10px">Movement by vertical</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
+      ${Object.keys(ljByVertical).map(v=>{
+        const d=ljByVertical[v];
+        if(!d.soy)return '';
+        const jPct=Math.round(d.jumped/d.soy*100);
+        const sPct=Math.round(d.stayed/d.soy*100);
+        const mPct=Math.round(d.multi/d.soy*100);
+        return `<div style="display:flex;align-items:center;gap:10px">
+          <div style="width:110px;font-size:11px;font-weight:700;color:#333;text-align:right;flex-shrink:0">${vShort[v]}</div>
+          <div style="flex:1;display:flex;height:24px;border-radius:5px;overflow:hidden;background:#eee">
+            <div style="width:${jPct}%;background:#0D6B50;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff" title="Jumped: ${jPct}% (${d.jumped})">${jPct>=15?jPct+'%':''}</div>
+            <div style="width:${sPct}%;background:#bbb;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff" title="Stayed: ${sPct}% (${d.stayed})">${sPct>=15?sPct+'%':''}</div>
+          </div>
+          <div style="width:80px;font-size:10px;color:#6B4DAA;font-weight:700;flex-shrink:0">${mPct}% (2+ levels)</div>
+        </div>`;
+      }).join('')}
+    </div>
+
+    <!-- Standout callouts -->
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
-      <div style="background:linear-gradient(135deg,#E8F5EF,#d1fae5);border:1px solid #6ee7b7;border-radius:12px;padding:16px">
-        <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#059669;margin-bottom:8px">Most students moved up from L1</div>
-        <div style="font-size:28px;font-weight:800;color:#0D6B50;line-height:1;margin-bottom:6px">${topJumper.pct}%</div>
-        <div style="font-size:12px;font-weight:600;color:#065f46;margin-bottom:4px;line-height:1.5">Students in ${vShort[topJumper.v]}<br>${topJumper.g} · ${topJumper.s}</div>
-        <div style="font-size:10px;color:#34d399;margin-top:6px">${topJumper.n} of ${topJumper.soy} L1 students moved up</div>
+      <div style="background:linear-gradient(135deg,#E8F5EF,#d1fae5);border:1px solid #6ee7b7;border-radius:10px;padding:14px">
+        <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#059669;margin-bottom:8px">Most moved up from L1</div>
+        <div style="font-size:26px;font-weight:800;color:#0D6B50;line-height:1;margin-bottom:5px">${topJumper.pct}%</div>
+        <div style="font-size:11px;font-weight:600;color:#065f46;line-height:1.5">Students in ${vShort[topJumper.v]}<br>${topJumper.g} · ${topJumper.s}</div>
+        <div style="font-size:10px;color:#34d399;margin-top:5px">${topJumper.n} of ${topJumper.soy} students</div>
       </div>
-      <div style="background:linear-gradient(135deg,#E8F5EF,#d1fae5);border:1px solid #6ee7b7;border-radius:12px;padding:16px">
-        <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#059669;margin-bottom:8px">Most multi-level jumpers from L1</div>
-        <div style="font-size:28px;font-weight:800;color:#0D6B50;line-height:1;margin-bottom:6px">${topMulti.pct}%</div>
-        <div style="font-size:12px;font-weight:600;color:#065f46;margin-bottom:4px;line-height:1.5">Students in ${vShort[topMulti.v]}<br>${topMulti.g} · ${topMulti.s}</div>
-        <div style="font-size:10px;color:#34d399;margin-top:6px">${topMulti.n} of ${topMulti.soy} jumped 2+ levels</div>
+      <div style="background:linear-gradient(135deg,#F5F3FF,#ede9fe);border:1px solid #c4b5fd;border-radius:10px;padding:14px">
+        <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#7c3aed;margin-bottom:8px">Most 2+ level jumps from L1</div>
+        <div style="font-size:26px;font-weight:800;color:#5b21b6;line-height:1;margin-bottom:5px">${topMulti.pct}%</div>
+        <div style="font-size:11px;font-weight:600;color:#3b0764;line-height:1.5">Students in ${vShort[topMulti.v]}<br>${topMulti.g} · ${topMulti.s}</div>
+        <div style="font-size:10px;color:#a78bfa;margin-top:5px">${topMulti.n} of ${topMulti.soy} students</div>
       </div>
-      <div style="background:linear-gradient(135deg,#FEF2F2,#fee2e2);border:1px solid #fca5a5;border-radius:12px;padding:16px">
-        <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#dc2626;margin-bottom:8px">Most students stayed at L1</div>
-        <div style="font-size:28px;font-weight:800;color:#991b1b;line-height:1;margin-bottom:6px">${topStayed.pct}%</div>
-        <div style="font-size:12px;font-weight:600;color:#7f1d1d;margin-bottom:4px;line-height:1.5">Students in ${vShort[topStayed.v]}<br>${topStayed.g} · ${topStayed.s}</div>
-        <div style="font-size:10px;color:#fca5a5;margin-top:6px">${topStayed.n} of ${topStayed.soy} remained at L1 by EOY</div>
+      <div style="background:linear-gradient(135deg,#FEF2F2,#fee2e2);border:1px solid #fca5a5;border-radius:10px;padding:14px">
+        <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#dc2626;margin-bottom:8px">Most stayed at L1</div>
+        <div style="font-size:26px;font-weight:800;color:#991b1b;line-height:1;margin-bottom:5px">${topStayed.pct}%</div>
+        <div style="font-size:11px;font-weight:600;color:#7f1d1d;line-height:1.5">Students in ${vShort[topStayed.v]}<br>${topStayed.g} · ${topStayed.s}</div>
+        <div style="font-size:10px;color:#fca5a5;margin-top:5px">${topStayed.n} of ${topStayed.soy} students</div>
       </div>
     </div>
   </div>`;
