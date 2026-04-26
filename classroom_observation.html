@@ -64,10 +64,15 @@ body{font-family:'Outfit',-apple-system,sans-serif;background:#F7F5F0;color:#111
     <h1>Classroom Observation</h1>
     <p>Observation data across verticals · April 2026</p>
   </div>
-  <div class="main-tabs">
-    <button class="main-tab active" onclick="switchTab('yoy')">2024-25 vs 2025-26</button>
-    <button class="main-tab" onclick="switchTab('soy-eoy')">SOY → EOY 2025-26</button>
-    <button class="main-tab" onclick="switchTab('overall')">Overall 2025-26</button>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0">
+    <div class="main-tabs" style="margin-bottom:0;border-bottom:none">
+      <button class="main-tab active" onclick="switchTab('yoy')">2024-25 vs 2025-26</button>
+      <button class="main-tab" onclick="switchTab('soy-eoy')">SOY → EOY 2025-26</button>
+      <button class="main-tab" onclick="switchTab('overall')">Overall 2025-26</button>
+    </div>
+    <button onclick="showJamnagar=!showJamnagar;switchTab(currentTab)" style="padding:7px 14px;font-size:11px;font-weight:600;border:1px dashed #aaa;border-radius:8px;background:#fafafa;color:#888;cursor:pointer;font-family:inherit;white-space:nowrap;margin-bottom:4px" id="jamnagarBtn">Show Jamnagar ▾</button>
+  </div>
+  <div style="border-bottom:2px solid #E5E2DC;margin-bottom:28px"></div>
   </div>
   <div id="tab-content"></div>
 </div>
@@ -153,6 +158,7 @@ const COMMON_MAP=[
 ];
 
 let currentTab='yoy';
+let showJamnagar = false;
 let currentSoyV='LCPS';
 let currentOverallV='LCPS';
 
@@ -223,7 +229,7 @@ function genOverallIns(data,vName){
 }
 
 function genCmpOverallIns(){
-  const ins=[],allV=Object.keys(OVERALL_DATA);
+  const ins=[],allV=Object.keys(OVERALL_DATA).filter(v=>showJamnagar||v!=='Jamnagar');
   COMMON_MAP.forEach(cm=>{
     const showV=allV.filter(v=>!cm.skipVerticals.includes(v)&&cm.map[v]);
     const vals=showV.map(v=>{const mD=OVERALL_DATA[v].metrics.find(m=>m.name===cm.map[v].metric);return{v,val:mD?mD.vals[0]:0};}).sort((a,b)=>b.val-a.val);
@@ -266,7 +272,7 @@ const YOY_DATA = {
 
 function renderYoY() {
   const el = document.getElementById('tab-content');
-  const verticals = Object.keys(YOY_DATA);
+  const verticals = Object.keys(YOY_DATA).filter(v=>showJamnagar||v!=='Jamnagar');
   const metrics = ['CFU', 'Practice Time', 'Students on Task'];
 
   let h = `<div style="display:flex;flex-direction:column;gap:28px">`;
@@ -336,6 +342,8 @@ function switchTab(tab){
   document.querySelectorAll('.main-tab').forEach((t,i)=>{
     t.classList.toggle('active',(i===0&&tab==='yoy')||(i===1&&tab==='soy-eoy')||(i===2&&tab==='overall'));
   });
+  const btn=document.getElementById('jamnagarBtn');
+  if(btn) btn.textContent=showJamnagar?'Hide Jamnagar ▲':'Show Jamnagar ▾';
   if(tab==='yoy')renderYoY();
   else if(tab==='soy-eoy')renderSoyEoy();
   else if(tab==='overall')renderOverall();
@@ -345,7 +353,7 @@ function switchTab(tab){
 function renderSoyEoy(){
   const el=document.getElementById('tab-content');
   let h='<div class="vertical-toggle">';
-  Object.keys(OBS_DATA).forEach(v=>{h+=`<button class="vtab${v===currentSoyV?' active':''}" data-v="${v}" onclick="switchSoyV('${v}')">${v}</button>`;});
+  Object.keys(OBS_DATA).filter(v=>showJamnagar||v!=='Jamnagar').forEach(v=>{h+=`<button class="vtab${v===currentSoyV?' active':''}" data-v="${v}" onclick="switchSoyV('${v}')">${v}</button>`;});
   h+=`<button class="vtab${currentSoyV==='compare'?' active':''}" data-v="compare" onclick="switchSoyV('compare')" style="border-left:none">Compare Common</button>`;
   h+='</div><div id="soy-area"></div>';
   el.innerHTML=h;
@@ -433,7 +441,7 @@ function paintSoyCmp(el){
 function renderOverall(){
   const el=document.getElementById('tab-content');
   let h='<div class="vertical-toggle" style="flex-wrap:wrap;gap:4px;margin-bottom:24px">';
-  Object.keys(OVERALL_DATA).forEach(v=>{
+  Object.keys(OVERALL_DATA).filter(v=>showJamnagar||v!=='Jamnagar').forEach(v=>{
     const col=V_COLORS[v]||'#333',active=v===currentOverallV;
     h+=`<button class="vtab${active?' active':''}" data-v="${v}" style="${active?`background:${col};border-color:${col};color:#fff`:''}" onclick="switchOverallV('${v}')">${v}</button>`;
   });
@@ -481,7 +489,7 @@ function paintOverall(){
 }
 
 function paintOverallCmp(el){
-  const allV=Object.keys(OVERALL_DATA);
+  const allV=Object.keys(OVERALL_DATA).filter(v=>showJamnagar||v!=='Jamnagar');
   let h='<div style="display:flex;flex-direction:column;gap:24px">';
   COMMON_MAP.forEach(cm=>{
     const showV=allV.filter(v=>!cm.skipVerticals.includes(v)&&cm.map[v]);
