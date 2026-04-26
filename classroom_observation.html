@@ -275,59 +275,49 @@ function renderYoY() {
   const verticals = Object.keys(YOY_DATA).filter(v=>showJamnagar||v!=='Jamnagar');
   const metrics = ['CFU', 'Practice Time', 'Students on Task'];
 
-  let h = `<div style="display:flex;flex-direction:column;gap:28px">`;
+  let h = `<div style="display:flex;flex-direction:column;gap:20px">`;
 
   metrics.forEach(metric => {
     h += `<div class="metric-card">
-      <div style="margin-bottom:18px;display:flex;align-items:center;justify-content:space-between">
-        <div>
-          <div class="metric-card-title" style="font-size:15px;margin-bottom:2px">${metric}</div>
-          <div style="font-size:10px;color:#bbb;display:flex;gap:14px;margin-top:4px">
-            <span style="display:flex;align-items:center;gap:4px"><span style="width:24px;height:3px;background:#888;display:inline-block;border-radius:2px;opacity:.5"></span>2024–25</span>
-            <span style="display:flex;align-items:center;gap:4px"><span style="width:24px;height:3px;background:#333;display:inline-block;border-radius:2px"></span>2025–26</span>
-          </div>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(${verticals.length},1fr);gap:14px">`;
+      <div style="font-size:15px;font-weight:700;color:#111;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #f0f0ec">${metric}</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">`;
 
     verticals.forEach(v => {
       const d = YOY_DATA[v]?.[metric];
-      if (!d) { h += `<div></div>`; return; }
+      if (!d) return;
       const col = V_COLORS[v];
       const pos24 = d['2024-25'][0];
       const pos25 = d['2025-26'][0];
       const diff = +(pos25 - pos24).toFixed(1);
       const diffCol = diff > 1 ? '#0D6B50' : diff < -1 ? '#C0392B' : '#888';
+      const diffBg = diff > 1 ? '#E8F5EF' : diff < -1 ? '#FCEAEA' : '#f5f5f5';
       const diffArrow = diff > 1 ? '▲' : diff < -1 ? '▼' : '—';
 
-      h += `<div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-          <div style="font-size:11px;font-weight:700;color:${col}">${v.replace('AMC - ','AMC ')}</div>
-          <span style="font-size:10px;font-weight:700;color:${diffCol}">${diff !== 0 ? diffArrow + Math.abs(diff) + '%' : '—'}</span>
+      h += `<div style="background:#fafaf8;border:1px solid #eee;border-radius:12px;padding:14px 16px">
+        <!-- Vertical name + change badge -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div style="font-size:12px;font-weight:800;color:${col}">${v.replace('AMC - ','AMC ')}</div>
+          <div style="font-size:11px;font-weight:700;color:${diffCol};background:${diffBg};padding:3px 8px;border-radius:6px">${diff !== 0 ? diffArrow + Math.abs(diff) + '%' : '—'}</div>
         </div>
+        <!-- 2024-25 bar -->
         <div style="margin-bottom:8px">
-          <div style="font-size:9px;color:#aaa;margin-bottom:3px;font-weight:600">2024–25</div>
-          <div class="bar-track" style="height:22px;opacity:0.65">`;
-      d['2024-25'].forEach((val, i) => {
-        if (!val) return;
-        const show = val >= 8;
-        h += `<div class="bar-seg${show ? '' : ' tiny'}" style="width:${val}%;background:${SLOT_COLORS[i]||SLOT_COLORS[2]}" title="${d.options[i]}: ${val}%">${show ? val + '%' : ''}</div>`;
-      });
-      h += `</div></div>
-        <div>
-          <div style="font-size:9px;color:#aaa;margin-bottom:3px;font-weight:600">2025–26</div>
-          <div class="bar-track" style="height:22px">`;
-      d['2025-26'].forEach((val, i) => {
-        if (!val) return;
-        const show = val >= 8;
-        h += `<div class="bar-seg${show ? '' : ' tiny'}" style="width:${val}%;background:${SLOT_COLORS[i]||SLOT_COLORS[2]}" title="${d.options[i]}: ${val}%">${show ? val + '%' : ''}</div>`;
-      });
-      h += `</div></div>
-        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px">`;
-      d.options.forEach((opt, i) => {
-        h += `<div style="display:flex;align-items:center;gap:3px;font-size:9px;color:#888"><div style="width:7px;height:7px;border-radius:2px;background:${SLOT_COLORS[i]||SLOT_COLORS[2]}"></div>${opt}</div>`;
-      });
-      h += `</div></div>`;
+          <div style="font-size:9px;font-weight:700;color:#bbb;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px">2024–25</div>
+          <div class="bar-track" style="height:24px;opacity:0.6;border-radius:5px">
+            ${d['2024-25'].map((val,i)=>val?`<div class="bar-seg${val<8?' tiny':''}" style="width:${val}%;background:${SLOT_COLORS[i]||SLOT_COLORS[2]}" title="${d.options[i]}: ${val}%">${val>=8?val+'%':''}</div>`:'').join('')}
+          </div>
+        </div>
+        <!-- 2025-26 bar -->
+        <div style="margin-bottom:10px">
+          <div style="font-size:9px;font-weight:700;color:#888;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px">2025–26</div>
+          <div class="bar-track" style="height:24px;border-radius:5px">
+            ${d['2025-26'].map((val,i)=>val?`<div class="bar-seg${val<8?' tiny':''}" style="width:${val}%;background:${SLOT_COLORS[i]||SLOT_COLORS[2]}" title="${d.options[i]}: ${val}%">${val>=8?val+'%':''}</div>`:'').join('')}
+          </div>
+        </div>
+        <!-- Legend -->
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${d.options.map((opt,i)=>`<div style="display:flex;align-items:center;gap:3px;font-size:9px;color:#888"><div style="width:7px;height:7px;border-radius:2px;background:${SLOT_COLORS[i]||SLOT_COLORS[2]};flex-shrink:0"></div>${opt}</div>`).join('')}
+        </div>
+      </div>`;
     });
     h += `</div></div>`;
   });
