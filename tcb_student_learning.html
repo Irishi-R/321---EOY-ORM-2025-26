@@ -644,8 +644,8 @@ function renderHydAllGrades(vName, vData, grades, th) {
     availG.push(g);
     labels.push('24-25'); l1D.push(d24?d24.SOY[0]:0); l2D.push(d24?d24.SOY[1]:0); l3D.push(d24?d24.SOY[2]:0); l4D.push(d24?d24.SOY[3]:0); barMeta.push({g,period:'SOY',year:'2024-25'});
     labels.push('25-26'); l1D.push(d25?d25.SOY[0]:0); l2D.push(d25?d25.SOY[1]:0); l3D.push(d25?d25.SOY[2]:0); l4D.push(d25?d25.SOY[3]:0); barMeta.push({g,period:'SOY',year:'2025-26'});
-    labels.push('24-25'); l1D.push(d24?d24.EOY[0]:0); l2D.push(d24?d24.EOY[1]:0); l3D.push(d24?d24.EOY[2]:0); l4D.push(d24?d24.EOY[3]:0); barMeta.push({g,period:'EOY',year:'2024-25',drop:d24?d24.SOY[0]-d24.EOY[0]:null});
-    labels.push('25-26'); l1D.push(d25?d25.EOY[0]:0); l2D.push(d25?d25.EOY[1]:0); l3D.push(d25?d25.EOY[2]:0); l4D.push(d25?d25.EOY[3]:0); barMeta.push({g,period:'EOY',year:'2025-26',drop:d25?d25.SOY[0]-d25.EOY[0]:null});
+    labels.push('24-25'); l1D.push(d24?d24.EOY[0]:0); l2D.push(d24?d24.EOY[1]:0); l3D.push(d24?d24.EOY[2]:0); l4D.push(d24?d24.EOY[3]:0); barMeta.push({g,period:'EOY',year:'2024-25',drop:d24?d24.SOY[0]-d24.EOY[0]:null,l34gain:d24?(d24.EOY[2]+d24.EOY[3])-(d24.SOY[2]+d24.SOY[3]):null});
+    labels.push('25-26'); l1D.push(d25?d25.EOY[0]:0); l2D.push(d25?d25.EOY[1]:0); l3D.push(d25?d25.EOY[2]:0); l4D.push(d25?d25.EOY[3]:0); barMeta.push({g,period:'EOY',year:'2025-26',drop:d25?d25.SOY[0]-d25.EOY[0]:null,l34gain:d25?(d25.EOY[2]+d25.EOY[3])-(d25.SOY[2]+d25.SOY[3]):null});
   });
 
   const plugin={id:'hydAllPlugin',
@@ -674,8 +674,23 @@ function renderHydAllGrades(vName, vData, grades, th) {
       for(let i=0;i<meta.data.length;i+=4){if(i+3>=meta.data.length)break;ctx.fillText(availG[i/4].replace('Grade ','G'),(meta.data[i].x+meta.data[i+3].x)/2,ca.top-22);}
       ctx.font='600 9px -apple-system,sans-serif';
       for(let i=0;i<meta.data.length;i+=4){if(i+3>=meta.data.length)break;const b0=meta.data[i],b1=meta.data[i+1],b2=meta.data[i+2],b3=meta.data[i+3];ctx.fillStyle=th.tabActive;ctx.fillText('SOY',(b0.x+b1.x)/2,ca.top-8);ctx.fillStyle=th.eoy;ctx.fillText('EOY',(b2.x+b3.x)/2,ca.top-8);}
-      ctx.font='bold 9px -apple-system,sans-serif';ctx.fillStyle=deltaC;
-      barMeta.forEach((m,i)=>{if(m.drop===null||m.drop===undefined)return;const x=meta.data[i].x,topY=last.data[i].y,d=m.drop;ctx.fillStyle=d>0?'#0D6B50':d<0?'#C0392B':'#999';ctx.fillText(d>0?'\u25BC'+d:d<0?'\u25B2'+Math.abs(d):'-',x,topY-3);});
+      ctx.font='bold 9px -apple-system,sans-serif';
+      barMeta.forEach((m,i)=>{
+        if(m.drop===null||m.drop===undefined)return;
+        const x=meta.data[i].x,topY=last.data[i].y,d=m.drop;
+        ctx.fillStyle=d>0?'#0D6B50':d<0?'#C0392B':'#999';
+        ctx.fillText(d>0?'\u25BC'+d:d<0?'\u25B2'+Math.abs(d):'-',x,topY-3);
+      });
+      // L3+L4 change on EOY bars
+      ctx.font='bold 8px -apple-system,sans-serif';
+      barMeta.forEach((m,i)=>{
+        if(m.period!=='EOY'||!m.l34gain===undefined)return;
+        const x=meta.data[i].x,topY=last.data[i].y;
+        if(m.l34gain===null||m.l34gain===undefined)return;
+        const g=m.l34gain;
+        ctx.fillStyle=g>0?'#185FA5':g<0?'#C0392B':'#aaa';
+        ctx.fillText((g>0?'+':'')+g,x,topY-14);
+      });
       ctx.restore();
     }
   };
@@ -684,7 +699,7 @@ function renderHydAllGrades(vName, vData, grades, th) {
   ['L1','L2','L3','L4'].forEach((l,i)=>{legendH+=`<span style="display:flex;align-items:center;gap:4px"><span style="width:11px;height:11px;border-radius:2px;background:${segC[i]};display:inline-block"></span>${l}</span>`;});
   legendH+=`<span style="display:flex;align-items:center;gap:6px"><span style="width:20px;height:3px;background:${th.tabActive};display:inline-block;border-radius:2px"></span>SOY</span>`;
   legendH+=`<span style="display:flex;align-items:center;gap:6px"><span style="width:20px;height:3px;background:${th.eoy};display:inline-block;border-radius:2px"></span>EOY</span>`;
-  legendH+='<span style="display:flex;align-items:center;gap:6px"><span style="color:#0D6B50;font-weight:800">▼</span><span style="color:#C0392B;font-weight:800">▲</span><span style="color:#888;font-size:12px"> L1 change</span></span></div>';
+  legendH+='<span style="display:flex;align-items:center;gap:6px"><span style="color:#0D6B50;font-weight:800">▼</span><span style="color:#C0392B;font-weight:800">▲</span><span style="color:#888;font-size:12px"> L1 change</span></span><span style="display:flex;align-items:center;gap:6px"><span style="color:#185FA5;font-weight:800">+/-</span><span style="color:#888;font-size:12px"> L3+L4 change</span></span></div>';
 
   document.getElementById('detLegend').innerHTML=legendH;
   const detBody=document.getElementById('detBody');
@@ -703,31 +718,27 @@ function renderHydAllGrades(vName, vData, grades, th) {
     y:{stacked:true,max:110,ticks:{color:'#999',callback:v=>v<=100?v+'%':'',font:{size:11},stepSize:25},grid:{color:'rgba(0,0,0,0.06)'}}}}});
   charts.push(c);
 
-  // YoY Change heatmaps below chart
+  // YoY Change heatmaps below chart — only for current subject
   const yoyGrades = grades;
-  const buildHydHeat=(metric,title,scale)=>{
+  const buildHydHeat=(metric,title)=>{
     let h=`<div class="heatmap-wrap" style="margin-top:20px"><div class="heatmap-title">${title}</div>`;
-    h+=`<table class="heatmap-table"><thead><tr><th>Subject</th>`;
+    h+=`<table class="heatmap-table"><thead><tr><th>${detailSubject}</th>`;
     yoyGrades.forEach(g=>{h+=`<th>${g.replace('Grade ','G')}</th>`;});
-    h+=`</tr></thead><tbody>`;
-    ['English','Maths'].forEach(subj=>{
-      h+=`<tr><td>${subj}</td>`;
-      yoyGrades.forEach(g=>{
-        const d24=getData(vName,subj,g,'2024-25'),d25=getData(vName,subj,g,'2025-26');
-        if(!d24||!d25){h+='<td class="none">—</td>';return;}
-        let val24,val25;
-        if(metric==='l1drop'){val24=d24.SOY[0]-d24.EOY[0];val25=d25.SOY[0]-d25.EOY[0];}
-        else{val24=(d24.EOY[2]+d24.EOY[3])-(d24.SOY[2]+d24.SOY[3]);val25=(d25.EOY[2]+d25.EOY[3])-(d25.SOY[2]+d25.SOY[3]);}
-        const chg=val25-val24;
-        const c=chg>0?heatGreenScale(chg,30):chg<0?heatRedScale(-chg,30):{bg:'#f5f5f5',text:'#999'};
-        const arrow=chg>0?'\u25B2 +'+chg:chg<0?'\u25BC '+chg:'\u2014';
-        h+=`<td style="background:${c.bg};color:${c.text};line-height:1.5;cursor:default" title="24-25: ${val24} | 25-26: ${val25}">`;
-        h+=`<div style="font-size:12px;font-weight:700">${arrow}</div>`;
-        h+=`<div style="font-size:9px;opacity:0.75">${val24} \u2192 ${val25}</div></td>`;
-      });
-      h+=`</tr>`;
+    h+=`</tr></thead><tbody><tr><td style="font-weight:600;color:#555">Change</td>`;
+    yoyGrades.forEach(g=>{
+      const d24=getData(vName,detailSubject,g,'2024-25'),d25=getData(vName,detailSubject,g,'2025-26');
+      if(!d24||!d25){h+='<td class="none">—</td>';return;}
+      let val24,val25;
+      if(metric==='l1drop'){val24=d24.SOY[0]-d24.EOY[0];val25=d25.SOY[0]-d25.EOY[0];}
+      else{val24=(d24.EOY[2]+d24.EOY[3])-(d24.SOY[2]+d24.SOY[3]);val25=(d25.EOY[2]+d25.EOY[3])-(d25.SOY[2]+d25.SOY[3]);}
+      const chg=val25-val24;
+      const c=chg>0?heatGreenScale(chg,30):chg<0?heatRedScale(-chg,30):{bg:'#f5f5f5',text:'#999'};
+      const arrow=chg>0?'\u25B2 +'+chg:chg<0?'\u25BC '+chg:'\u2014';
+      h+=`<td style="background:${c.bg};color:${c.text};line-height:1.5;cursor:default" title="24-25: ${val24} | 25-26: ${val25}">`;
+      h+=`<div style="font-size:12px;font-weight:700">${arrow}</div>`;
+      h+=`<div style="font-size:9px;opacity:0.75">${val24} \u2192 ${val25}</div></td>`;
     });
-    h+=`</tbody></table></div>`;return h;
+    h+=`</tr></tbody></table></div>`;return h;
   };
 
   detBody.insertAdjacentHTML('beforeend',
